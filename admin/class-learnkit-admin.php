@@ -115,6 +115,7 @@ class LearnKit_Admin {
 				'learnkitAdmin',
 				array(
 					'apiUrl'      => rest_url( 'learnkit/v1' ),
+					'wpApiUrl'    => rest_url(),
 					'nonce'       => wp_create_nonce( 'wp_rest' ),
 					'currentUser' => wp_get_current_user()->ID,
 					'pluginUrl'   => LEARNKIT_PLUGIN_URL,

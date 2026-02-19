@@ -29,8 +29,11 @@ class LearnKit_Activator {
 	 * @since    0.1.0
 	 */
 	public static function activate() {
+		// Load database class.
+		require_once plugin_dir_path( __FILE__ ) . 'class-learnkit-database.php';
+
 		// Create custom database tables.
-		self::create_tables();
+		LearnKit_Database::create_tables();
 
 		// Migrate existing data from post_parent to meta fields.
 		self::migrate_relationships();
@@ -40,80 +43,6 @@ class LearnKit_Activator {
 
 		// Set default options.
 		self::set_default_options();
-	}
-
-	/**
-	 * Create custom database tables for enrollments and progress tracking.
-	 *
-	 * Uses dbDelta for safe table creation that handles updates gracefully.
-	 * Custom tables chosen over post meta for performance at scale.
-	 *
-	 * @since    0.1.0
-	 */
-	private static function create_tables() {
-		global $wpdb;
-
-		$charset_collate = $wpdb->get_charset_collate();
-
-		// Table names with WordPress prefix.
-		$enrollments_table = $wpdb->prefix . 'lk_enrollments';
-		$progress_table    = $wpdb->prefix . 'lk_progress';
-		$certificates_table = $wpdb->prefix . 'lk_certificates';
-
-		$sql = array();
-
-		// Enrollments table: tracks which users are enrolled in which courses.
-		$sql[] = "CREATE TABLE $enrollments_table (
-			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-			user_id bigint(20) unsigned NOT NULL,
-			course_id bigint(20) unsigned NOT NULL,
-			status varchar(20) NOT NULL DEFAULT 'active',
-			enrolled_date datetime NOT NULL,
-			completed_date datetime DEFAULT NULL,
-			PRIMARY KEY  (id),
-			KEY user_id (user_id),
-			KEY course_id (course_id),
-			KEY status (status),
-			UNIQUE KEY user_course (user_id, course_id)
-		) $charset_collate;";
-
-		// Progress table: tracks lesson completion per user.
-		$sql[] = "CREATE TABLE $progress_table (
-			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-			user_id bigint(20) unsigned NOT NULL,
-			lesson_id bigint(20) unsigned NOT NULL,
-			course_id bigint(20) unsigned NOT NULL,
-			completed tinyint(1) NOT NULL DEFAULT 0,
-			completed_date datetime DEFAULT NULL,
-			PRIMARY KEY  (id),
-			KEY user_id (user_id),
-			KEY lesson_id (lesson_id),
-			KEY course_id (course_id),
-			KEY completed (completed),
-			UNIQUE KEY user_lesson (user_id, lesson_id)
-		) $charset_collate;";
-
-		// Certificates table: stores generated certificates.
-		$sql[] = "CREATE TABLE $certificates_table (
-			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-			user_id bigint(20) unsigned NOT NULL,
-			course_id bigint(20) unsigned NOT NULL,
-			certificate_code varchar(100) NOT NULL,
-			issued_date datetime NOT NULL,
-			PRIMARY KEY  (id),
-			KEY user_id (user_id),
-			KEY course_id (course_id),
-			UNIQUE KEY certificate_code (certificate_code),
-			UNIQUE KEY user_course_cert (user_id, course_id)
-		) $charset_collate;";
-
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		foreach ( $sql as $query ) {
-			dbDelta( $query );
-		}
-
-		// Store database version for future migrations.
-		update_option( 'learnkit_db_version', '1.0' );
 	}
 
 	/**

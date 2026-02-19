@@ -1,0 +1,358 @@
+<?php
+/**
+ * REST API: Progress Controller
+ *
+ * @link       https://jameswelbes.com
+ * @since      0.2.14
+ *
+ * @package    LearnKit
+ * @subpackage LearnKit/includes/rest-controllers
+ */
+
+/**
+ * Progress REST API controller.
+ *
+ * Handles all progress tracking endpoints.
+ *
+ * @since      0.2.14
+ * @package    LearnKit
+ * @subpackage LearnKit/includes/rest-controllers
+ * @author     James Welbes <james.welbes@gmail.com>
+ */
+class LearnKit_Progress_Controller {
+
+	/**
+	 * The namespace for our REST API.
+	 *
+	 * @since    0.2.14
+	 * @access   private
+	 * @var      string    $namespace    The namespace for REST API routes.
+	 */
+	private $namespace = 'learnkit/v1';
+
+	/**
+	 * Register progress routes.
+	 *
+	 * @since    0.2.14
+	 */
+	public function register_routes() {
+		register_rest_route(
+			$this->namespace,
+			'/progress/(?P<lesson_id>\d+)',
+			array(
+				array(
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => array( $this, 'mark_lesson_complete' ),
+					'permission_callback' => array( $this, 'check_user_permission' ),
+				),
+				array(
+					'methods'             => WP_REST_Server::DELETABLE,
+					'callback'            => array( $this, 'mark_lesson_incomplete' ),
+					'permission_callback' => array( $this, 'check_user_permission' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			$this->namespace,
+			'/progress/user/(?P<user_id>\d+)/course/(?P<course_id>\d+)',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_course_progress' ),
+				'permission_callback' => array( $this, 'check_user_permission' ),
+			)
+		);
+
+		register_rest_route(
+			$this->namespace,
+			'/progress/user/(?P<user_id>\d+)/module/(?P<module_id>\d+)',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_module_progress' ),
+				'permission_callback' => array( $this, 'check_user_permission' ),
+			)
+		);
+	}
+
+	/**
+	 * Mark lesson as complete.
+	 *
+	 * @since    0.2.14
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   WP_REST_Response Response object.
+	 */
+	public function mark_lesson_complete( $request ) {
+		global $wpdb;
+
+		$lesson_id = (int) $request['lesson_id'];
+		$user_id   = get_current_user_id();
+
+		// Verify lesson exists.
+		$lesson = get_post( $lesson_id );
+		if ( ! $lesson || 'lk_lesson' !== $lesson->post_type ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'Lesson not found', 'learnkit' ) ),
+				404
+			);
+		}
+
+		$table = $wpdb->prefix . 'learnkit_progress';
+
+		// Insert or update progress record.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$existing = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM $table WHERE user_id = %d AND lesson_id = %d",
+				$user_id,
+				$lesson_id
+			)
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( $existing ) {
+			// Already marked complete.
+			return new WP_REST_Response(
+				array(
+					'message'   => __( 'Lesson already marked complete', 'learnkit' ),
+					'completed' => true,
+				),
+				200
+			);
+		}
+
+		// Insert new progress record.
+		$inserted = $wpdb->insert(
+			$table,
+			array(
+				'user_id'      => $user_id,
+				'lesson_id'    => $lesson_id,
+				'completed_at' => current_time( 'mysql' ),
+			),
+			array( '%d', '%d', '%s' )
+		);
+
+		if ( false === $inserted ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'Failed to mark lesson complete', 'learnkit' ) ),
+				500
+			);
+		}
+
+		return new WP_REST_Response(
+			array(
+				'message'   => __( 'Lesson marked complete', 'learnkit' ),
+				'completed' => true,
+			),
+			201
+		);
+	}
+
+	/**
+	 * Mark lesson as incomplete.
+	 *
+	 * @since    0.2.14
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   WP_REST_Response Response object.
+	 */
+	public function mark_lesson_incomplete( $request ) {
+		global $wpdb;
+
+		$lesson_id = (int) $request['lesson_id'];
+		$user_id   = get_current_user_id();
+
+		$table = $wpdb->prefix . 'learnkit_progress';
+
+		$deleted = $wpdb->delete(
+			$table,
+			array(
+				'user_id'   => $user_id,
+				'lesson_id' => $lesson_id,
+			),
+			array( '%d', '%d' )
+		);
+
+		if ( false === $deleted ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'Failed to mark lesson incomplete', 'learnkit' ) ),
+				500
+			);
+		}
+
+		return new WP_REST_Response(
+			array(
+				'message'   => __( 'Lesson marked incomplete', 'learnkit' ),
+				'completed' => false,
+			),
+			200
+		);
+	}
+
+	/**
+	 * Get course progress for a user.
+	 *
+	 * @since    0.2.14
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   WP_REST_Response Response object.
+	 */
+	public function get_course_progress( $request ) {
+		global $wpdb;
+
+		$user_id   = (int) $request['user_id'];
+		$course_id = (int) $request['course_id'];
+
+		// Get all lessons in this course.
+		$modules = get_posts(
+			array(
+				'post_type'      => 'lk_module',
+				'posts_per_page' => -1,
+				'meta_key'       => 'learnkit_course_id',
+				'meta_value'     => $course_id,
+			)
+		);
+
+		$module_ids = wp_list_pluck( $modules, 'ID' );
+
+		if ( empty( $module_ids ) ) {
+			return new WP_REST_Response(
+				array(
+					'total_lessons'      => 0,
+					'completed_lessons'  => 0,
+					'progress_percent'   => 0,
+					'completed_lesson_ids' => array(),
+				),
+				200
+			);
+		}
+
+		// Get all lessons in these modules.
+		$lessons = get_posts(
+			array(
+				'post_type'      => 'lk_lesson',
+				'posts_per_page' => -1,
+				'meta_query'     => array(
+					array(
+						'key'     => '_lk_module_id',
+						'value'   => $module_ids,
+						'compare' => 'IN',
+					),
+				),
+			)
+		);
+
+		$total_lessons = count( $lessons );
+		$lesson_ids    = wp_list_pluck( $lessons, 'ID' );
+
+		if ( empty( $lesson_ids ) ) {
+			return new WP_REST_Response(
+				array(
+					'total_lessons'      => 0,
+					'completed_lessons'  => 0,
+					'progress_percent'   => 0,
+					'completed_lesson_ids' => array(),
+				),
+				200
+			);
+		}
+
+		// Get completed lessons.
+		$table             = $wpdb->prefix . 'learnkit_progress';
+		$placeholders      = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$completed = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT lesson_id FROM $table WHERE user_id = %d AND lesson_id IN ($placeholders)",
+				array_merge( array( $user_id ), $lesson_ids )
+			)
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		$completed_count   = count( $completed );
+		$progress_percent  = $total_lessons > 0 ? round( ( $completed_count / $total_lessons ) * 100 ) : 0;
+
+		return new WP_REST_Response(
+			array(
+				'total_lessons'        => $total_lessons,
+				'completed_lessons'    => $completed_count,
+				'progress_percent'     => $progress_percent,
+				'completed_lesson_ids' => array_map( 'intval', $completed ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * Get module progress for a user.
+	 *
+	 * @since    0.2.14
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   WP_REST_Response Response object.
+	 */
+	public function get_module_progress( $request ) {
+		global $wpdb;
+
+		$user_id   = (int) $request['user_id'];
+		$module_id = (int) $request['module_id'];
+
+		// Get all lessons in this module.
+		$lessons = get_posts(
+			array(
+				'post_type'      => 'lk_lesson',
+				'posts_per_page' => -1,
+				'meta_key'       => '_lk_module_id',
+				'meta_value'     => $module_id,
+			)
+		);
+
+		$total_lessons = count( $lessons );
+		$lesson_ids    = wp_list_pluck( $lessons, 'ID' );
+
+		if ( empty( $lesson_ids ) ) {
+			return new WP_REST_Response(
+				array(
+					'total_lessons'        => 0,
+					'completed_lessons'    => 0,
+					'progress_percent'     => 0,
+					'completed_lesson_ids' => array(),
+				),
+				200
+			);
+		}
+
+		// Get completed lessons.
+		$table             = $wpdb->prefix . 'learnkit_progress';
+		$placeholders      = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$completed = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT lesson_id FROM $table WHERE user_id = %d AND lesson_id IN ($placeholders)",
+				array_merge( array( $user_id ), $lesson_ids )
+			)
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		$completed_count  = count( $completed );
+		$progress_percent = $total_lessons > 0 ? round( ( $completed_count / $total_lessons ) * 100 ) : 0;
+
+		return new WP_REST_Response(
+			array(
+				'total_lessons'        => $total_lessons,
+				'completed_lessons'    => $completed_count,
+				'progress_percent'     => $progress_percent,
+				'completed_lesson_ids' => array_map( 'intval', $completed ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * Check user permission.
+	 *
+	 * @since    0.2.14
+	 * @return   bool True if user is logged in.
+	 */
+	public function check_user_permission() {
+		return is_user_logged_in();
+	}
+}

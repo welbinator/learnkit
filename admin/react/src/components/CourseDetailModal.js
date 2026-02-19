@@ -2,16 +2,17 @@
  * CourseDetailModal Component
  * 
  * Large modal showing course details with editable fields and module management.
- * Includes drag-and-drop module reordering.
+ * Includes drag-and-drop module reordering and enrollment management.
  * 
  * @package LearnKit
  * @since 0.2.0
  */
 
 import { __ } from '@wordpress/i18n';
-import { Modal, Button, TextControl, TextareaControl } from '@wordpress/components';
+import { Modal, Button, TextControl, TextareaControl, TabPanel } from '@wordpress/components';
 import { useState, useEffect } from '@wordpress/element';
 import CourseStructure from './CourseStructure';
+import EnrollmentManager from './EnrollmentManager';
 
 const CourseDetailModal = ({
 	course,
@@ -118,23 +119,55 @@ const CourseDetailModal = ({
 					rows={4}
 				/>
 
-				{/* Modules Section */}
-				<div className="modules-section">
-					<div className="section-header">
-						<h3>{__('Modules', 'learnkit')} ({structure?.modules?.length || 0})</h3>
-						<Button variant="secondary" onClick={onCreateModule}>
-							{__('Add Module', 'learnkit')}
-						</Button>
-					</div>
+				{/* Tabbed Content */}
+				<TabPanel
+					className="learnkit-course-tabs"
+					activeClass="is-active"
+					tabs={[
+						{
+							name: 'structure',
+							title: __('Modules & Lessons', 'learnkit'),
+						},
+						{
+							name: 'enrollments',
+							title: __('Enrollments', 'learnkit'),
+						},
+					]}
+				>
+					{(tab) => {
+						if (tab.name === 'structure') {
+							return (
+								<div className="modules-section">
+									<div className="section-header">
+										<h3>{__('Modules', 'learnkit')} ({structure?.modules?.length || 0})</h3>
+										<Button variant="secondary" onClick={onCreateModule}>
+											{__('Add Module', 'learnkit')}
+										</Button>
+									</div>
 
-					<CourseStructure
-						structure={structure}
-						onEditModule={onEditModule}
-						onDeleteModule={onDeleteModule}
-						onCreateLesson={onCreateLesson}
-						onReorderModules={onReorderModules}
-					/>
-				</div>
+									<CourseStructure
+										structure={structure}
+										onEditModule={onEditModule}
+										onDeleteModule={onDeleteModule}
+										onCreateLesson={onCreateLesson}
+										onReorderModules={onReorderModules}
+									/>
+								</div>
+							);
+						}
+
+						if (tab.name === 'enrollments') {
+							return (
+								<EnrollmentManager
+									courseId={course.id}
+									courseName={title}
+								/>
+							);
+						}
+
+						return null;
+					}}
+				</TabPanel>
 
 				{/* Action Buttons */}
 				<div className="modal-actions">

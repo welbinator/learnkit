@@ -1,66 +1,120 @@
 /**
  * LearnKit Public JavaScript
- * 
- * Frontend interactions for student experience.
- * 
+ *
+ * Handles lesson progress tracking on the frontend.
+ *
  * @package LearnKit
- * @since 0.1.0
+ * @since 0.2.14
  */
 
-(function($) {
+(function ($) {
 	'use strict';
 
-	/**
-	 * Initialize LearnKit public functionality.
-	 */
-	$(document).ready(function() {
-		// Mark lesson as complete (Sprint 3).
-		$('.learnkit-mark-complete').on('click', function(e) {
+	$(document).ready(function () {
+		// Handle mark complete button
+		$('.learnkit-mark-complete').on('click', function (e) {
 			e.preventDefault();
-			
-			const $btn = $(this);
-			const lessonId = $btn.data('lesson-id');
-			
-			// Show loading state.
-			$btn.prop('disabled', true).text('Saving...');
-			
-			// API call to mark complete.
+
+			const $button = $(this);
+			const lessonId = $button.data('lesson-id');
+
+			// Disable button during request
+			$button.prop('disabled', true).text('Marking...');
+
 			$.ajax({
-				url: learnkitPublic.apiUrl + '/progress',
+				url: learnkitPublic.apiUrl + '/progress/' + lessonId,
 				method: 'POST',
-				beforeSend: function(xhr) {
+				beforeSend: function (xhr) {
 					xhr.setRequestHeader('X-WP-Nonce', learnkitPublic.nonce);
 				},
-				data: {
-					lesson_id: lessonId,
-					completed: true
+				success: function (response) {
+					$button
+						.removeClass('learnkit-mark-complete')
+						.addClass('learnkit-marked-complete')
+						.prop('disabled', false)
+						.html('<span class="checkmark">✓</span> Completed');
+
+					// Update sidebar lesson status
+					updateLessonStatus(lessonId, true);
+
+					// Update module progress
+					updateModuleProgress();
 				},
-				success: function(response) {
-					$btn.text('✓ Completed').addClass('completed');
-					// Update progress bar if present.
-					updateProgressBar();
-				},
-				error: function(xhr) {
-					$btn.prop('disabled', false).text('Mark Complete');
-					alert('Failed to save progress. Please try again.');
+				error: function (xhr) {
+					let message = 'Failed to mark lesson complete';
+					if (xhr.responseJSON && xhr.responseJSON.message) {
+						message = xhr.responseJSON.message;
+					}
+					alert(message);
+					$button.prop('disabled', false).html('<span class="checkmark">✓</span> Mark as Complete');
 				}
 			});
 		});
+
+		// Update lesson status icon in sidebar
+		function updateLessonStatus(lessonId, completed) {
+			const $lessonItem = $('.lesson-item a[href*="' + lessonId + '"]').parent();
+			const $statusIcon = $lessonItem.find('.status-icon');
+
+			if (completed) {
+				$statusIcon.removeClass('incomplete').addClass('complete').text('✓');
+			} else {
+				$statusIcon.removeClass('complete').addClass('incomplete').text('○');
+			}
+		}
+
+		// Update module progress bar
+		function updateModuleProgress() {
+			const totalLessons = $('.lesson-item').length;
+			const completedLessons = $('.lesson-item .status-icon.complete').length;
+			const percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+			$('.progress-fill').css('width', percent + '%');
+			$('.progress-text').text(percent + '% Complete');
+		}
+
+		// Load progress on page load
+		loadProgressData();
+
+		function loadProgressData() {
+			// Get lesson ID from the button (either state)
+			const lessonId = $('.learnkit-mark-complete').data('lesson-id') || $('.learnkit-marked-complete').data('lesson-id');
+			if (!lessonId) {
+				return;
+			}
+
+			// Get module ID from page data
+			const moduleId = $('.learnkit-lesson-sidebar').data('module-id');
+			if (!moduleId) {
+				return;
+			}
+
+			// Load module progress
+			$.ajax({
+				url: learnkitPublic.apiUrl + '/progress/user/' + learnkitPublic.currentUser + '/module/' + moduleId,
+				method: 'GET',
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('X-WP-Nonce', learnkitPublic.nonce);
+				},
+				success: function (response) {
+					// Update progress bar
+					$('.progress-fill').css('width', response.progress_percent + '%');
+					$('.progress-text').text(response.progress_percent + '% Complete');
+
+					// Update lesson status icons
+					response.completed_lesson_ids.forEach(function (completedLessonId) {
+						updateLessonStatus(completedLessonId, true);
+					});
+
+					// Check if current lesson is complete
+					if (response.completed_lesson_ids.includes(parseInt(lessonId))) {
+						$('.learnkit-mark-complete')
+							.removeClass('learnkit-mark-complete')
+							.addClass('learnkit-marked-complete')
+							.html('<span class="checkmark">✓</span> Completed');
+					}
+				}
+			});
+		}
 	});
-
-	/**
-	 * Update course progress bar.
-	 */
-	function updateProgressBar() {
-		const $progressBar = $('.learnkit-progress-fill');
-		if (!$progressBar.length) return;
-
-		// Recalculate progress based on completed lessons.
-		const totalLessons = $('.learnkit-lesson-item').length;
-		const completedLessons = $('.learnkit-lesson-item.completed').length;
-		const percentage = (completedLessons / totalLessons) * 100;
-
-		$progressBar.css('width', percentage + '%');
-	}
-
 })(jQuery);
