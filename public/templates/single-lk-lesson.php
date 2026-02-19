@@ -128,7 +128,7 @@ foreach ( $lessons as $index => $l ) {
 	</div>
 
 	<!-- Sidebar: Module Lessons List -->
-	<aside class="learnkit-lesson-sidebar">
+	<aside class="learnkit-lesson-sidebar" data-module-id="<?php echo esc_attr( $module_id ); ?>">
 		<div class="learnkit-module-overview">
 			<h3 class="module-title"><?php echo esc_html( $module->post_title ); ?></h3>
 			<div class="module-progress">
