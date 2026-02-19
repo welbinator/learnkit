@@ -192,7 +192,7 @@ export async function deleteEnrollment(enrollmentId) {
  * Get WordPress users (for enrollment dropdown).
  */
 export async function getUsers() {
-	const response = await fetch(window.learnkitAdmin.wpApiUrl + '/wp/v2/users?per_page=100', {
+	const response = await fetch(window.learnkitAdmin.wpApiUrl + 'wp/v2/users?per_page=100', {
 		headers: {
 			'X-WP-Nonce': window.learnkitAdmin.nonce,
 		},
