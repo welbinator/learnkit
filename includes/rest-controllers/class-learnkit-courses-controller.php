@@ -225,6 +225,11 @@ class LearnKit_Courses_Controller {
 			}
 		}
 
+		// Handle self-enrollment flag.
+		if ( isset( $request['self_enrollment'] ) ) {
+			update_post_meta( $course_id, '_lk_self_enrollment', (bool) $request['self_enrollment'] );
+		}
+
 		return new WP_REST_Response(
 			array( 'message' => __( 'Course updated successfully', 'learnkit' ) ),
 			200
@@ -347,17 +352,18 @@ class LearnKit_Courses_Controller {
 	 */
 	private function prepare_course_response( $course ) {
 		return array(
-			'id'             => $course->ID,
-			'title'          => $course->post_title,
-			'content'        => $course->post_content,
-			'excerpt'        => $course->post_excerpt,
-			'status'         => $course->post_status,
-			'author'         => $course->post_author,
-			'date_created'   => $course->post_date,
-			'date_modified'  => $course->post_modified,
-			'permalink'      => get_permalink( $course->ID ),
-			'featured_image' => get_the_post_thumbnail_url( $course->ID, 'large' ),
-			'edit_link'      => get_edit_post_link( $course->ID, 'raw' ),
+			'id'              => $course->ID,
+			'title'           => $course->post_title,
+			'content'         => $course->post_content,
+			'excerpt'         => $course->post_excerpt,
+			'status'          => $course->post_status,
+			'author'          => $course->post_author,
+			'date_created'    => $course->post_date,
+			'date_modified'   => $course->post_modified,
+			'permalink'       => get_permalink( $course->ID ),
+			'featured_image'  => get_the_post_thumbnail_url( $course->ID, 'large' ),
+			'edit_link'       => get_edit_post_link( $course->ID, 'raw' ),
+			'self_enrollment' => (bool) get_post_meta( $course->ID, '_lk_self_enrollment', true ),
 		);
 	}
 
