@@ -93,7 +93,8 @@ class LearnKit_Post_Types {
 	 * Register Module post type.
 	 *
 	 * Modules are organizational units within courses.
-	 * Uses post_parent to link to parent course.
+	 * Uses _lk_course_id post meta to link to parent course (not post_parent).
+	 * Flat structure prevents WordPress hierarchical URL conflicts across CPT boundaries.
 	 *
 	 * @since    0.1.0
 	 */
@@ -132,8 +133,8 @@ class LearnKit_Post_Types {
 			'label'               => __( 'Module', 'learnkit' ),
 			'description'         => __( 'Course Modules', 'learnkit' ),
 			'labels'              => $labels,
-			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'page-attributes' ),
-			'hierarchical'        => true,
+			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
+			'hierarchical'        => false,
 			'public'              => true,
 			'show_ui'             => true,
 			'show_in_menu'        => false,
@@ -163,7 +164,8 @@ class LearnKit_Post_Types {
 	 *
 	 * Lessons contain the actual course content.
 	 * Uses WordPress block editor for content creation.
-	 * Links to parent module via post_parent.
+	 * Uses _lk_module_id post meta to link to parent module (not post_parent).
+	 * Flat structure prevents WordPress hierarchical URL conflicts across CPT boundaries.
 	 *
 	 * @since    0.1.0
 	 */
@@ -202,8 +204,8 @@ class LearnKit_Post_Types {
 			'label'               => __( 'Lesson', 'learnkit' ),
 			'description'         => __( 'Course Lessons', 'learnkit' ),
 			'labels'              => $labels,
-			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'comments', 'page-attributes' ),
-			'hierarchical'        => true,
+			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'comments' ),
+			'hierarchical'        => false,
 			'public'              => true,
 			'show_ui'             => true,
 			'show_in_menu'        => false,
@@ -226,5 +228,47 @@ class LearnKit_Post_Types {
 		);
 
 		register_post_type( 'lk_lesson', $args );
+	}
+
+	/**
+	 * Register post meta fields for REST API.
+	 *
+	 * Registers custom meta fields for course/module relationships.
+	 * Makes them accessible via REST API for front-end queries.
+	 *
+	 * @since    0.1.0
+	 */
+	public function register_post_meta_fields() {
+		// Module -> Course relationship.
+		register_post_meta(
+			'lk_module',
+			'_lk_course_id',
+			array(
+				'type'         => 'integer',
+				'single'       => true,
+				'show_in_rest' => true,
+				'default'      => 0,
+				'description'  => __( 'Parent course ID for this module', 'learnkit' ),
+				'auth_callback' => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+
+		// Lesson -> Module relationship.
+		register_post_meta(
+			'lk_lesson',
+			'_lk_module_id',
+			array(
+				'type'         => 'integer',
+				'single'       => true,
+				'show_in_rest' => true,
+				'default'      => 0,
+				'description'  => __( 'Parent module ID for this lesson', 'learnkit' ),
+				'auth_callback' => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
 	}
 }

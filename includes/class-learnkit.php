@@ -163,6 +163,7 @@ class LearnKit {
 		$this->loader->add_action( 'init', $post_types, 'register_course_post_type' );
 		$this->loader->add_action( 'init', $post_types, 'register_module_post_type' );
 		$this->loader->add_action( 'init', $post_types, 'register_lesson_post_type' );
+		$this->loader->add_action( 'init', $post_types, 'register_post_meta_fields' );
 	}
 
 	/**
