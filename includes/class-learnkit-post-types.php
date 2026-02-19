@@ -147,7 +147,10 @@ class LearnKit_Post_Types {
 			'publicly_queryable'  => true,
 			'show_in_rest'        => true,
 			'rest_base'           => 'lk-modules',
-			'rewrite'             => array( 'slug' => 'module' ),
+			'rewrite'             => array(
+				'slug' => 'module',
+				'hierarchical' => false,
+			),
 			'capability_type'     => 'post',
 			'map_meta_cap'        => true,
 		);
@@ -214,7 +217,10 @@ class LearnKit_Post_Types {
 			'publicly_queryable'  => true,
 			'show_in_rest'        => true, // Enable Gutenberg editor for lesson content.
 			'rest_base'           => 'lk-lessons',
-			'rewrite'             => array( 'slug' => 'lesson' ),
+			'rewrite'             => array(
+				'slug' => 'lesson',
+				'hierarchical' => false,
+			),
 			'capability_type'     => 'post',
 			'map_meta_cap'        => true,
 		);
