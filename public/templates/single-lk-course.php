@@ -363,7 +363,10 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 		<?php endif; ?>
 
 		<!-- Course Description -->
-		<?php if ( has_content() ) : ?>
+		<?php
+		$content = get_the_content();
+		if ( ! empty( $content ) ) :
+			?>
 			<div class="lk-course-description" style="margin-bottom: 40px; line-height: 1.8; font-size: 16px;">
 				<?php the_content(); ?>
 			</div>
