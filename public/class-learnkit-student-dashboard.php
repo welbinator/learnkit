@@ -268,7 +268,7 @@ class LearnKit_Student_Dashboard {
 		}
 
 		register_block_type(
-			'learnkit/dashboard',
+			LEARNKIT_PLUGIN_DIR . 'blocks/dashboard',
 			array(
 				'render_callback' => array( $this, 'render_dashboard' ),
 			)
