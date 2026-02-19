@@ -14,8 +14,8 @@ get_header();
 // Get current lesson.
 $lesson_id = get_the_ID();
 $lesson    = get_post( $lesson_id );
-$module_id = get_post_meta( $lesson_id, 'learnkit_module_id', true );
-$course_id = $module_id ? get_post_meta( $module_id, 'learnkit_course_id', true ) : 0;
+$module_id = get_post_meta( $lesson_id, '_lk_module_id', true );
+$course_id = $module_id ? get_post_meta( $module_id, '_lk_course_id', true ) : 0;
 
 // Get module and course.
 $module = $module_id ? get_post( $module_id ) : null;
@@ -27,7 +27,7 @@ $lessons_query = new WP_Query(
 		'post_type'      => 'lk_lesson',
 		'posts_per_page' => -1,
 		'post_status'    => 'publish',
-		'meta_key'       => 'learnkit_module_id',
+		'meta_key'       => '_lk_module_id',
 		'meta_value'     => $module_id,
 		'orderby'        => 'menu_order',
 		'order'          => 'ASC',
