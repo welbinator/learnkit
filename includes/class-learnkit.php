@@ -76,6 +76,7 @@ class LearnKit {
 		$this->load_dependencies();
 		$this->set_locale();
 		$this->register_post_types();
+		$this->register_meta_boxes();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 		$this->register_rest_api();
@@ -116,6 +117,11 @@ class LearnKit {
 		 * The class responsible for defining custom post types.
 		 */
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-post-types.php';
+
+		/**
+		 * The class responsible for defining meta boxes for relationships.
+		 */
+		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-meta-boxes.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
@@ -164,6 +170,26 @@ class LearnKit {
 		$this->loader->add_action( 'init', $post_types, 'register_module_post_type' );
 		$this->loader->add_action( 'init', $post_types, 'register_lesson_post_type' );
 		$this->loader->add_action( 'init', $post_types, 'register_post_meta_fields' );
+	}
+
+	/**
+	 * Register meta boxes for course/module relationships.
+	 *
+	 * @since    0.1.0
+	 * @access   private
+	 */
+	private function register_meta_boxes() {
+		$meta_boxes = new LearnKit_Meta_Boxes();
+
+		$this->loader->add_action( 'add_meta_boxes', $meta_boxes, 'add_meta_boxes' );
+		$this->loader->add_action( 'save_post_lk_module', $meta_boxes, 'save_module_meta' );
+		$this->loader->add_action( 'save_post_lk_lesson', $meta_boxes, 'save_lesson_meta' );
+
+		// Admin columns.
+		$this->loader->add_filter( 'manage_lk_module_posts_columns', $meta_boxes, 'add_module_columns' );
+		$this->loader->add_action( 'manage_lk_module_posts_custom_column', $meta_boxes, 'populate_module_columns', 10, 2 );
+		$this->loader->add_filter( 'manage_lk_lesson_posts_columns', $meta_boxes, 'add_lesson_columns' );
+		$this->loader->add_action( 'manage_lk_lesson_posts_custom_column', $meta_boxes, 'populate_lesson_columns', 10, 2 );
 	}
 
 	/**
