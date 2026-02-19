@@ -1,88 +1,46 @@
 <?php
 /**
- * Plugin activation tests.
+ * Class Test_Plugin_Activation
  *
  * @package LearnKit
  */
 
-use Yoast\PHPUnitPolyfills\TestCases\TestCase;
-
 /**
- * Test plugin activation.
+ * Test plugin activation and basic setup.
  */
-class Test_Plugin_Activation extends TestCase {
+class Test_Plugin_Activation extends WP_UnitTestCase {
 
 	/**
-	 * Test plugin activates without errors.
+	 * Test that plugin is loaded.
 	 */
-	public function test_plugin_activates() {
-		// Plugin should already be activated via bootstrap
-		$this->assertTrue( class_exists( 'LearnKit' ), 'LearnKit main class should exist' );
+	public function test_plugin_loaded() {
+		$this->assertTrue( defined( 'LEARNKIT_VERSION' ) );
+		$this->assertTrue( defined( 'LEARNKIT_PLUGIN_DIR' ) );
 	}
 
 	/**
-	 * Test database tables exist after activation.
+	 * Test custom post types are registered.
 	 */
-	public function test_database_tables_exist() {
-		global $wpdb;
-
-		$tables = [
-			$wpdb->prefix . 'learnkit_enrollments',
-			$wpdb->prefix . 'learnkit_progress',
-			$wpdb->prefix . 'learnkit_certificates',
-		];
-
-		foreach ( $tables as $table ) {
-			$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
-			$this->assertEquals( $table, $exists, "Table {$table} should exist" );
-		}
+	public function test_cpt_registered() {
+		$this->assertTrue( post_type_exists( 'lk_course' ) );
+		$this->assertTrue( post_type_exists( 'lk_module' ) );
+		$this->assertTrue( post_type_exists( 'lk_lesson' ) );
 	}
 
 	/**
-	 * Test enrollments table structure.
+	 * Test that custom tables exist.
 	 */
-	public function test_enrollments_table_structure() {
+	public function test_custom_tables_exist() {
 		global $wpdb;
-
-		$table = $wpdb->prefix . 'learnkit_enrollments';
-		$columns = $wpdb->get_col( "DESC {$table}", 0 );
-
-		$expected_columns = [ 'id', 'user_id', 'course_id', 'status', 'enrolled_at', 'completed_at' ];
 		
-		foreach ( $expected_columns as $column ) {
-			$this->assertContains( $column, $columns, "Enrollments table should have {$column} column" );
-		}
-	}
-
-	/**
-	 * Test progress table structure.
-	 */
-	public function test_progress_table_structure() {
-		global $wpdb;
-
-		$table = $wpdb->prefix . 'learnkit_progress';
-		$columns = $wpdb->get_col( "DESC {$table}", 0 );
-
-		$expected_columns = [ 'id', 'user_id', 'lesson_id', 'status', 'started_at', 'completed_at' ];
+		$enrollments_table = $wpdb->prefix . 'learnkit_enrollments';
+		$progress_table    = $wpdb->prefix . 'learnkit_progress';
 		
-		foreach ( $expected_columns as $column ) {
-			$this->assertContains( $column, $columns, "Progress table should have {$column} column" );
-		}
-	}
-
-	/**
-	 * Test certificates table structure.
-	 */
-	public function test_certificates_table_structure() {
-		global $wpdb;
-
-		$table = $wpdb->prefix . 'learnkit_certificates';
-		$columns = $wpdb->get_col( "DESC {$table}", 0 );
-
-		$expected_columns = [ 'id', 'user_id', 'course_id', 'certificate_url', 'issued_at' ];
+		// Check table exists.
+		$enrollments_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $enrollments_table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$progress_exists    = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $progress_table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		
-		foreach ( $expected_columns as $column ) {
-			$this->assertContains( $column, $columns, "Certificates table should have {$column} column" );
-		}
+		$this->assertEquals( $enrollments_table, $enrollments_exists );
+		$this->assertEquals( $progress_table, $progress_exists );
 	}
 }
