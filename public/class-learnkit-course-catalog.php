@@ -137,8 +137,8 @@ class LearnKit_Course_Catalog {
 			<div class="learnkit-catalog-grid">
 				<?php foreach ( $courses as $course ) : ?>
 					<?php
-					$course_id     = $course->ID;
-					$is_enrolled   = in_array( $course_id, $enrolled_course_ids, true );
+					$course_id     = (int) $course->ID;
+					$is_enrolled   = in_array( $course_id, array_map( 'intval', $enrolled_course_ids ), true );
 					$thumbnail_url = get_the_post_thumbnail_url( $course_id, 'medium' );
 					if ( ! $thumbnail_url ) {
 						$thumbnail_url = LEARNKIT_PLUGIN_URL . 'assets/images/default-course.png';
