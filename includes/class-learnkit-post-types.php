@@ -104,7 +104,7 @@ class LearnKit_Post_Types {
 			'name_admin_bar'        => __( 'Module', 'learnkit' ),
 			'archives'              => __( 'Module Archives', 'learnkit' ),
 			'attributes'            => __( 'Module Attributes', 'learnkit' ),
-			'parent_item_colon'     => __( 'Parent Module:', 'learnkit' ),
+			'parent_item_colon'     => __( 'Parent Course:', 'learnkit' ),
 			'all_items'             => __( 'All Modules', 'learnkit' ),
 			'add_new_item'          => __( 'Add New Module', 'learnkit' ),
 			'add_new'               => __( 'Add New', 'learnkit' ),
