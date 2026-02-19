@@ -55,7 +55,7 @@ class LearnKit_Public {
 	}
 
 	/**
-	 * Load custom template for single lessons.
+	 * Load custom template for single lessons and courses.
 	 *
 	 * @since    0.2.13
 	 * @param    string $template    The path to the template.
@@ -68,6 +68,14 @@ class LearnKit_Public {
 				return $plugin_template;
 			}
 		}
+
+		if ( is_singular( 'lk_course' ) ) {
+			$plugin_template = plugin_dir_path( __FILE__ ) . 'templates/single-lk-course.php';
+			if ( file_exists( $plugin_template ) ) {
+				return $plugin_template;
+			}
+		}
+
 		return $template;
 	}
 
