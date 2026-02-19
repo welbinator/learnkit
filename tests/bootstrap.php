@@ -5,62 +5,27 @@
  * @package LearnKit
  */
 
-// Composer autoloader.
-require_once dirname( __DIR__ ) . '/vendor/autoload.php';
+$_tests_dir = getenv( 'WP_TESTS_DIR' );
 
-// For now, we'll create a simple mock environment for basic tests
-// In production CI/CD, the full WordPress test suite will be available
-
-// Define WordPress constants for testing
-if ( ! defined( 'ABSPATH' ) ) {
-	define( 'ABSPATH', '/app/' );
+if ( ! $_tests_dir ) {
+	$_tests_dir = rtrim( sys_get_temp_dir(), '/\\' ) . '/wordpress-tests-lib';
 }
 
-// Load the plugin
-require_once dirname( __DIR__ ) . '/learnkit.php';
-
-// Mock WordPress functions needed for basic tests
-if ( ! function_exists( 'get_option' ) ) {
-	function get_option( $option, $default = false ) {
-		return $default;
-	}
+if ( ! file_exists( $_tests_dir . '/includes/functions.php' ) ) {
+	echo "Could not find $_tests_dir/includes/functions.php, have you run bin/install-wp-tests.sh ?" . PHP_EOL; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	exit( 1 );
 }
 
-if ( ! function_exists( 'add_action' ) ) {
-	function add_action( $hook, $callback, $priority = 10, $args = 1 ) {
-		return true;
-	}
-}
+// Give access to tests_add_filter() function.
+require_once $_tests_dir . '/includes/functions.php';
 
-if ( ! function_exists( 'add_filter' ) ) {
-	function add_filter( $hook, $callback, $priority = 10, $args = 1 ) {
-		return true;
-	}
+/**
+ * Manually load the plugin being tested.
+ */
+function _manually_load_plugin() {
+	require dirname( dirname( __FILE__ ) ) . '/learnkit.php';
 }
+tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
-if ( ! function_exists( 'plugin_dir_path' ) ) {
-	function plugin_dir_path( $file ) {
-		return dirname( $file ) . '/';
-	}
-}
-
-if ( ! function_exists( 'plugin_basename' ) ) {
-	function plugin_basename( $file ) {
-		return basename( dirname( $file ) ) . '/' . basename( $file );
-	}
-}
-
-if ( ! function_exists( 'register_activation_hook' ) ) {
-	function register_activation_hook( $file, $callback ) {
-		return true;
-	}
-}
-
-if ( ! function_exists( 'register_deactivation_hook' ) ) {
-	function register_deactivation_hook( $file, $callback ) {
-		return true;
-	}
-}
-
-// Note: Full WordPress test suite integration will be available in CI/CD environment
-// For local testing within Lando, run: lando wp scaffold plugin-tests learnkit
+// Start up the WP testing environment.
+require $_tests_dir . '/includes/bootstrap.php';

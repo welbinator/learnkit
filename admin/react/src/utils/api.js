@@ -48,6 +48,7 @@ export async function getCourses() {
 		description: course.excerpt || '',
 		status: course.status,
 		featuredImage: course.featured_image || '',
+		selfEnrollment: course.self_enrollment || false,
 		moduleCount: 0, // TODO: Get actual module count
 	}));
 }
@@ -88,6 +89,7 @@ export async function updateCourse(courseId, courseData) {
 			title: courseData.title,
 			excerpt: courseData.description || '',
 			featured_image_url: courseData.featuredImage || '',
+			self_enrollment: courseData.selfEnrollment || false,
 		},
 	});
 }

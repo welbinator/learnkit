@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "learnkit/catalog",
+	"version": "0.3.0",
+	"title": "Course Catalog",
+	"category": "widgets",
+	"icon": "book",
+	"description": "Display all available courses with enrollment options.",
+	"keywords": ["learnkit", "catalog", "courses", "browse", "enroll"],
+	"textdomain": "learnkit",
+	"supports": {
+		"html": false,
+		"align": ["wide", "full"]
+	},
+	"attributes": {
+		"columns": {
+			"type": "number",
+			"default": 3
+		},
+		"order": {
+			"type": "string",
+			"default": "DESC"
+		},
+		"orderby": {
+			"type": "string",
+			"default": "date"
+		}
+	}
+}

@@ -1,26 +1,27 @@
 <?xml version="1.0"?>
 <phpunit
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
-    bootstrap="tests/bootstrap.php"
-    colors="true"
-    verbose="true">
-    <testsuites>
-        <testsuite name="LearnKit Test Suite">
-            <directory suffix=".php">./tests</directory>
-            <exclude>./tests/bootstrap.php</exclude>
-        </testsuite>
-    </testsuites>
-    <coverage processUncoveredFiles="true">
-        <include>
-            <directory suffix=".php">./includes</directory>
-            <directory suffix=".php">./admin</directory>
-            <directory suffix=".php">./public</directory>
-        </include>
-        <exclude>
-            <directory>./vendor</directory>
-            <directory>./tests</directory>
-            <directory>./node_modules</directory>
-        </exclude>
-    </coverage>
+	bootstrap="tests/bootstrap.php"
+	backupGlobals="false"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	>
+	<testsuites>
+		<testsuite name="LearnKit Test Suite">
+			<directory>./tests/</directory>
+		</testsuite>
+	</testsuites>
+	<filter>
+		<whitelist processUncoveredFilesFromWhitelist="true">
+			<directory suffix=".php">./includes</directory>
+			<directory suffix=".php">./admin</directory>
+			<directory suffix=".php">./public</directory>
+			<exclude>
+				<directory suffix=".php">./vendor</directory>
+				<directory suffix=".php">./node_modules</directory>
+				<directory suffix=".php">./tests</directory>
+			</exclude>
+		</whitelist>
+	</filter>
 </phpunit>
