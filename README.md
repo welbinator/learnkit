@@ -1,5 +1,7 @@
 # LearnKit - WordPress LMS Plugin
 
+![Tests](https://github.com/welbinator/learnkit/workflows/Tests/badge.svg)
+
 > Modern WordPress LMS plugin for course creators who value simplicity, performance, and fair pricing.
 
 ## Overview
@@ -128,6 +130,36 @@ wp_lk_certificates (user_id, course_id, certificate_code, issued_date)
 - **API Integration:** WordPress REST API with nonce authentication
 
 ## Development
+
+### Code Quality Tools
+
+```bash
+# Install dependencies
+composer install
+
+# Run PHP Code Sniffer
+composer phpcs
+
+# Auto-fix PHP Code Sniffer issues
+composer phpcbf
+
+# Run PHP Mess Detector
+composer phpmd
+
+# Run all linting tools
+composer lint
+
+# Run PHPUnit tests
+composer test
+```
+
+The project includes:
+- **PHPCS**: WordPress Coding Standards enforcement
+- **PHPMD**: Code complexity and quality analysis
+- **PHPUnit**: Automated testing suite
+- **Pre-commit hooks**: Automatic code quality checks
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development workflow.
 
 ### React Development Workflow
 

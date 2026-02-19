@@ -1,0 +1,48 @@
+{
+    "name": "learnkit/learnkit",
+    "description": "WordPress LMS plugin for course management",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "James Welbes",
+            "email": "james.welbes@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "wp-coding-standards/wpcs": "^3.0",
+        "phpmd/phpmd": "^2.13",
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "LearnKit\\": "includes/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LearnKit\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "phpcs": "phpcs",
+        "phpcbf": "phpcbf",
+        "phpmd": "phpmd includes,admin,public text phpmd.xml",
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage",
+        "lint": [
+            "@phpcs",
+            "@phpmd"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

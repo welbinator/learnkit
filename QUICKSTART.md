@@ -81,6 +81,36 @@ npm start
 npm run build
 ```
 
+### Testing & Code Quality
+
+The plugin includes comprehensive testing infrastructure:
+
+```bash
+cd ~/lando/learnkit/wp-content/plugins/learnkit
+
+# Run code quality checks
+lando composer lint       # Run PHPCS + PHPMD
+lando composer phpcs      # Check coding standards
+lando composer phpcbf     # Auto-fix coding standards
+lando composer phpmd      # Check code complexity
+
+# Run tests
+lando composer test       # Run PHPUnit test suite
+```
+
+**Pre-commit Hook:** Automatically runs PHPCS on staged files before commits. Install once:
+```bash
+# Already installed in .git/hooks/pre-commit
+# To bypass: git commit --no-verify
+```
+
+**CI/CD:** GitHub Actions workflow ready (`.github/workflows/tests.yml`):
+- Tests run on PHP 7.4, 8.0, 8.1, 8.2
+- Tests run on WordPress latest and latest-1
+- PHPCS and PHPMD checks enforced
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed testing guidelines.
+
 ### Creating More Test Data
 
 ```bash

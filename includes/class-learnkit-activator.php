@@ -123,10 +123,13 @@ class LearnKit_Activator {
 		add_option( 'learnkit_activated', current_time( 'timestamp' ) );
 
 		// Default settings (can be modified via settings page later).
-		add_option( 'learnkit_settings', array(
-			'enable_certificates' => true,
-			'enable_email_notifications' => false,
-			'course_catalog_page' => '',
-		) );
+		add_option(
+			'learnkit_settings',
+			array(
+				'enable_certificates' => true,
+				'enable_email_notifications' => false,
+				'course_catalog_page' => '',
+			)
+		);
 	}
 }
