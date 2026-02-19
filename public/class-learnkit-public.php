@@ -49,6 +49,26 @@ class LearnKit_Public {
 	public function __construct( $plugin_name, $version ) {
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
+
+		// Hook template loading.
+		add_filter( 'single_template', array( $this, 'load_lesson_template' ) );
+	}
+
+	/**
+	 * Load custom template for single lessons.
+	 *
+	 * @since    0.2.13
+	 * @param    string $template    The path to the template.
+	 * @return   string             Modified template path.
+	 */
+	public function load_lesson_template( $template ) {
+		if ( is_singular( 'lk_lesson' ) ) {
+			$plugin_template = plugin_dir_path( __FILE__ ) . 'templates/single-lk-lesson.php';
+			if ( file_exists( $plugin_template ) ) {
+				return $plugin_template;
+			}
+		}
+		return $template;
 	}
 
 	/**
