@@ -121,7 +121,7 @@ const EnrollmentManager = ({ courseId, courseName }) => {
 						options={[
 							{ label: __('-- Choose a user --', 'learnkit'), value: '' },
 							...availableUsers.map(user => ({
-								label: `${user.name} (${user.email})`,
+								label: user.email ? `${user.name} (${user.email})` : user.name,
 								value: user.id.toString()
 							}))
 						]}
