@@ -12,7 +12,5 @@
 	"supports": {
 		"html": false,
 		"align": ["wide", "full"]
-	},
-	"attributes": {},
-	"example": {}
+	}
 }

@@ -267,10 +267,43 @@ class LearnKit_Student_Dashboard {
 			return;
 		}
 
+		// Register block with inline editor script.
+		wp_register_script(
+			'learnkit-dashboard-block',
+			'',
+			array( 'wp-blocks', 'wp-element', 'wp-block-editor' ),
+			LEARNKIT_VERSION,
+			false
+		);
+
+		// Add inline script for block editor.
+		wp_add_inline_script(
+			'learnkit-dashboard-block',
+			"
+			(function(blocks, element, blockEditor) {
+				var el = element.createElement;
+				var useBlockProps = blockEditor.useBlockProps;
+				blocks.registerBlockType('learnkit/dashboard', {
+					edit: function() {
+						return el('div', useBlockProps(), 
+							el('div', { style: { padding: '40px', textAlign: 'center', background: '#f9f9f9', border: '2px dashed #dcdcde', borderRadius: '8px' } },
+								el('span', { className: 'dashicons dashicons-welcome-learn-more', style: { fontSize: '48px', color: '#2271b1', display: 'block', marginBottom: '16px' } }),
+								el('h3', { style: { margin: '16px 0 8px' } }, 'Student Dashboard'),
+								el('p', { style: { color: '#757575', margin: 0 } }, 'Shows enrolled courses with progress. Preview on frontend.')
+							)
+						);
+					},
+					save: function() { return null; }
+				});
+			})(window.wp.blocks, window.wp.element, window.wp.blockEditor);
+			"
+		);
+
 		register_block_type(
 			LEARNKIT_PLUGIN_DIR . 'blocks/dashboard',
 			array(
 				'render_callback' => array( $this, 'render_dashboard' ),
+				'editor_script'   => 'learnkit-dashboard-block',
 			)
 		);
 	}
