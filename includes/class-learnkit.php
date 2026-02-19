@@ -135,6 +135,11 @@ class LearnKit {
 		require_once LEARNKIT_PLUGIN_DIR . 'public/class-learnkit-public.php';
 
 		/**
+		 * The class responsible for student dashboard functionality.
+		 */
+		require_once LEARNKIT_PLUGIN_DIR . 'public/class-learnkit-student-dashboard.php';
+
+		/**
 		 * The class responsible for defining REST API endpoints.
 		 */
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-rest-api.php';
@@ -219,6 +224,10 @@ class LearnKit {
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
+
+		// Register student dashboard.
+		$student_dashboard = new LearnKit_Student_Dashboard();
+		$student_dashboard->register();
 	}
 
 	/**
