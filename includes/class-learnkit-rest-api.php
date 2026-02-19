@@ -42,12 +42,14 @@ class LearnKit_REST_API {
 		require_once plugin_dir_path( __FILE__ ) . 'rest-controllers/class-learnkit-modules-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'rest-controllers/class-learnkit-lessons-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'rest-controllers/class-learnkit-progress-controller.php';
+		require_once plugin_dir_path( __FILE__ ) . 'rest-controllers/class-learnkit-enrollments-controller.php';
 
 		// Instantiate controllers.
-		$this->controllers['courses']  = new LearnKit_Courses_Controller();
-		$this->controllers['modules']  = new LearnKit_Modules_Controller();
-		$this->controllers['lessons']  = new LearnKit_Lessons_Controller();
-		$this->controllers['progress'] = new LearnKit_Progress_Controller();
+		$this->controllers['courses']      = new LearnKit_Courses_Controller();
+		$this->controllers['modules']      = new LearnKit_Modules_Controller();
+		$this->controllers['lessons']      = new LearnKit_Lessons_Controller();
+		$this->controllers['progress']     = new LearnKit_Progress_Controller();
+		$this->controllers['enrollments']  = new LearnKit_Enrollments_Controller();
 	}
 
 	/**
