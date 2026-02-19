@@ -1,0 +1,93 @@
+/**
+ * LearnKit Admin Styles
+ * 
+ * Admin-specific styling for the LearnKit course builder interface.
+ * Mobile-first approach with responsive breakpoints.
+ *
+ * @package LearnKit
+ * @since 0.1.0
+ */
+
+/* ==========================================================================
+   Admin Root Container
+   ========================================================================== */
+
+#learnkit-admin-root {
+	margin: 20px 0;
+	padding: 20px;
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+/* ==========================================================================
+   React App Loading State
+   ========================================================================== */
+
+.learnkit-loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 300px;
+	font-size: 16px;
+	color: #50575e;
+}
+
+.learnkit-loading::before {
+	content: "";
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	margin-right: 10px;
+	border: 2px solid #0073aa;
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: learnkit-spin 0.6s linear infinite;
+}
+
+@keyframes learnkit-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* ==========================================================================
+   Course Builder Interface (Sprint 2+)
+   ========================================================================== */
+
+.learnkit-course-builder {
+	display: grid;
+	gap: 20px;
+}
+
+/* Mobile-first: single column */
+@media (min-width: 768px) {
+	.learnkit-course-builder {
+		grid-template-columns: 1fr 300px;
+	}
+}
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+
+.learnkit-hidden {
+	display: none !important;
+}
+
+.learnkit-error {
+	padding: 12px;
+	background: #f8d7da;
+	border: 1px solid #f5c2c7;
+	border-radius: 4px;
+	color: #842029;
+}
+
+.learnkit-success {
+	padding: 12px;
+	background: #d1e7dd;
+	border: 1px solid #badbcc;
+	border-radius: 4px;
+	color: #0f5132;
+}

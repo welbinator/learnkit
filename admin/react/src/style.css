@@ -1,0 +1,41 @@
+/**
+ * LearnKit Admin Styles
+ * 
+ * React component styles for the admin interface.
+ * 
+ * @package LearnKit
+ * @since 0.1.0
+ */
+
+.learnkit-admin-app {
+	margin: 20px 0;
+}
+
+.learnkit-admin-app h2 {
+	margin: 0;
+	font-size: 24px;
+	color: #1e1e1e;
+}
+
+.learnkit-admin-app h3 {
+	font-size: 18px;
+	color: #1e1e1e;
+}
+
+.learnkit-loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 300px;
+	font-size: 18px;
+	color: #50575e;
+}
+
+/* Override WordPress component defaults for better consistency */
+.learnkit-admin-app .components-card__header {
+	padding: 20px;
+}
+
+.learnkit-admin-app .components-card__body {
+	padding: 20px;
+}
