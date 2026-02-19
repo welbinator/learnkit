@@ -119,6 +119,11 @@ class LearnKit {
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-post-types.php';
 
 		/**
+		 * The class responsible for quiz custom post type.
+		 */
+		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-quiz-cpt.php';
+
+		/**
 		 * The class responsible for defining meta boxes for relationships.
 		 */
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-meta-boxes.php';
@@ -180,11 +185,13 @@ class LearnKit {
 	 */
 	private function register_post_types() {
 		$post_types = new LearnKit_Post_Types();
+		$quiz_cpt   = new LearnKit_Quiz_CPT();
 
 		$this->loader->add_action( 'init', $post_types, 'register_course_post_type' );
 		$this->loader->add_action( 'init', $post_types, 'register_module_post_type' );
 		$this->loader->add_action( 'init', $post_types, 'register_lesson_post_type' );
 		$this->loader->add_action( 'init', $post_types, 'register_post_meta_fields' );
+		$this->loader->add_action( 'init', $quiz_cpt, 'register' );
 	}
 
 	/**
