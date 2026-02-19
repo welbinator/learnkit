@@ -158,3 +158,54 @@ export async function reorderModules(courseId, moduleIds) {
 		},
 	});
 }
+
+/**
+ * Get enrollments for a course.
+ */
+export async function getEnrollments(courseId) {
+	return await apiRequest(`/enrollments/course/${courseId}`);
+}
+
+/**
+ * Create a new enrollment.
+ */
+export async function createEnrollment(userId, courseId) {
+	return await apiRequest('/enrollments', {
+		method: 'POST',
+		body: {
+			user_id: userId,
+			course_id: courseId,
+		},
+	});
+}
+
+/**
+ * Delete an enrollment.
+ */
+export async function deleteEnrollment(enrollmentId) {
+	return await apiRequest(`/enrollments/${enrollmentId}`, {
+		method: 'DELETE',
+	});
+}
+
+/**
+ * Get WordPress users (for enrollment dropdown).
+ */
+export async function getUsers() {
+	const response = await fetch(window.learnkitAdmin.wpApiUrl + '/wp/v2/users?per_page=100', {
+		headers: {
+			'X-WP-Nonce': window.learnkitAdmin.nonce,
+		},
+	});
+
+	if (!response.ok) {
+		throw new Error('Failed to fetch users');
+	}
+
+	const users = await response.json();
+	return users.map(user => ({
+		id: user.id,
+		name: user.name,
+		email: user.email || '',
+	}));
+}
