@@ -1,41 +1,275 @@
 /**
  * LearnKit Admin Styles
  * 
- * React component styles for the admin interface.
- * 
  * @package LearnKit
- * @since 0.1.0
+ * @since 0.2.0
  */
 
-.learnkit-admin-app {
-	margin: 20px 0;
+/* Course Builder Layout */
+.learnkit-course-builder {
+	padding: 20px;
 }
 
-.learnkit-admin-app h2 {
+.learnkit-builder-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 30px;
+	padding-bottom: 20px;
+	border-bottom: 2px solid #e0e0e0;
+}
+
+.learnkit-builder-header h2 {
 	margin: 0;
-	font-size: 24px;
-	color: #1e1e1e;
+	font-size: 28px;
 }
 
-.learnkit-admin-app h3 {
+.learnkit-builder-content {
+	display: grid;
+	grid-template-columns: 300px 1fr;
+	gap: 30px;
+}
+
+/* Sidebar - Course List */
+.learnkit-sidebar {
+	background: #f5f5f5;
+	padding: 20px;
+	border-radius: 8px;
+	height: fit-content;
+}
+
+.learnkit-course-list h3 {
+	margin-top: 0;
+	margin-bottom: 15px;
 	font-size: 18px;
-	color: #1e1e1e;
 }
 
-.learnkit-loading {
+.learnkit-course-list ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.learnkit-course-list li {
+	margin-bottom: 10px;
+	padding: 12px;
+	background: white;
+	border-radius: 6px;
+	border: 2px solid transparent;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.learnkit-course-list li:hover {
+	border-color: #2271b1;
+}
+
+.learnkit-course-list li.selected {
+	border-color: #2271b1;
+	background: #e7f3ff;
+}
+
+.learnkit-course-list .course-item {
+	margin-bottom: 8px;
+}
+
+.learnkit-course-list .course-title {
+	font-weight: 600;
+	display: block;
+}
+
+.learnkit-course-list .course-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.learnkit-empty-courses {
+	text-align: center;
+	color: #666;
+	padding: 20px;
+}
+
+/* Main - Course Structure */
+.learnkit-main {
+	background: white;
+	padding: 30px;
+	border-radius: 8px;
+	border: 1px solid #e0e0e0;
+	min-height: 500px;
+}
+
+.learnkit-structure-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 25px;
+	padding-bottom: 15px;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.learnkit-structure-header h3 {
+	margin: 0;
+	font-size: 22px;
+}
+
+.learnkit-empty-state,
+.learnkit-empty-structure {
+	text-align: center;
+	color: #666;
+	padding: 60px 20px;
+	font-size: 16px;
+}
+
+/* Module Styles */
+.learnkit-module {
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	margin-bottom: 20px;
+	padding: 20px;
+	transition: box-shadow 0.2s;
+}
+
+.learnkit-module:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.learnkit-module .module-header {
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	min-height: 300px;
+	gap: 12px;
+	margin-bottom: 15px;
+}
+
+.learnkit-module .drag-handle {
+	cursor: grab;
 	font-size: 18px;
-	color: #50575e;
+	color: #999;
+	user-select: none;
 }
 
-/* Override WordPress component defaults for better consistency */
-.learnkit-admin-app .components-card__header {
+.learnkit-module .drag-handle:active {
+	cursor: grabbing;
+}
+
+.learnkit-module h4 {
+	margin: 0;
+	flex: 1;
+	font-size: 18px;
+}
+
+.learnkit-module .module-actions {
+	display: flex;
+	gap: 8px;
+}
+
+/* Lesson Input */
+.lesson-input {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 15px;
+	padding: 15px;
+	background: white;
+	border-radius: 6px;
+}
+
+.lesson-input input {
+	flex: 1;
+	padding: 8px 12px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+/* Lesson List */
+.lesson-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.lesson-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px;
+	background: white;
+	border: 1px solid #e0e0e0;
+	border-radius: 6px;
+	margin-bottom: 8px;
+	transition: all 0.2s;
+}
+
+.lesson-item:hover {
+	background: #fafafa;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.lesson-item .lesson-title {
+	flex: 1;
+	font-weight: 500;
+}
+
+.lesson-item .lesson-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.empty-lessons {
+	color: #999;
+	font-style: italic;
+	text-align: center;
 	padding: 20px;
 }
 
-.learnkit-admin-app .components-card__body {
-	padding: 20px;
+/* Modal Styles */
+.learnkit-modal-content {
+	padding: 20px 0;
+}
+
+.learnkit-modal-content .components-base-control {
+	margin-bottom: 20px;
+}
+
+.learnkit-modal-actions {
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+	margin-top: 25px;
+	padding-top: 20px;
+	border-top: 1px solid #e0e0e0;
+}
+
+/* Loading States */
+.learnkit-loading {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 60px 20px;
+	color: #666;
+}
+
+.learnkit-loading .components-spinner {
+	margin-bottom: 15px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+	.learnkit-builder-content {
+		grid-template-columns: 250px 1fr;
+	}
+}
+
+@media (max-width: 768px) {
+	.learnkit-builder-content {
+		grid-template-columns: 1fr;
+	}
+	
+	.learnkit-sidebar {
+		order: 2;
+	}
+	
+	.learnkit-main {
+		order: 1;
+	}
 }
