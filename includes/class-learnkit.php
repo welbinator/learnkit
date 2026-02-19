@@ -145,6 +145,11 @@ class LearnKit {
 		require_once LEARNKIT_PLUGIN_DIR . 'public/class-learnkit-course-catalog.php';
 
 		/**
+		 * The class responsible for certificate generation.
+		 */
+		require_once LEARNKIT_PLUGIN_DIR . 'public/class-learnkit-certificate-generator.php';
+
+		/**
 		 * The class responsible for defining REST API endpoints.
 		 */
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-rest-api.php';
@@ -237,6 +242,10 @@ class LearnKit {
 		// Register course catalog.
 		$course_catalog = new LearnKit_Course_Catalog();
 		$course_catalog->register();
+
+		// Register certificate generator.
+		$certificate_generator = new LearnKit_Certificate_Generator();
+		$certificate_generator->register();
 	}
 
 	/**
