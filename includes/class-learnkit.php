@@ -140,6 +140,11 @@ class LearnKit {
 		require_once LEARNKIT_PLUGIN_DIR . 'public/class-learnkit-student-dashboard.php';
 
 		/**
+		 * The class responsible for course catalog functionality.
+		 */
+		require_once LEARNKIT_PLUGIN_DIR . 'public/class-learnkit-course-catalog.php';
+
+		/**
 		 * The class responsible for defining REST API endpoints.
 		 */
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-rest-api.php';
@@ -228,6 +233,10 @@ class LearnKit {
 		// Register student dashboard.
 		$student_dashboard = new LearnKit_Student_Dashboard();
 		$student_dashboard->register();
+
+		// Register course catalog.
+		$course_catalog = new LearnKit_Course_Catalog();
+		$course_catalog->register();
 	}
 
 	/**
