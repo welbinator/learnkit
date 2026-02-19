@@ -32,8 +32,18 @@
 				},
 				success: function(response) {
 					if (response.success) {
-						// Success - reload page to show enrolled state
-						location.reload();
+						// Update button to show enrolled state
+						var $card = $button.closest('.learnkit-catalog-course');
+						$card.addClass('enrolled');
+						
+						// Add enrolled badge if not present
+						if (!$card.find('.enrollment-badge').length) {
+							$card.find('.course-thumbnail').append('<span class="enrollment-badge">Enrolled</span>');
+						}
+						
+						// Replace button with "Continue Learning" link
+						var courseUrl = $card.find('h3 a').attr('href');
+						$button.replaceWith('<a href="' + courseUrl + '" class="button button-enrolled">Continue Learning</a>');
 					} else {
 						alert(response.data.message || 'Enrollment failed. Please try again.');
 						$button.removeClass('enrolling').prop('disabled', false).text('Enroll Now');
