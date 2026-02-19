@@ -84,11 +84,23 @@ class LearnKit_Admin {
 			return;
 		}
 
+		// Enqueue WordPress media library.
+		wp_enqueue_media();
+
 		// Enqueue React bundle (built from admin/react/).
 		$react_bundle = LEARNKIT_PLUGIN_URL . 'assets/js/learnkit-admin.js';
 
 		// Check if React build exists, otherwise use development warning.
 		if ( file_exists( LEARNKIT_PLUGIN_DIR . 'assets/js/learnkit-admin.js' ) ) {
+			// Enqueue React styles.
+			wp_enqueue_style(
+				$this->plugin_name . '-react',
+				LEARNKIT_PLUGIN_URL . 'assets/js/style-index.css',
+				array(),
+				$this->version,
+				'all'
+			);
+
 			wp_enqueue_script(
 				$this->plugin_name,
 				$react_bundle,

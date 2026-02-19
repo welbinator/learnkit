@@ -1,0 +1,160 @@
+/**
+ * API utility functions
+ * 
+ * @package LearnKit
+ * @since 0.2.0
+ */
+
+/**
+ * Make an API request to LearnKit REST endpoints.
+ * 
+ * @param {string} endpoint - API endpoint (without base URL)
+ * @param {Object} options - Fetch options
+ * @returns {Promise} API response data
+ */
+export async function apiRequest(endpoint, options = {}) {
+	const url = window.learnkitAdmin.apiUrl + endpoint;
+	
+	const defaultOptions = {
+		headers: {
+			'Content-Type': 'application/json',
+			'X-WP-Nonce': window.learnkitAdmin.nonce,
+		},
+	};
+
+	if (options.body) {
+		options.body = JSON.stringify(options.body);
+	}
+
+	const response = await fetch(url, { ...defaultOptions, ...options });
+
+	if (!response.ok) {
+		throw new Error(`API request failed: ${response.statusText}`);
+	}
+
+	return await response.json();
+}
+
+/**
+ * Get all courses with module counts.
+ */
+export async function getCourses() {
+	const courses = await apiRequest('/courses');
+	
+	// Transform to include module count and other metadata
+	return courses.map(course => ({
+		id: course.id,
+		title: course.title || 'Untitled Course',
+		description: course.excerpt || '',
+		status: course.status,
+		featuredImage: course.featured_image || '',
+		moduleCount: 0, // TODO: Get actual module count
+	}));
+}
+
+/**
+ * Create a new course.
+ */
+export async function createCourse(courseData) {
+	const response = await apiRequest('/courses', {
+		method: 'POST',
+		body: {
+			title: courseData.title,
+			status: courseData.status || 'draft',
+			meta: {
+				learnkit_description: courseData.description || '',
+				learnkit_featured_image: courseData.featuredImage || '',
+			},
+		},
+	});
+
+	return {
+		id: response.id,
+		title: response.title?.rendered || courseData.title,
+		description: courseData.description || '',
+		status: response.status,
+		featuredImage: courseData.featuredImage || '',
+		moduleCount: 0,
+	};
+}
+
+/**
+ * Update a course.
+ */
+export async function updateCourse(courseId, courseData) {
+	return await apiRequest(`/courses/${courseId}`, {
+		method: 'POST',
+		body: {
+			title: courseData.title,
+			excerpt: courseData.description || '',
+			featured_image_url: courseData.featuredImage || '',
+		},
+	});
+}
+
+/**
+ * Delete a course.
+ */
+export async function deleteCourse(courseId) {
+	return await apiRequest(`/courses/${courseId}`, {
+		method: 'DELETE',
+	});
+}
+
+/**
+ * Get course structure (modules and lessons).
+ */
+export async function getCourseStructure(courseId) {
+	return await apiRequest(`/courses/${courseId}/structure`);
+}
+
+/**
+ * Create a new module.
+ */
+export async function createModule(courseId, moduleData) {
+	return await apiRequest(`/courses/${courseId}/modules`, {
+		method: 'POST',
+		body: moduleData,
+	});
+}
+
+/**
+ * Update a module.
+ */
+export async function updateModule(moduleId, moduleData) {
+	return await apiRequest(`/modules/${moduleId}`, {
+		method: 'POST',
+		body: moduleData,
+	});
+}
+
+/**
+ * Delete a module.
+ */
+export async function deleteModule(moduleId) {
+	return await apiRequest(`/modules/${moduleId}`, {
+		method: 'DELETE',
+	});
+}
+
+/**
+ * Create a new lesson.
+ */
+export async function createLesson(moduleId, lessonData) {
+	return await apiRequest(`/modules/${moduleId}/lessons`, {
+		method: 'POST',
+		body: lessonData,
+	});
+}
+
+/**
+ * Reorder modules in a course.
+ */
+export async function reorderModules(courseId, moduleIds) {
+	return await apiRequest(`/courses/${courseId}/reorder-modules`, {
+		method: 'POST',
+		body: {
+			order: moduleIds,
+		},
+	});
+}
