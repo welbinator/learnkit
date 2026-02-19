@@ -62,11 +62,11 @@
 }
 
 /* Mobile-first: single column */
-@media (min-width: 768px) {
+/* @media (min-width: 768px) {
 	.learnkit-course-builder {
 		grid-template-columns: 1fr 300px;
 	}
-}
+} */
 
 /* ==========================================================================
    Utility Classes

@@ -8,7 +8,7 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
 import { Button } from '@wordpress/components';
 import {
 	DndContext,
@@ -27,10 +27,10 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-function SortableModule({ module, onEdit, onDelete, onCreateLesson, onEditLesson, onDeleteLesson, onReorderLessons }) {
+function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, onEditLesson, onDeleteLesson, onReorderLessons }) {
 	const [showLessonInput, setShowLessonInput] = useState(false);
 	const [lessonTitle, setLessonTitle] = useState('');
-	const [localLessons, setLocalLessons] = useState(module.lessons || []);
+	const [localLessons, setLocalLessons] = useState(module?.lessons || []);
 
 	const {
 		attributes,
@@ -38,7 +38,7 @@ function SortableModule({ module, onEdit, onDelete, onCreateLesson, onEditLesson
 		setNodeRef,
 		transform,
 		transition,
-	} = useSortable({ id: module.id });
+	} = useSortable({ id: moduleId });
 
 	const style = {
 		transform: CSS.Transform.toString(transform),
@@ -79,7 +79,7 @@ function SortableModule({ module, onEdit, onDelete, onCreateLesson, onEditLesson
 				<span className="drag-handle" {...attributes} {...listeners}>
 					⋮⋮
 				</span>
-				<h4>{module.title}</h4>
+				<h4>{module?.title || __('Untitled Module', 'learnkit')}</h4>
 				<div className="module-actions">
 					<Button isSmall onClick={() => onEdit(module)}>
 						{__('Edit', 'learnkit')}
@@ -186,6 +186,13 @@ function CourseStructure({
 }) {
 	const [localModules, setLocalModules] = useState(structure?.modules || []);
 
+	// Update localModules when structure prop changes
+	useEffect(() => {
+		if (structure?.modules) {
+			setLocalModules(structure.modules);
+		}
+	}, [structure]);
+
 	const sensors = useSensors(
 		useSensor(PointerSensor),
 		useSensor(KeyboardSensor, {
@@ -196,14 +203,27 @@ function CourseStructure({
 	const handleDragEnd = (event) => {
 		const { active, over } = event;
 
-		if (active.id !== over.id) {
-			const oldIndex = localModules.findIndex((m) => m.id === active.id);
-			const newIndex = localModules.findIndex((m) => m.id === over.id);
-			const reorderedModules = arrayMove(localModules, oldIndex, newIndex);
-			
-			setLocalModules(reorderedModules);
-			onReorderModules(reorderedModules.map((m) => m.id));
+		if (!over || active.id === over.id) {
+			return;
 		}
+
+		setLocalModules((prevModules) => {
+			const oldIndex = prevModules.findIndex((m) => m.id === active.id);
+			const newIndex = prevModules.findIndex((m) => m.id === over.id);
+			
+			if (oldIndex === -1 || newIndex === -1) {
+				return prevModules;
+			}
+
+			const reorderedModules = arrayMove(prevModules, oldIndex, newIndex);
+			
+			// Call parent callback with full module objects (not just IDs)
+			if (onReorderModules) {
+				onReorderModules(reorderedModules);
+			}
+			
+			return reorderedModules;
+		});
 	};
 
 	if (!structure || !structure.modules || structure.modules.length === 0) {
@@ -228,6 +248,7 @@ function CourseStructure({
 					{localModules.map((module) => (
 						<SortableModule
 							key={module.id}
+							moduleId={module.id}
 							module={module}
 							onEdit={onEditModule}
 							onDelete={onDeleteModule}

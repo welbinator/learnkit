@@ -84,6 +84,9 @@ class LearnKit_Admin {
 			return;
 		}
 
+		// Enqueue WordPress media library.
+		wp_enqueue_media();
+
 		// Enqueue React bundle (built from admin/react/).
 		$react_bundle = LEARNKIT_PLUGIN_URL . 'assets/js/learnkit-admin.js';
 

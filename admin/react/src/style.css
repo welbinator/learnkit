@@ -1,144 +1,313 @@
 /**
- * LearnKit Admin Styles
+ * LearnKit Admin Styles - Card-Based Layout
+ * 
+ * Modern, clean design with card grids and modals.
  * 
  * @package LearnKit
  * @since 0.2.0
  */
 
-/* Course Builder Layout */
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+
 .learnkit-course-builder {
-	padding: 20px;
+	padding: 32px;
+	max-width: 1400px;
+	margin: 0 auto;
 }
 
+/* Header */
 .learnkit-builder-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 30px;
-	padding-bottom: 20px;
-	border-bottom: 2px solid #e0e0e0;
+	margin-bottom: 32px;
+	padding-bottom: 24px;
+	border-bottom: 2px solid #dcdcde;
 }
 
-.learnkit-builder-header h2 {
-	margin: 0;
-	font-size: 28px;
-}
-
-.learnkit-builder-content {
-	display: grid;
-	grid-template-columns: 300px 1fr;
-	gap: 30px;
-}
-
-/* Sidebar - Course List */
-.learnkit-sidebar {
-	background: #f5f5f5;
-	padding: 20px;
-	border-radius: 8px;
-	height: fit-content;
-}
-
-.learnkit-course-list h3 {
-	margin-top: 0;
-	margin-bottom: 15px;
-	font-size: 18px;
-}
-
-.learnkit-course-list ul {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-}
-
-.learnkit-course-list li {
-	margin-bottom: 10px;
-	padding: 12px;
-	background: white;
-	border-radius: 6px;
-	border: 2px solid transparent;
-	cursor: pointer;
-	transition: all 0.2s;
-}
-
-.learnkit-course-list li:hover {
-	border-color: #2271b1;
-}
-
-.learnkit-course-list li.selected {
-	border-color: #2271b1;
-	background: #e7f3ff;
-}
-
-.learnkit-course-list .course-item {
-	margin-bottom: 8px;
-}
-
-.learnkit-course-list .course-title {
-	font-weight: 600;
-	display: block;
-}
-
-.learnkit-course-list .course-actions {
+.learnkit-builder-header .header-content {
 	display: flex;
-	gap: 8px;
-}
-
-.learnkit-empty-courses {
-	text-align: center;
-	color: #666;
-	padding: 20px;
-}
-
-/* Main - Course Structure */
-.learnkit-main {
-	background: white;
-	padding: 30px;
-	border-radius: 8px;
-	border: 1px solid #e0e0e0;
-	min-height: 500px;
-}
-
-.learnkit-structure-header {
-	display: flex;
-	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 25px;
-	padding-bottom: 15px;
-	border-bottom: 1px solid #e0e0e0;
+	gap: 16px;
 }
 
-.learnkit-structure-header h3 {
+.learnkit-builder-header .header-icon {
+	font-size: 48px;
+	line-height: 1;
+}
+
+.learnkit-builder-header h1 {
+	margin: 0 0 4px 0;
+	font-size: 28px;
+	font-weight: 600;
+	color: #1e1e1e;
+}
+
+.learnkit-builder-header p {
 	margin: 0;
-	font-size: 22px;
+	color: #757575;
+	font-size: 14px;
 }
 
-.learnkit-empty-state,
-.learnkit-empty-structure {
+/* ==========================================================================
+   Course Grid
+   ========================================================================== */
+
+.learnkit-course-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+	gap: 24px;
+}
+
+/* Course Card */
+.learnkit-course-card {
+	background: #ffffff;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	cursor: pointer;
+	transition: all 0.2s ease-in-out;
+	border: 1px solid #dcdcde;
+}
+
+.learnkit-course-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.learnkit-course-card:focus {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+}
+
+/* Card Image */
+.course-card-image {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.course-card-image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.course-card-placeholder {
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Status Badge */
+.course-status-badge {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	padding: 4px 12px;
+	border-radius: 16px;
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.status-published {
+	background: #00a32a;
+	color: #ffffff;
+}
+
+.status-draft {
+	background: #f0b429;
+	color: #1e1e1e;
+}
+
+/* Card Content */
+.course-card-content {
+	padding: 20px;
+}
+
+.course-card-title {
+	margin: 0 0 8px 0;
+	font-size: 18px;
+	font-weight: 600;
+	color: #1e1e1e;
+	line-height: 1.4;
+}
+
+.course-card-description {
+	margin: 0 0 16px 0;
+	font-size: 14px;
+	color: #757575;
+	line-height: 1.6;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	min-height: 42px;
+}
+
+.course-card-meta {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 13px;
+	color: #757575;
+}
+
+.module-count {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* Empty State */
+.learnkit-empty-state {
 	text-align: center;
-	color: #666;
-	padding: 60px 20px;
+	padding: 80px 20px;
+	color: #757575;
 	font-size: 16px;
 }
 
-/* Module Styles */
+/* ==========================================================================
+   Modals
+   ========================================================================== */
+
+/* Modal Base */
+.components-modal__frame {
+	max-width: 700px;
+	border-radius: 12px;
+}
+
+.learnkit-course-detail-modal .components-modal__frame {
+	max-width: 900px;
+	max-height: 90vh;
+}
+
+.modal-content {
+	padding: 8px 0;
+}
+
+.modal-content > * {
+	margin-bottom: 24px;
+}
+
+.modal-content > *:last-child {
+	margin-bottom: 0;
+}
+
+/* Featured Image Section */
+.featured-image-section {
+	margin-bottom: 24px;
+}
+
+.featured-image-section label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 600;
+	font-size: 13px;
+	text-transform: uppercase;
+	color: #757575;
+	letter-spacing: 0.5px;
+}
+
+.featured-image-preview {
+	position: relative;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.featured-image-preview img {
+	width: 100%;
+	height: auto;
+	display: block;
+	border-radius: 8px;
+}
+
+.featured-image-preview button {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+}
+
+.featured-image-upload {
+	border: 2px dashed #dcdcde;
+	border-radius: 8px;
+	background: #f9f9f9;
+	transition: all 0.2s;
+	cursor: pointer;
+}
+
+.featured-image-upload:hover {
+	border-color: #2271b1;
+	background: #f0f6fc;
+}
+
+.upload-placeholder {
+	padding: 48px 24px;
+	text-align: center;
+	color: #757575;
+}
+
+.upload-placeholder .dashicons {
+	font-size: 48px;
+	width: 48px;
+	height: 48px;
+	margin-bottom: 12px;
+	opacity: 0.5;
+}
+
+.upload-placeholder p {
+	margin: 0;
+	font-size: 14px;
+}
+
+/* Modules Section */
+.modules-section {
+	margin-top: 32px;
+	padding-top: 24px;
+	border-top: 1px solid #dcdcde;
+}
+
+.modules-section .section-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.modules-section h3 {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: #1e1e1e;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+/* Module Items (in modal) */
 .learnkit-module {
 	background: #f9f9f9;
-	border: 1px solid #ddd;
+	border: 1px solid #dcdcde;
 	border-radius: 8px;
-	margin-bottom: 20px;
-	padding: 20px;
-	transition: box-shadow 0.2s;
+	margin-bottom: 12px;
+	padding: 16px;
+	transition: all 0.2s;
 }
 
 .learnkit-module:hover {
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	background: #ffffff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .learnkit-module .module-header {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	margin-bottom: 15px;
 }
 
 .learnkit-module .drag-handle {
@@ -146,16 +315,23 @@
 	font-size: 18px;
 	color: #999;
 	user-select: none;
+	line-height: 1;
 }
 
 .learnkit-module .drag-handle:active {
 	cursor: grabbing;
 }
 
+.learnkit-module .drag-handle:hover {
+	color: #666;
+}
+
 .learnkit-module h4 {
 	margin: 0;
 	flex: 1;
-	font-size: 18px;
+	font-size: 16px;
+	font-weight: 600;
+	color: #1e1e1e;
 }
 
 .learnkit-module .module-actions {
@@ -163,113 +339,71 @@
 	gap: 8px;
 }
 
-/* Lesson Input */
-.lesson-input {
-	display: flex;
-	gap: 10px;
-	margin-bottom: 15px;
-	padding: 15px;
-	background: white;
-	border-radius: 6px;
-}
-
-.lesson-input input {
-	flex: 1;
-	padding: 8px 12px;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-}
-
-/* Lesson List */
-.lesson-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-}
-
-.lesson-item {
-	display: flex;
-	align-items: center;
-	gap: 12px;
+.learnkit-module .empty-lessons {
+	margin: 12px 0 0 30px;
 	padding: 12px;
-	background: white;
-	border: 1px solid #e0e0e0;
+	background: #ffffff;
 	border-radius: 6px;
-	margin-bottom: 8px;
-	transition: all 0.2s;
-}
-
-.lesson-item:hover {
-	background: #fafafa;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.lesson-item .lesson-title {
-	flex: 1;
-	font-weight: 500;
-}
-
-.lesson-item .lesson-actions {
-	display: flex;
-	gap: 8px;
-}
-
-.empty-lessons {
 	color: #999;
 	font-style: italic;
+	font-size: 13px;
 	text-align: center;
-	padding: 20px;
 }
 
-/* Modal Styles */
-.learnkit-modal-content {
-	padding: 20px 0;
-}
-
-.learnkit-modal-content .components-base-control {
-	margin-bottom: 20px;
-}
-
-.learnkit-modal-actions {
+/* Modal Actions */
+.modal-actions {
 	display: flex;
 	gap: 12px;
 	justify-content: flex-end;
-	margin-top: 25px;
-	padding-top: 20px;
-	border-top: 1px solid #e0e0e0;
+	margin-top: 32px;
+	padding-top: 24px;
+	border-top: 1px solid #dcdcde;
 }
 
-/* Loading States */
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
 .learnkit-loading {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	padding: 60px 20px;
-	color: #666;
+	padding: 80px 20px;
+	color: #757575;
 }
 
 .learnkit-loading .components-spinner {
-	margin-bottom: 15px;
+	margin-bottom: 16px;
 }
 
-/* Responsive */
+.learnkit-loading p {
+	margin: 0;
+	font-size: 14px;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
 @media (max-width: 1024px) {
-	.learnkit-builder-content {
-		grid-template-columns: 250px 1fr;
+	.learnkit-course-grid {
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 	}
 }
 
 @media (max-width: 768px) {
-	.learnkit-builder-content {
-		grid-template-columns: 1fr;
+	.learnkit-course-builder {
+		padding: 20px;
 	}
-	
-	.learnkit-sidebar {
-		order: 2;
+
+	.learnkit-builder-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 16px;
 	}
-	
-	.learnkit-main {
-		order: 1;
+
+	.components-modal__frame {
+		max-width: 95vw;
 	}
 }

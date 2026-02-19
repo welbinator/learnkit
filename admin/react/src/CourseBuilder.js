@@ -1,49 +1,56 @@
 /**
- * Course Builder Component
+ * CourseBuilder Component
  * 
- * Main course builder interface with tree view, drag-and-drop reordering,
- * and CRUD operations for courses, modules, and lessons.
+ * Main Course Builder interface with card-based grid layout.
+ * Handles course creation, editing, and module management.
  * 
  * @package LearnKit
  * @since 0.2.0
  */
 
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { useState, useEffect } from '@wordpress/element';
 import { Button, Spinner } from '@wordpress/components';
-import CourseList from './components/CourseList';
-import CourseStructure from './components/CourseStructure';
-import CourseEditorModal from './components/CourseEditorModal';
-import ModuleEditorModal from './components/ModuleEditorModal';
-import { apiRequest } from './utils/api';
+import CourseGrid from './components/CourseGrid';
+import CourseDetailModal from './components/CourseDetailModal';
+import CreateCourseModal from './components/CreateCourseModal';
+import EditModuleModal from './components/EditModuleModal';
+import { 
+	getCourses, 
+	createCourse, 
+	updateCourse, 
+	deleteCourse,
+	getCourseStructure,
+	createModule,
+	updateModule,
+	deleteModule,
+	createLesson,
+	reorderModules
+} from './utils/api';
 
-function CourseBuilder() {
+const CourseBuilder = () => {
+	// State
 	const [courses, setCourses] = useState([]);
+	const [loading, setLoading] = useState(true);
 	const [selectedCourseId, setSelectedCourseId] = useState(null);
 	const [courseStructure, setCourseStructure] = useState(null);
-	const [loading, setLoading] = useState(true);
 	const [structureLoading, setStructureLoading] = useState(false);
-	
+
 	// Modal states
-	const [showCourseModal, setShowCourseModal] = useState(false);
+	const [showCreateModal, setShowCreateModal] = useState(false);
+	const [showDetailModal, setShowDetailModal] = useState(false);
 	const [showModuleModal, setShowModuleModal] = useState(false);
-	const [editingCourse, setEditingCourse] = useState(null);
 	const [editingModule, setEditingModule] = useState(null);
 
+	// Load courses on mount
 	useEffect(() => {
 		loadCourses();
 	}, []);
 
-	useEffect(() => {
-		if (selectedCourseId) {
-			loadCourseStructure(selectedCourseId);
-		}
-	}, [selectedCourseId]);
-
 	const loadCourses = async () => {
-		setLoading(true);
 		try {
-			const data = await apiRequest('/courses');
+			setLoading(true);
+			const data = await getCourses();
 			setCourses(data);
 		} catch (error) {
 			console.error('Failed to load courses:', error);
@@ -53,9 +60,9 @@ function CourseBuilder() {
 	};
 
 	const loadCourseStructure = async (courseId) => {
-		setStructureLoading(true);
 		try {
-			const data = await apiRequest(`/courses/${courseId}/structure`);
+			setStructureLoading(true);
+			const data = await getCourseStructure(courseId);
 			setCourseStructure(data);
 		} catch (error) {
 			console.error('Failed to load course structure:', error);
@@ -64,65 +71,56 @@ function CourseBuilder() {
 		}
 	};
 
-	const handleSelectCourse = (courseId) => {
+	// Course handlers
+	const handleCourseClick = (courseId) => {
 		setSelectedCourseId(courseId);
+		setShowDetailModal(true);
+		loadCourseStructure(courseId);
 	};
 
-	const handleCreateCourse = () => {
-		setEditingCourse(null);
-		setShowCourseModal(true);
-	};
-
-	const handleEditCourse = (course) => {
-		setEditingCourse(course);
-		setShowCourseModal(true);
-	};
-
-	const handleDeleteCourse = async (courseId) => {
-		if (!confirm(__('Are you sure you want to delete this course? This will also delete all modules and lessons.', 'learnkit'))) {
-			return;
-		}
-
+	const handleCreateCourse = async (courseData) => {
 		try {
-			await apiRequest(`/courses/${courseId}`, { method: 'DELETE' });
-			await loadCourses();
-			if (selectedCourseId === courseId) {
-				setSelectedCourseId(null);
-				setCourseStructure(null);
-			}
+			const newCourse = await createCourse(courseData);
+			setCourses([...courses, newCourse]);
+			setShowCreateModal(false);
+			
+			// Open the new course in detail modal
+			handleCourseClick(newCourse.id);
 		} catch (error) {
-			alert(__('Failed to delete course', 'learnkit'));
+			console.error('Failed to create course:', error);
 		}
 	};
 
 	const handleSaveCourse = async (courseData) => {
 		try {
-			if (editingCourse) {
-				await apiRequest(`/courses/${editingCourse.id}`, {
-					method: 'PUT',
-					body: courseData,
-				});
-			} else {
-				const response = await apiRequest('/courses', {
-					method: 'POST',
-					body: courseData,
-				});
-				if (response.course_id) {
-					setSelectedCourseId(response.course_id);
-				}
-			}
+			await updateCourse(courseData.id, courseData);
 			await loadCourses();
-			setShowCourseModal(false);
+			setShowDetailModal(false);
 		} catch (error) {
-			alert(__('Failed to save course', 'learnkit'));
+			console.error('Failed to update course:', error);
 		}
 	};
 
-	const handleCreateModule = () => {
-		if (!selectedCourseId) {
-			alert(__('Please select a course first', 'learnkit'));
+	const handleDeleteCourse = async (courseId) => {
+		if (!confirm(__('Are you sure you want to delete this course? This cannot be undone.', 'learnkit'))) {
 			return;
 		}
+
+		try {
+			await deleteCourse(courseId);
+			setCourses(courses.filter((c) => c.id !== courseId));
+			
+			if (selectedCourseId === courseId) {
+				setShowDetailModal(false);
+				setSelectedCourseId(null);
+			}
+		} catch (error) {
+			console.error('Failed to delete course:', error);
+		}
+	};
+
+	// Module handlers
+	const handleCreateModule = () => {
 		setEditingModule(null);
 		setShowModuleModal(true);
 	};
@@ -132,187 +130,132 @@ function CourseBuilder() {
 		setShowModuleModal(true);
 	};
 
-	const handleDeleteModule = async (moduleId) => {
-		if (!confirm(__('Are you sure you want to delete this module? This will also delete all lessons in it.', 'learnkit'))) {
-			return;
-		}
-
-		try {
-			await apiRequest(`/modules/${moduleId}`, { method: 'DELETE' });
-			await loadCourseStructure(selectedCourseId);
-		} catch (error) {
-			alert(__('Failed to delete module', 'learnkit'));
-		}
-	};
-
 	const handleSaveModule = async (moduleData) => {
 		try {
-			moduleData.course_id = selectedCourseId;
-			
 			if (editingModule) {
-				await apiRequest(`/modules/${editingModule.id}`, {
-					method: 'PUT',
-					body: moduleData,
-				});
+				await updateModule(editingModule.id, moduleData);
 			} else {
-				await apiRequest('/modules', {
-					method: 'POST',
-					body: moduleData,
-				});
+				await createModule(selectedCourseId, moduleData);
 			}
+			
 			await loadCourseStructure(selectedCourseId);
 			setShowModuleModal(false);
+			setEditingModule(null);
 		} catch (error) {
-			alert(__('Failed to save module', 'learnkit'));
+			console.error('Failed to save module:', error);
 		}
 	};
 
-	const handleCreateLesson = async (moduleId, lessonTitle) => {
-		try {
-			const response = await apiRequest('/lessons', {
-				method: 'POST',
-				body: {
-					title: lessonTitle,
-					module_id: moduleId,
-				},
-			});
-			
-			// Open WordPress editor for the new lesson
-			if (response.lesson && response.lesson.edit_link) {
-				window.open(response.lesson.edit_link, '_blank');
-			}
-			
-			await loadCourseStructure(selectedCourseId);
-		} catch (error) {
-			alert(__('Failed to create lesson', 'learnkit'));
-		}
-	};
-
-	const handleEditLesson = (lesson) => {
-		// Open WordPress block editor for the lesson
-		if (lesson.edit_link) {
-			window.open(lesson.edit_link, '_blank');
-		}
-	};
-
-	const handleDeleteLesson = async (lessonId) => {
-		if (!confirm(__('Are you sure you want to delete this lesson?', 'learnkit'))) {
+	const handleDeleteModule = async (moduleId) => {
+		if (!confirm(__('Are you sure you want to delete this module? This cannot be undone.', 'learnkit'))) {
 			return;
 		}
 
 		try {
-			await apiRequest(`/lessons/${lessonId}`, { method: 'DELETE' });
+			await deleteModule(moduleId);
 			await loadCourseStructure(selectedCourseId);
 		} catch (error) {
-			alert(__('Failed to delete lesson', 'learnkit'));
+			console.error('Failed to delete module:', error);
 		}
 	};
 
-	const handleReorderModules = async (newOrder) => {
+	const handleCreateLesson = async (moduleId) => {
 		try {
-			await apiRequest(`/courses/${selectedCourseId}/reorder-modules`, {
-				method: 'PUT',
-				body: { order: newOrder },
+			await createLesson(moduleId, {
+				title: __('New Lesson', 'learnkit'),
 			});
 			await loadCourseStructure(selectedCourseId);
 		} catch (error) {
-			alert(__('Failed to reorder modules', 'learnkit'));
+			console.error('Failed to create lesson:', error);
 		}
 	};
 
-	const handleReorderLessons = async (moduleId, newOrder) => {
+	const handleReorderModules = async (reorderedModules) => {
+		// reorderedModules is now the full array of module objects (not just IDs)
+		// Update local state immediately for smooth UX
+		setCourseStructure({
+			...courseStructure,
+			modules: reorderedModules,
+		});
+
+		// Save order to backend
 		try {
-			await apiRequest(`/modules/${moduleId}/reorder-lessons`, {
-				method: 'PUT',
-				body: { order: newOrder },
-			});
-			await loadCourseStructure(selectedCourseId);
+			const moduleIds = reorderedModules.map(m => m.id);
+			await reorderModules(selectedCourseId, moduleIds);
 		} catch (error) {
-			alert(__('Failed to reorder lessons', 'learnkit'));
+			console.error('Failed to save module order:', error);
+			// Optionally: reload structure to revert to server state
 		}
 	};
+
+	const selectedCourse = courses.find((c) => c.id === selectedCourseId);
 
 	if (loading) {
 		return (
 			<div className="learnkit-loading">
 				<Spinner />
-				<p>{__('Loading Course Builder...', 'learnkit')}</p>
+				<p>{__('Loading courses...', 'learnkit')}</p>
 			</div>
 		);
 	}
 
 	return (
 		<div className="learnkit-course-builder">
+			{/* Header */}
 			<div className="learnkit-builder-header">
-				<h2>{__('🎓 Course Builder', 'learnkit')}</h2>
-				<Button variant="primary" onClick={handleCreateCourse}>
-					{__('Create New Course', 'learnkit')}
+				<div className="header-content">
+					<span className="header-icon">🎓</span>
+					<div className="header-text">
+						<h1>{__('Course Builder', 'learnkit')}</h1>
+						<p>{__('Create and manage your courses', 'learnkit')}</p>
+					</div>
+				</div>
+				<Button variant="primary" onClick={() => setShowCreateModal(true)}>
+					+ {__('New Course', 'learnkit')}
 				</Button>
 			</div>
 
-			<div className="learnkit-builder-content">
-				<div className="learnkit-sidebar">
-					<CourseList
-						courses={courses}
-						selectedCourseId={selectedCourseId}
-						onSelectCourse={handleSelectCourse}
-						onEditCourse={handleEditCourse}
-						onDeleteCourse={handleDeleteCourse}
-					/>
-				</div>
+			{/* Course Grid */}
+			<CourseGrid
+				courses={courses}
+				onCourseClick={handleCourseClick}
+			/>
 
-				<div className="learnkit-main">
-					{selectedCourseId ? (
-						<>
-							<div className="learnkit-structure-header">
-								<h3>{courseStructure?.course?.title || __('Course Structure', 'learnkit')}</h3>
-								<Button variant="secondary" onClick={handleCreateModule}>
-									{__('Add Module', 'learnkit')}
-								</Button>
-							</div>
+			{/* Modals */}
+			<CreateCourseModal
+				isOpen={showCreateModal}
+				onClose={() => setShowCreateModal(false)}
+				onSave={handleCreateCourse}
+			/>
 
-							{structureLoading ? (
-								<div className="learnkit-loading">
-									<Spinner />
-								</div>
-							) : (
-								<CourseStructure
-									structure={courseStructure}
-									onEditModule={handleEditModule}
-									onDeleteModule={handleDeleteModule}
-									onCreateLesson={handleCreateLesson}
-									onEditLesson={handleEditLesson}
-									onDeleteLesson={handleDeleteLesson}
-									onReorderModules={handleReorderModules}
-									onReorderLessons={handleReorderLessons}
-								/>
-							)}
-						</>
-					) : (
-						<div className="learnkit-empty-state">
-							<p>{__('Select a course from the sidebar or create a new one to get started.', 'learnkit')}</p>
-						</div>
-					)}
-				</div>
-			</div>
+			<CourseDetailModal
+				course={selectedCourse}
+				structure={courseStructure}
+				isOpen={showDetailModal}
+				onClose={() => {
+					setShowDetailModal(false);
+					setSelectedCourseId(null);
+					setCourseStructure(null);
+				}}
+				onSave={handleSaveCourse}
+				onEditModule={handleEditModule}
+				onDeleteModule={handleDeleteModule}
+				onCreateModule={handleCreateModule}
+				onCreateLesson={handleCreateLesson}
+				onReorderModules={handleReorderModules}
+			/>
 
-			{showCourseModal && (
-				<CourseEditorModal
-					course={editingCourse}
-					onSave={handleSaveCourse}
-					onClose={() => setShowCourseModal(false)}
-				/>
-			)}
-
-			{showModuleModal && (
-				<ModuleEditorModal
-					module={editingModule}
-					onSave={handleSaveModule}
-					onClose={() => setShowModuleModal(false)}
-				/>
-			)}
+			<EditModuleModal
+				module={editingModule}
+				isOpen={showModuleModal}
+				onClose={() => {
+					setShowModuleModal(false);
+					setEditingModule(null);
+				}}
+				onSave={handleSaveModule}
+			/>
 		</div>
 	);
-}
+};
 
 export default CourseBuilder;

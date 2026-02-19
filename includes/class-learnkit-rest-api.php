@@ -345,10 +345,19 @@ class LearnKit_REST_API {
 
 		$course_data = array(
 			'ID'           => $course_id,
-			'post_title'   => sanitize_text_field( $request['title'] ),
-			'post_content' => wp_kses_post( $request['content'] ),
-			'post_excerpt' => sanitize_textarea_field( $request['excerpt'] ),
 		);
+
+		if ( isset( $request['title'] ) ) {
+			$course_data['post_title'] = sanitize_text_field( $request['title'] );
+		}
+
+		if ( isset( $request['content'] ) ) {
+			$course_data['post_content'] = wp_kses_post( $request['content'] );
+		}
+
+		if ( isset( $request['excerpt'] ) ) {
+			$course_data['post_excerpt'] = sanitize_textarea_field( $request['excerpt'] );
+		}
 
 		$updated = wp_update_post( $course_data );
 
@@ -357,6 +366,22 @@ class LearnKit_REST_API {
 				array( 'message' => __( 'Failed to update course', 'learnkit' ) ),
 				500
 			);
+		}
+
+		// Handle featured image if provided.
+		if ( isset( $request['featured_image_url'] ) ) {
+			$image_url = $request['featured_image_url'];
+
+			if ( empty( $image_url ) ) {
+				// Remove featured image.
+				delete_post_thumbnail( $course_id );
+			} else {
+				// Get attachment ID from URL.
+				$attachment_id = attachment_url_to_postid( $image_url );
+				if ( $attachment_id ) {
+					set_post_thumbnail( $course_id, $attachment_id );
+				}
+			}
 		}
 
 		return new WP_REST_Response(
