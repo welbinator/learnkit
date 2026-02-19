@@ -77,11 +77,8 @@
 		loadProgressData();
 
 		function loadProgressData() {
-			const urlParts = window.location.pathname.split('/');
-			const lessonSlug = urlParts[urlParts.length - 2];
-
-			// Get lesson ID from the mark complete button
-			const lessonId = $('.learnkit-mark-complete').data('lesson-id');
+			// Get lesson ID from the button (either state)
+			const lessonId = $('.learnkit-mark-complete').data('lesson-id') || $('.learnkit-marked-complete').data('lesson-id');
 			if (!lessonId) {
 				return;
 			}

@@ -120,7 +120,7 @@ class LearnKit_Lessons_Controller {
 		);
 
 		if ( ! empty( $request['module_id'] ) ) {
-			$args['meta_key']   = 'learnkit_module_id';
+			$args['meta_key']   = '_lk_module_id';
 			$args['meta_value'] = (int) $request['module_id'];
 		}
 
@@ -182,7 +182,7 @@ class LearnKit_Lessons_Controller {
 			);
 		}
 
-		update_post_meta( $lesson_id, 'learnkit_module_id', $module_id );
+		update_post_meta( $lesson_id, '_lk_module_id', $module_id );
 
 		if ( isset( $request['menu_order'] ) ) {
 			wp_update_post(
@@ -247,7 +247,7 @@ class LearnKit_Lessons_Controller {
 		}
 
 		if ( ! empty( $request['module_id'] ) ) {
-			update_post_meta( $lesson_id, 'learnkit_module_id', (int) $request['module_id'] );
+			update_post_meta( $lesson_id, '_lk_module_id', (int) $request['module_id'] );
 		}
 
 		return new WP_REST_Response(
@@ -331,7 +331,7 @@ class LearnKit_Lessons_Controller {
 			'date_created'   => $lesson->post_date,
 			'date_modified'  => $lesson->post_modified,
 			'menu_order'     => $lesson->menu_order,
-			'module_id'      => get_post_meta( $lesson->ID, 'learnkit_module_id', true ),
+			'module_id'      => get_post_meta( $lesson->ID, '_lk_module_id', true ),
 			'permalink'      => get_permalink( $lesson->ID ),
 			'edit_link'      => get_edit_post_link( $lesson->ID, 'raw' ),
 		);

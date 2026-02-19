@@ -113,7 +113,7 @@ class LearnKit_Modules_Controller {
 		);
 
 		if ( ! empty( $request['course_id'] ) ) {
-			$args['meta_key']   = 'learnkit_course_id';
+			$args['meta_key']   = '_lk_course_id';
 			$args['meta_value'] = (int) $request['course_id'];
 		}
 
@@ -175,7 +175,7 @@ class LearnKit_Modules_Controller {
 		}
 
 		if ( ! empty( $request['course_id'] ) ) {
-			update_post_meta( $module_id, 'learnkit_course_id', (int) $request['course_id'] );
+			update_post_meta( $module_id, '_lk_course_id', (int) $request['course_id'] );
 		}
 
 		if ( isset( $request['menu_order'] ) ) {
@@ -245,7 +245,7 @@ class LearnKit_Modules_Controller {
 		}
 
 		if ( ! empty( $request['course_id'] ) ) {
-			update_post_meta( $module_id, 'learnkit_course_id', (int) $request['course_id'] );
+			update_post_meta( $module_id, '_lk_course_id', (int) $request['course_id'] );
 		}
 
 		return new WP_REST_Response(
@@ -330,7 +330,7 @@ class LearnKit_Modules_Controller {
 			'date_created'   => $module->post_date,
 			'date_modified'  => $module->post_modified,
 			'menu_order'     => $module->menu_order,
-			'course_id'      => get_post_meta( $module->ID, 'learnkit_course_id', true ),
+			'course_id'      => get_post_meta( $module->ID, '_lk_course_id', true ),
 			'permalink'      => get_permalink( $module->ID ),
 			'edit_link'      => get_edit_post_link( $module->ID, 'raw' ),
 		);

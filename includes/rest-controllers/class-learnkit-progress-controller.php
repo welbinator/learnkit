@@ -231,7 +231,7 @@ class LearnKit_Progress_Controller {
 				'posts_per_page' => -1,
 				'meta_query'     => array(
 					array(
-						'key'     => 'learnkit_module_id',
+						'key'     => '_lk_module_id',
 						'value'   => $module_ids,
 						'compare' => 'IN',
 					),
@@ -299,7 +299,7 @@ class LearnKit_Progress_Controller {
 			array(
 				'post_type'      => 'lk_lesson',
 				'posts_per_page' => -1,
-				'meta_key'       => 'learnkit_module_id',
+				'meta_key'       => '_lk_module_id',
 				'meta_value'     => $module_id,
 			)
 		);
