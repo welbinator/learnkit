@@ -198,6 +198,16 @@ class LearnKit_Admin {
 			'edit.php?post_type=lk_lesson'
 		);
 
+		// Quiz Reports submenu.
+		add_submenu_page(
+			'learnkit',
+			__( 'Quiz Reports', 'learnkit' ),
+			__( 'Quiz Reports', 'learnkit' ),
+			'manage_options',
+			'learnkit-quiz-reports',
+			array( $this, 'render_quiz_reports_page' )
+		);
+
 		// Settings submenu (placeholder for future).
 		add_submenu_page(
 			'learnkit',
@@ -247,5 +257,14 @@ class LearnKit_Admin {
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Render the Quiz Reports page.
+	 *
+	 * @since    0.4.0
+	 */
+	public function render_quiz_reports_page() {
+		require_once plugin_dir_path( __FILE__ ) . 'quiz-reports.php';
 	}
 }
