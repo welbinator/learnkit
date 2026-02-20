@@ -96,6 +96,29 @@ foreach ( $lessons as $index => $l ) {
 					>
 						<span class="checkmark">✓</span> Mark as Complete
 					</button>
+
+					<?php
+					// Check if there's a quiz for this lesson.
+					global $wpdb;
+					$quiz_table = $wpdb->prefix . 'posts';
+					$quiz       = $wpdb->get_row(
+						$wpdb->prepare(
+							"SELECT ID FROM $quiz_table p 
+							INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
+							WHERE p.post_type = 'lk_quiz' 
+							AND pm.meta_key = '_lk_lesson_id' 
+							AND pm.meta_value = %d 
+							LIMIT 1",
+							$lesson_id
+						)
+					);
+
+					if ( $quiz ) :
+						?>
+						<a href="<?php echo esc_url( get_permalink( $quiz->ID ) ); ?>" class="learnkit-quiz-button">
+							<span class="quiz-icon">📝</span> Take Quiz
+						</a>
+					<?php endif; ?>
 				<?php else : ?>
 					<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="learnkit-login-prompt">
 						Log in to track your progress
@@ -248,6 +271,31 @@ foreach ( $lessons as $index => $l ) {
 
 .learnkit-mark-complete:hover {
 	background: #008a20;
+}
+
+.learnkit-quiz-button {
+	background: #2271b1;
+	color: #ffffff;
+	border: none;
+	padding: 0.75rem 1.5rem;
+	border-radius: 4px;
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	transition: background 0.2s;
+	text-decoration: none;
+	margin-left: 1rem;
+}
+
+.learnkit-quiz-button:hover {
+	background: #135e96;
+}
+
+.quiz-icon {
+	font-size: 1.25rem;
 }
 
 .learnkit-login-prompt {
