@@ -27,7 +27,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, onEditLesson, onDeleteLesson, onReorderLessons, onEditQuiz }) {
+function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, onEditLesson, onDeleteLesson, onReorderLessons, onEditQuiz, quizMap }) {
 	const [showLessonInput, setShowLessonInput] = useState(false);
 	const [lessonTitle, setLessonTitle] = useState('');
 	const [localLessons, setLocalLessons] = useState(module?.lessons || []);
@@ -267,6 +267,7 @@ function CourseStructure({
 							onDeleteLesson={onDeleteLesson}
 							onReorderLessons={onReorderLessons}
 							onEditQuiz={onEditQuiz}
+							quizMap={quizMap}
 						/>
 					))}
 				</SortableContext>
