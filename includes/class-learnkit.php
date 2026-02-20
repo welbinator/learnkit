@@ -134,6 +134,11 @@ class LearnKit {
 		require_once LEARNKIT_PLUGIN_DIR . 'admin/class-learnkit-admin.php';
 
 		/**
+		 * The class responsible for quiz reports.
+		 */
+		require_once LEARNKIT_PLUGIN_DIR . 'admin/class-learnkit-quiz-reports.php';
+
+		/**
 		 * The class responsible for defining all actions that occur in the public-facing
 		 * side of the site.
 		 */
@@ -227,6 +232,10 @@ class LearnKit {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_admin_menu' );
+
+		// Quiz reports.
+		$quiz_reports = new LearnKit_Quiz_Reports();
+		$this->loader->add_action( 'admin_menu', $quiz_reports, 'add_menu_page' );
 	}
 
 	/**
