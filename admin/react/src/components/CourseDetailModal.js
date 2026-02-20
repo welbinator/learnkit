@@ -35,19 +35,23 @@ const CourseDetailModal = ({
 	const [quizModalOpen, setQuizModalOpen] = useState(false);
 	const [selectedLesson, setSelectedLesson] = useState(null);
 	const [quizMap, setQuizMap] = useState({}); // Map of module/lesson IDs to quiz existence
+	const [loadingQuizMap, setLoadingQuizMap] = useState(false);
 
 	// Fetch quiz existence for all modules and lessons
 	useEffect(() => {
-		if (course && structure && isOpen) {
+		if (course && isOpen && !loadingQuizMap) {
 			fetchQuizMap();
 		}
-	}, [course, structure, isOpen]);
+	}, [course?.id, isOpen]);
 
 	const fetchQuizMap = async () => {
+		if (!course || !structure || loadingQuizMap) return;
+		
+		setLoadingQuizMap(true);
 		const map = {};
 		
-		// Check for course-level quiz
 		try {
+			// Check for course-level quiz
 			const courseQuizRes = await fetch(
 				`${window.wpApiSettings.root}learnkit/v1/quizzes?course_id=${course.id}`,
 				{
@@ -99,6 +103,7 @@ const CourseDetailModal = ({
 		}
 
 		setQuizMap(map);
+		setLoadingQuizMap(false);
 	};
 
 	// Update form fields when course changes
