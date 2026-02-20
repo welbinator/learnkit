@@ -27,7 +27,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, onEditLesson, onDeleteLesson, onReorderLessons, onEditQuiz, quizMap }) {
+function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, onEditLesson, onDeleteLesson, onReorderLessons, onEditQuiz }) {
 	const [showLessonInput, setShowLessonInput] = useState(false);
 	const [lessonTitle, setLessonTitle] = useState('');
 	const [localLessons, setLocalLessons] = useState(module?.lessons || []);
@@ -88,7 +88,7 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 						{__('+ Lesson', 'learnkit')}
 					</Button>
 					<Button isSmall onClick={() => onEditQuiz({ id: module.id, title: module.title, type: 'module' })}>
-						{quizMap[`module-${module.id}`] ? __('Edit Quiz', 'learnkit') : __('+ Quiz', 'learnkit')}
+						{__('Quiz', 'learnkit')}
 					</Button>
 					<Button isSmall isDestructive onClick={() => onDelete(module.id)}>
 						{__('Delete', 'learnkit')}
@@ -132,7 +132,6 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 									onEdit={onEditLesson}
 									onDelete={onDeleteLesson}
 									onEditQuiz={onEditQuiz}
-									quizMap={quizMap}
 								/>
 							))}
 						</ul>
@@ -147,7 +146,7 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 	);
 }
 
-function SortableLesson({ lesson, onEdit, onDelete, onEditQuiz, quizMap }) {
+function SortableLesson({ lesson, onEdit, onDelete, onEditQuiz }) {
 	const {
 		attributes,
 		listeners,
@@ -172,7 +171,7 @@ function SortableLesson({ lesson, onEdit, onDelete, onEditQuiz, quizMap }) {
 					{__('Edit Content', 'learnkit')}
 				</Button>
 				<Button isSmall onClick={() => onEditQuiz(lesson)}>
-					{quizMap[`lesson-${lesson.id}`] ? __('Edit Quiz', 'learnkit') : __('+ Quiz', 'learnkit')}
+					{__('Quiz', 'learnkit')}
 				</Button>
 				<Button isSmall isDestructive onClick={() => onDelete(lesson.id)}>
 					{__('Delete', 'learnkit')}
@@ -192,7 +191,6 @@ function CourseStructure({
 	onReorderModules,
 	onReorderLessons,
 	onEditQuiz,
-	quizMap = {},
 }) {
 	const [localModules, setLocalModules] = useState(structure?.modules || []);
 
@@ -267,7 +265,6 @@ function CourseStructure({
 							onDeleteLesson={onDeleteLesson}
 							onReorderLessons={onReorderLessons}
 							onEditQuiz={onEditQuiz}
-							quizMap={quizMap}
 						/>
 					))}
 				</SortableContext>

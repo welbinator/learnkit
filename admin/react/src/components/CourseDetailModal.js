@@ -34,77 +34,6 @@ const CourseDetailModal = ({
 	const [selfEnrollment, setSelfEnrollment] = useState(false);
 	const [quizModalOpen, setQuizModalOpen] = useState(false);
 	const [selectedLesson, setSelectedLesson] = useState(null);
-	const [quizMap, setQuizMap] = useState({}); // Map of module/lesson IDs to quiz existence
-	const [loadingQuizMap, setLoadingQuizMap] = useState(false);
-
-	// Fetch quiz existence for all modules and lessons
-	useEffect(() => {
-		if (course && isOpen && !loadingQuizMap) {
-			fetchQuizMap();
-		}
-	}, [course?.id, isOpen]);
-
-	const fetchQuizMap = async () => {
-		if (!course || !structure || loadingQuizMap) return;
-		
-		setLoadingQuizMap(true);
-		const map = {};
-		
-		try {
-			// Check for course-level quiz
-			const courseQuizRes = await fetch(
-				`${window.wpApiSettings.root}learnkit/v1/quizzes?course_id=${course.id}`,
-				{
-					headers: { 'X-WP-Nonce': window.wpApiSettings.nonce }
-				}
-			);
-			if (courseQuizRes.ok) {
-				const data = await courseQuizRes.json();
-				map[`course-${course.id}`] = data.length > 0;
-			}
-		} catch (error) {
-			console.error('Error checking course quiz:', error);
-		}
-
-		// Check for module and lesson quizzes
-		for (const module of structure || []) {
-			try {
-				const moduleQuizRes = await fetch(
-					`${window.wpApiSettings.root}learnkit/v1/quizzes?module_id=${module.id}`,
-					{
-						headers: { 'X-WP-Nonce': window.wpApiSettings.nonce }
-					}
-				);
-				if (moduleQuizRes.ok) {
-					const data = await moduleQuizRes.json();
-					map[`module-${module.id}`] = data.length > 0;
-				}
-			} catch (error) {
-				console.error(`Error checking module ${module.id} quiz:`, error);
-			}
-
-			// Check lessons in this module
-			for (const lesson of module.lessons || []) {
-				try {
-					const lessonQuizRes = await fetch(
-						`${window.wpApiSettings.root}learnkit/v1/quizzes?lesson_id=${lesson.id}`,
-						{
-							headers: { 'X-WP-Nonce': window.wpApiSettings.nonce }
-						}
-					);
-					if (lessonQuizRes.ok) {
-						const data = await lessonQuizRes.json();
-						map[`lesson-${lesson.id}`] = data.length > 0;
-					}
-				} catch (error) {
-					console.error(`Error checking lesson ${lesson.id} quiz:`, error);
-				}
-			}
-		}
-
-		setQuizMap(map);
-		setLoadingQuizMap(false);
-	};
 
 	// Update form fields when course changes
 	useEffect(() => {
@@ -260,7 +189,6 @@ const CourseDetailModal = ({
 										onCreateLesson={onCreateLesson}
 										onReorderModules={onReorderModules}
 										onEditQuiz={handleEditQuiz}
-										quizMap={quizMap}
 									/>
 								</div>
 							);
@@ -317,8 +245,6 @@ const CourseDetailModal = ({
 							console.log('QuizModal onClose called');
 							setQuizModalOpen(false);
 							setSelectedLesson(null);
-							// Refresh quiz map to update button text
-							fetchQuizMap();
 						}}
 						lessonId={selectedLesson?.type === 'module' || selectedLesson?.type === 'course' ? null : selectedLesson?.id}
 						moduleId={selectedLesson?.type === 'module' ? selectedLesson.id : null}
