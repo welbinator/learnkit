@@ -49,7 +49,7 @@ export async function getCourses() {
 		status: course.status,
 		featuredImage: course.featured_image || '',
 		selfEnrollment: course.self_enrollment || false,
-		moduleCount: 0, // TODO: Get actual module count
+		moduleCount: course.module_count || 0,
 	}));
 }
 
