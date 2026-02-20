@@ -119,8 +119,8 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType }) => {
 			};
 
 			const url = quiz 
-				? `${window.wpApiSettings.root}wp/v2/lk_quiz/${quiz.id}`
-				: `${window.wpApiSettings.root}wp/v2/lk_quiz`;
+				? `${window.wpApiSettings.root}wp/v2/quizzes/${quiz.id}`
+				: `${window.wpApiSettings.root}wp/v2/quizzes`;
 
 			const method = quiz ? 'PUT' : 'POST';
 
