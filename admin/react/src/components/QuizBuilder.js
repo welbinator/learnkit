@@ -94,19 +94,28 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType }) => {
 				quizTitle = `Quiz for Course ${courseId}`;
 			}
 
+			// Build meta object - only include the relevant ID field
+			const meta = {
+				_lk_passing_score: settings.passingScore,
+				_lk_time_limit: settings.timeLimit,
+				_lk_attempts_allowed: settings.attemptsAllowed,
+				_lk_required_to_complete: settings.requiredToComplete,
+				_lk_questions: JSON.stringify(questions)
+			};
+
+			// Add the appropriate context ID
+			if (lessonId) {
+				meta._lk_lesson_id = lessonId;
+			} else if (moduleId) {
+				meta._lk_module_id = moduleId;
+			} else if (courseId) {
+				meta._lk_course_id = courseId;
+			}
+
 			const quizData = {
 				title: quizTitle,
 				status: 'publish',
-				meta: {
-					_lk_lesson_id: lessonId || '',
-					_lk_module_id: moduleId || '',
-					_lk_course_id: courseId || '',
-					_lk_passing_score: settings.passingScore,
-					_lk_time_limit: settings.timeLimit,
-					_lk_attempts_allowed: settings.attemptsAllowed,
-					_lk_required_to_complete: settings.requiredToComplete,
-					_lk_questions: JSON.stringify(questions)
-				}
+				meta
 			};
 
 			const url = quiz 

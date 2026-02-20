@@ -104,6 +104,32 @@ class LearnKit_Quiz_CPT {
 			)
 		);
 
+		// Module ID (quiz belongs to this module).
+		register_post_meta(
+			'lk_quiz',
+			'_lk_module_id',
+			array(
+				'type'              => 'integer',
+				'description'       => __( 'Module this quiz belongs to', 'learnkit' ),
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'absint',
+			)
+		);
+
+		// Course ID (quiz belongs to this course).
+		register_post_meta(
+			'lk_quiz',
+			'_lk_course_id',
+			array(
+				'type'              => 'integer',
+				'description'       => __( 'Course this quiz belongs to', 'learnkit' ),
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'absint',
+			)
+		);
+
 		// Passing score percentage.
 		register_post_meta(
 			'lk_quiz',
