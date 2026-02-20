@@ -87,6 +87,9 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 					<Button isSmall onClick={() => setShowLessonInput(!showLessonInput)}>
 						{__('+ Lesson', 'learnkit')}
 					</Button>
+					<Button isSmall onClick={() => onEditQuiz({ id: module.id, title: module.title, type: 'module' })}>
+						{__('+ Quiz', 'learnkit')}
+					</Button>
 					<Button isSmall isDestructive onClick={() => onDelete(module.id)}>
 						{__('Delete', 'learnkit')}
 					</Button>
@@ -168,7 +171,7 @@ function SortableLesson({ lesson, onEdit, onDelete, onEditQuiz }) {
 					{__('Edit Content', 'learnkit')}
 				</Button>
 				<Button isSmall onClick={() => onEditQuiz(lesson)}>
-					{__('Edit Quiz', 'learnkit')}
+					{__('+ Quiz', 'learnkit')}
 				</Button>
 				<Button isSmall isDestructive onClick={() => onDelete(lesson.id)}>
 					{__('Delete', 'learnkit')}

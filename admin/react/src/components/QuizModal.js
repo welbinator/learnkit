@@ -10,9 +10,14 @@ import QuizBuilder from './QuizBuilder';
 const QuizModal = ({ isOpen, onClose, lessonId, lessonTitle }) => {
 	if (!isOpen) return null;
 
+	// Determine title based on context
+	const modalTitle = lessonTitle 
+		? `Quiz for: ${lessonTitle}` 
+		: 'Create Quiz';
+
 	return (
 		<Modal
-			title={`Quiz for: ${lessonTitle}`}
+			title={modalTitle}
 			onRequestClose={onClose}
 			className="learnkit-quiz-modal"
 			style={{ maxWidth: '900px' }}

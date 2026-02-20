@@ -72,8 +72,9 @@ const CourseDetailModal = ({
 		});
 	};
 
-	const handleEditQuiz = (lesson) => {
-		setSelectedLesson(lesson);
+	const handleEditQuiz = (context) => {
+		// context can be a lesson object, module object, or { type: 'course' }
+		setSelectedLesson(context);
 		setQuizModalOpen(true);
 	};
 
@@ -152,6 +153,10 @@ const CourseDetailModal = ({
 							name: 'enrollments',
 							title: __('Enrollments', 'learnkit'),
 						},
+						{
+							name: 'quizzes',
+							title: __('Course Quizzes', 'learnkit'),
+						},
 					]}
 				>
 					{(tab) => {
@@ -183,6 +188,21 @@ const CourseDetailModal = ({
 									courseId={course.id}
 									courseName={title}
 								/>
+							);
+						}
+
+						if (tab.name === 'quizzes') {
+							return (
+								<div className="quizzes-section">
+									<h3>{__('Course-Level Quizzes', 'learnkit')}</h3>
+									<p style={{ color: '#757575', marginBottom: '20px' }}>
+										{__('Course-level quizzes are standalone assessments not tied to specific lessons.', 'learnkit')}
+									</p>
+									<Button variant="secondary" onClick={() => handleEditQuiz({ id: null, title: 'Course Quiz' })}>
+										{__('+ Add Course Quiz', 'learnkit')}
+									</Button>
+									{/* TODO: List existing course quizzes here */}
+								</div>
 							);
 						}
 
