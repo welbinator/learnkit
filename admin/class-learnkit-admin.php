@@ -95,7 +95,7 @@ class LearnKit_Admin {
 			// Enqueue React styles.
 			wp_enqueue_style(
 				$this->plugin_name . '-react',
-				LEARNKIT_PLUGIN_URL . 'assets/js/style-index.css',
+				LEARNKIT_PLUGIN_URL . 'assets/js/index.css',
 				array(),
 				$this->version,
 				'all'
