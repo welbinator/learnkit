@@ -1,0 +1,396 @@
+import React, { useState, useEffect } from 'react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+/**
+ * Quiz Builder Component
+ * 
+ * Allows instructors to create and manage quiz questions for a lesson.
+ */
+const QuizBuilder = ({ lessonId }) => {
+	const [quiz, setQuiz] = useState(null);
+	const [questions, setQuestions] = useState([]);
+	const [settings, setSettings] = useState({
+		passingScore: 70,
+		timeLimit: 0,
+		attemptsAllowed: 0,
+		requiredToComplete: false
+	});
+	const [loading, setLoading] = useState(true);
+	const [saving, setSaving] = useState(false);
+	const [editingQuestion, setEditingQuestion] = useState(null);
+
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		})
+	);
+
+	// Load quiz data
+	useEffect(() => {
+		loadQuiz();
+	}, [lessonId]);
+
+	const loadQuiz = async () => {
+		setLoading(true);
+		try {
+			// Check if quiz exists for this lesson
+			const response = await fetch(`${window.wpApiSettings.root}learnkit/v1/quizzes?lesson_id=${lessonId}`, {
+				headers: {
+					'X-WP-Nonce': window.wpApiSettings.nonce
+				}
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				if (data.length > 0) {
+					const quizData = data[0];
+					setQuiz(quizData);
+					setQuestions(JSON.parse(quizData.meta._lk_questions || '[]'));
+					setSettings({
+						passingScore: parseInt(quizData.meta._lk_passing_score) || 70,
+						timeLimit: parseInt(quizData.meta._lk_time_limit) || 0,
+						attemptsAllowed: parseInt(quizData.meta._lk_attempts_allowed) || 0,
+						requiredToComplete: quizData.meta._lk_required_to_complete === '1' || quizData.meta._lk_required_to_complete === true
+					});
+				}
+			}
+		} catch (error) {
+			console.error('Error loading quiz:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const saveQuiz = async () => {
+		setSaving(true);
+		try {
+			const quizData = {
+				title: `Quiz for Lesson ${lessonId}`,
+				status: 'publish',
+				meta: {
+					_lk_lesson_id: lessonId,
+					_lk_passing_score: settings.passingScore,
+					_lk_time_limit: settings.timeLimit,
+					_lk_attempts_allowed: settings.attemptsAllowed,
+					_lk_required_to_complete: settings.requiredToComplete,
+					_lk_questions: JSON.stringify(questions)
+				}
+			};
+
+			const url = quiz 
+				? `${window.wpApiSettings.root}wp/v2/lk_quiz/${quiz.id}`
+				: `${window.wpApiSettings.root}wp/v2/lk_quiz`;
+
+			const method = quiz ? 'PUT' : 'POST';
+
+			const response = await fetch(url, {
+				method,
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': window.wpApiSettings.nonce
+				},
+				body: JSON.stringify(quizData)
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				setQuiz(data);
+				alert('Quiz saved successfully!');
+			} else {
+				throw new Error('Save failed');
+			}
+		} catch (error) {
+			console.error('Error saving quiz:', error);
+			alert('Failed to save quiz. Please try again.');
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const addQuestion = (type) => {
+		const newQuestion = {
+			id: Date.now().toString(),
+			type,
+			question: '',
+			points: 1,
+			options: type === 'multiple_choice' ? ['', '', '', ''] : ['True', 'False'],
+			correctAnswer: type === 'multiple_choice' ? 0 : 0
+		};
+		setQuestions([...questions, newQuestion]);
+		setEditingQuestion(newQuestion.id);
+	};
+
+	const updateQuestion = (id, field, value) => {
+		setQuestions(questions.map(q => 
+			q.id === id ? { ...q, [field]: value } : q
+		));
+	};
+
+	const updateQuestionOption = (id, index, value) => {
+		setQuestions(questions.map(q => {
+			if (q.id === id) {
+				const newOptions = [...q.options];
+				newOptions[index] = value;
+				return { ...q, options: newOptions };
+			}
+			return q;
+		}));
+	};
+
+	const deleteQuestion = (id) => {
+		if (confirm('Are you sure you want to delete this question?')) {
+			setQuestions(questions.filter(q => q.id !== id));
+			if (editingQuestion === id) {
+				setEditingQuestion(null);
+			}
+		}
+	};
+
+	const handleDragEnd = (event) => {
+		const { active, over } = event;
+
+		if (active.id !== over.id) {
+			setQuestions((items) => {
+				const oldIndex = items.findIndex(item => item.id === active.id);
+				const newIndex = items.findIndex(item => item.id === over.id);
+				return arrayMove(items, oldIndex, newIndex);
+			});
+		}
+	};
+
+	if (loading) {
+		return <div className="lk-loading">Loading quiz...</div>;
+	}
+
+	return (
+		<div className="lk-quiz-builder">
+			{/* Settings Section */}
+			<div className="lk-quiz-settings">
+				<h3>Quiz Settings</h3>
+				<div className="lk-settings-grid">
+					<div className="lk-setting">
+						<label>Passing Score (%)</label>
+						<input
+							type="number"
+							min="0"
+							max="100"
+							value={settings.passingScore}
+							onChange={(e) => setSettings({ ...settings, passingScore: parseInt(e.target.value) })}
+						/>
+					</div>
+					<div className="lk-setting">
+						<label>Time Limit (minutes, 0 = unlimited)</label>
+						<input
+							type="number"
+							min="0"
+							value={settings.timeLimit}
+							onChange={(e) => setSettings({ ...settings, timeLimit: parseInt(e.target.value) })}
+						/>
+					</div>
+					<div className="lk-setting">
+						<label>Attempts Allowed (0 = unlimited)</label>
+						<input
+							type="number"
+							min="0"
+							value={settings.attemptsAllowed}
+							onChange={(e) => setSettings({ ...settings, attemptsAllowed: parseInt(e.target.value) })}
+						/>
+					</div>
+					<div className="lk-setting">
+						<label>
+							<input
+								type="checkbox"
+								checked={settings.requiredToComplete}
+								onChange={(e) => setSettings({ ...settings, requiredToComplete: e.target.checked })}
+							/>
+							{' '}Required to complete lesson
+						</label>
+					</div>
+				</div>
+			</div>
+
+			{/* Questions Section */}
+			<div className="lk-quiz-questions">
+				<div className="lk-questions-header">
+					<h3>Questions ({questions.length})</h3>
+					<div className="lk-add-question-buttons">
+						<button
+							type="button"
+							className="button"
+							onClick={() => addQuestion('multiple_choice')}
+						>
+							+ Multiple Choice
+						</button>
+						<button
+							type="button"
+							className="button"
+							onClick={() => addQuestion('true_false')}
+						>
+							+ True/False
+						</button>
+					</div>
+				</div>
+
+				{questions.length === 0 ? (
+					<div className="lk-no-questions">
+						<p>No questions yet. Click a button above to add your first question.</p>
+					</div>
+				) : (
+					<DndContext
+						sensors={sensors}
+						collisionDetection={closestCenter}
+						onDragEnd={handleDragEnd}
+					>
+						<SortableContext
+							items={questions.map(q => q.id)}
+							strategy={verticalListSortingStrategy}
+						>
+							{questions.map((question, index) => (
+								<QuestionItem
+									key={question.id}
+									question={question}
+									index={index}
+									isEditing={editingQuestion === question.id}
+									onEdit={() => setEditingQuestion(question.id)}
+									onCollapse={() => setEditingQuestion(null)}
+									onUpdate={updateQuestion}
+									onUpdateOption={updateQuestionOption}
+									onDelete={deleteQuestion}
+								/>
+							))}
+						</SortableContext>
+					</DndContext>
+				)}
+			</div>
+
+			{/* Save Button */}
+			<div className="lk-quiz-actions">
+				<button
+					type="button"
+					className="button button-primary button-large"
+					onClick={saveQuiz}
+					disabled={saving}
+				>
+					{saving ? 'Saving...' : 'Save Quiz'}
+				</button>
+			</div>
+		</div>
+	);
+};
+
+/**
+ * Sortable Question Item Component
+ */
+const QuestionItem = ({ question, index, isEditing, onEdit, onCollapse, onUpdate, onUpdateOption, onDelete }) => {
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+	} = useSortable({ id: question.id });
+
+	const style = {
+		transform: CSS.Transform.toString(transform),
+		transition,
+	};
+
+	return (
+		<div ref={setNodeRef} style={style} className={`lk-question-item ${isEditing ? 'editing' : ''}`}>
+			<div className="lk-question-header">
+				<div className="lk-question-drag" {...attributes} {...listeners}>
+					<span className="dashicons dashicons-menu"></span>
+				</div>
+				<div className="lk-question-summary">
+					<strong>Question {index + 1}</strong>
+					<span className="lk-question-type">
+						{question.type === 'multiple_choice' ? 'Multiple Choice' : 'True/False'}
+					</span>
+					{question.question && <span className="lk-question-preview">{question.question}</span>}
+				</div>
+				<div className="lk-question-actions">
+					<button
+						type="button"
+						className="button button-small"
+						onClick={isEditing ? onCollapse : onEdit}
+					>
+						{isEditing ? 'Collapse' : 'Edit'}
+					</button>
+					<button
+						type="button"
+						className="button button-small button-link-delete"
+						onClick={() => onDelete(question.id)}
+					>
+						Delete
+					</button>
+				</div>
+			</div>
+
+			{isEditing && (
+				<div className="lk-question-editor">
+					<div className="lk-question-field">
+						<label>Question Text</label>
+						<textarea
+							value={question.question}
+							onChange={(e) => onUpdate(question.id, 'question', e.target.value)}
+							placeholder="Enter your question..."
+							rows="3"
+						/>
+					</div>
+
+					<div className="lk-question-field">
+						<label>Points</label>
+						<input
+							type="number"
+							min="1"
+							value={question.points}
+							onChange={(e) => onUpdate(question.id, 'points', parseInt(e.target.value))}
+						/>
+					</div>
+
+					{question.type === 'multiple_choice' && (
+						<div className="lk-question-field">
+							<label>Answer Options</label>
+							{question.options.map((option, optIndex) => (
+								<div key={optIndex} className="lk-option-row">
+									<input
+										type="radio"
+										name={`correct-${question.id}`}
+										checked={question.correctAnswer === optIndex}
+										onChange={() => onUpdate(question.id, 'correctAnswer', optIndex)}
+									/>
+									<input
+										type="text"
+										value={option}
+										onChange={(e) => onUpdateOption(question.id, optIndex, e.target.value)}
+										placeholder={`Option ${optIndex + 1}`}
+									/>
+								</div>
+							))}
+							<p className="description">Select the radio button next to the correct answer.</p>
+						</div>
+					)}
+
+					{question.type === 'true_false' && (
+						<div className="lk-question-field">
+							<label>Correct Answer</label>
+							<select
+								value={question.correctAnswer}
+								onChange={(e) => onUpdate(question.id, 'correctAnswer', parseInt(e.target.value))}
+							>
+								<option value={0}>True</option>
+								<option value={1}>False</option>
+							</select>
+						</div>
+					)}
+				</div>
+			)}
+		</div>
+	);
+};
+
+export default QuizBuilder;
