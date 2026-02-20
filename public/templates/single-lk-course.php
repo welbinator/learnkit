@@ -270,6 +270,25 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 		font-size: 20px;
 	}
 
+	:where(.lk-enroll-button, .lk-start-button) {
+		display: inline-block;
+		padding: 14px 32px;
+		background: var(--btn-background, #2271b1);
+		color: var(--btn-color, #fff);
+		text-decoration: none;
+		border-radius: 6px;
+		font-size: 18px;
+		font-weight: 600;
+		border: none;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	:where(.lk-enroll-button, .lk-start-button):hover {
+		background: var(--btn-background-hover, #135e96);
+		color: var(--btn-color, #fff);
+	}
+
 	.lk-login-prompt {
 		background: #f0f0f1;
 		padding: 20px;
