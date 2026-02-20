@@ -277,9 +277,28 @@ if ( ! $is_enrolled ) {
 					);
 
 					if ( $quiz ) :
+						// Check if user has already attempted this quiz.
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+						$quiz_attempt = $wpdb->get_row(
+							$wpdb->prepare(
+								"SELECT score, passed FROM {$wpdb->prefix}learnkit_quiz_attempts
+								WHERE user_id = %d AND quiz_id = %d
+								ORDER BY completed_at DESC LIMIT 1",
+								$user_id,
+								$quiz->ID
+							)
+						);
 						?>
 						<a href="<?php echo esc_url( get_permalink( $quiz->ID ) ); ?>" class="learnkit-quiz-button btn--primary">
-							<span class="quiz-icon">📝</span> Take Quiz
+							<span class="quiz-icon">📝</span>
+							<?php if ( $quiz_attempt ) : ?>
+								<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
+								<span style="font-size: 12px; opacity: 0.85; margin-left: 6px;">
+									(<?php echo esc_html( $quiz_attempt->score ); ?>% — <?php echo $quiz_attempt->passed ? esc_html__( 'Passed', 'learnkit' ) : esc_html__( 'Failed', 'learnkit' ); ?>)
+								</span>
+							<?php else : ?>
+								<?php esc_html_e( 'Take Quiz', 'learnkit' ); ?>
+							<?php endif; ?>
 						</a>
 					<?php endif; ?>
 				<?php else : ?>
