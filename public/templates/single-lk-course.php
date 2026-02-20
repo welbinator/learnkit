@@ -422,7 +422,7 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 							<?php foreach ( $lessons as $lesson ) : ?>
 								<div class="lk-lesson-item">
 									<a href="<?php echo esc_url( get_permalink( $lesson->ID ) ); ?>" class="lk-lesson-title">
-										<?php echo esc_html( $lesson->post_title ); ?>
+										📖 <?php echo esc_html( $lesson->post_title ); ?>
 									</a>
 									<?php if ( $is_enrolled ) : ?>
 										<span class="lk-lesson-status">
@@ -430,10 +430,105 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 										</span>
 									<?php endif; ?>
 								</div>
+
+								<?php
+								// Check for lesson quiz.
+								// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+								$lesson_quiz = $wpdb->get_row(
+									$wpdb->prepare(
+										"SELECT p.ID, p.post_title FROM {$wpdb->posts} p 
+										INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
+										WHERE p.post_type = 'lk_quiz' 
+										AND pm.meta_key = '_lk_lesson_id' 
+										AND pm.meta_value = %d 
+										LIMIT 1",
+										$lesson->ID
+									)
+								);
+								if ( $lesson_quiz ) :
+									?>
+									<div class="lk-lesson-item" style="padding-left: 48px; background: #f9f9f9;">
+										<a href="<?php echo esc_url( get_permalink( $lesson_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #2271b1;">
+											📝 <?php echo esc_html( $lesson_quiz->post_title ); ?>
+										</a>
+									</div>
+								<?php endif; ?>
 							<?php endforeach; ?>
+
+							<?php
+							// Check for module quiz.
+							// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+							$module_quiz = $wpdb->get_row(
+								$wpdb->prepare(
+									"SELECT p.ID, p.post_title FROM {$wpdb->posts} p 
+									INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
+									WHERE p.post_type = 'lk_quiz' 
+									AND pm.meta_key = '_lk_module_id' 
+									AND pm.meta_value = %d 
+									AND NOT EXISTS (
+										SELECT 1 FROM {$wpdb->postmeta} pm2 
+										WHERE pm2.post_id = p.ID 
+										AND pm2.meta_key = '_lk_lesson_id'
+									)
+									LIMIT 1",
+									$module->ID
+								)
+							);
+							if ( $module_quiz ) :
+								?>
+								<div class="lk-lesson-item" style="background: #fff3cd; border-top: 2px solid #ffc107;">
+									<a href="<?php echo esc_url( get_permalink( $module_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #856404; font-weight: 600;">
+										🎯 Module Quiz: <?php echo esc_html( $module_quiz->post_title ); ?>
+									</a>
+								</div>
+							<?php endif; ?>
 						</div>
 					</div>
 				<?php endforeach; ?>
+
+				<?php
+				// Check for course-level quizzes.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$course_quizzes = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT p.ID, p.post_title FROM {$wpdb->posts} p 
+						INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
+						WHERE p.post_type = 'lk_quiz' 
+						AND pm.meta_key = '_lk_course_id' 
+						AND pm.meta_value = %d 
+						AND NOT EXISTS (
+							SELECT 1 FROM {$wpdb->postmeta} pm2 
+							WHERE pm2.post_id = p.ID 
+							AND pm2.meta_key IN ('_lk_lesson_id', '_lk_module_id')
+						)
+						ORDER BY p.post_title ASC",
+						$course_id
+					)
+				);
+
+				if ( ! empty( $course_quizzes ) ) :
+					?>
+					<div class="lk-module open" style="border: 2px solid #00a32a; background: #f0f6fc;">
+						<div class="lk-module-header" style="background: #e7f5ec;">
+							<div>
+								<h3 class="lk-module-title" style="color: #00a32a;">🏆 Final Course Assessment</h3>
+								<div class="lk-module-meta">
+									<?php echo esc_html( count( $course_quizzes ) ); ?> <?php echo 1 === count( $course_quizzes ) ? 'quiz' : 'quizzes'; ?>
+								</div>
+							</div>
+							<span class="lk-module-toggle">▼</span>
+						</div>
+						<div class="lk-lessons-list">
+							<?php foreach ( $course_quizzes as $course_quiz ) : ?>
+								<div class="lk-lesson-item" style="background: #fff;">
+									<a href="<?php echo esc_url( get_permalink( $course_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #00a32a; font-weight: 600;">
+										🎓 <?php echo esc_html( $course_quiz->post_title ); ?>
+									</a>
+								</div>
+							<?php endforeach; ?>
+						</div>
+					</div>
+				<?php endif; ?>
 			</div>
 		<?php endif; ?>
 	</div>
