@@ -88,7 +88,7 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 						{__('+ Lesson', 'learnkit')}
 					</Button>
 					<Button isSmall onClick={() => onEditQuiz({ id: module.id, title: module.title, type: 'module' })}>
-						{__('+ Quiz', 'learnkit')}
+						{quizMap[`module-${module.id}`] ? __('Edit Quiz', 'learnkit') : __('+ Quiz', 'learnkit')}
 					</Button>
 					<Button isSmall isDestructive onClick={() => onDelete(module.id)}>
 						{__('Delete', 'learnkit')}
@@ -132,6 +132,7 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 									onEdit={onEditLesson}
 									onDelete={onDeleteLesson}
 									onEditQuiz={onEditQuiz}
+									quizMap={quizMap}
 								/>
 							))}
 						</ul>
@@ -146,7 +147,7 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 	);
 }
 
-function SortableLesson({ lesson, onEdit, onDelete, onEditQuiz }) {
+function SortableLesson({ lesson, onEdit, onDelete, onEditQuiz, quizMap }) {
 	const {
 		attributes,
 		listeners,
@@ -171,7 +172,7 @@ function SortableLesson({ lesson, onEdit, onDelete, onEditQuiz }) {
 					{__('Edit Content', 'learnkit')}
 				</Button>
 				<Button isSmall onClick={() => onEditQuiz(lesson)}>
-					{__('+ Quiz', 'learnkit')}
+					{quizMap[`lesson-${lesson.id}`] ? __('Edit Quiz', 'learnkit') : __('+ Quiz', 'learnkit')}
 				</Button>
 				<Button isSmall isDestructive onClick={() => onDelete(lesson.id)}>
 					{__('Delete', 'learnkit')}
@@ -191,6 +192,7 @@ function CourseStructure({
 	onReorderModules,
 	onReorderLessons,
 	onEditQuiz,
+	quizMap = {},
 }) {
 	const [localModules, setLocalModules] = useState(structure?.modules || []);
 
