@@ -61,7 +61,7 @@ class LearnKit_Quiz_CPT {
 			'label'               => __( 'Quiz', 'learnkit' ),
 			'description'         => __( 'Quizzes and assessments for courses', 'learnkit' ),
 			'labels'              => $labels,
-			'supports'            => array( 'title', 'editor', 'revisions' ),
+			'supports'            => array( 'title', 'editor', 'revisions', 'custom-fields' ),
 			'hierarchical'        => false,
 			'public'              => true,
 			'show_ui'             => true,
