@@ -237,44 +237,43 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType }) => {
 							onChange={(e) => setSettings({ ...settings, attemptsAllowed: parseInt(e.target.value) })}
 						/>
 					</div>
-					<div className="lk-setting">
-						<label>
-							<input
-								type="checkbox"
-								checked={settings.requiredToComplete}
-								onChange={(e) => setSettings({ ...settings, requiredToComplete: e.target.checked })}
-							/>
-							{' '}Required to complete lesson
-						</label>
-					</div>
+				</div>
+				<div className="lk-setting-checkbox">
+					<label>Required to complete lesson</label>
+					<input
+						type="checkbox"
+						checked={settings.requiredToComplete}
+						onChange={(e) => setSettings({ ...settings, requiredToComplete: e.target.checked })}
+					/>
 				</div>
 			</div>
-
 			{/* Questions Section */}
 			<div className="lk-quiz-questions">
 				<div className="lk-questions-header">
-					<h3>Questions ({questions.length})</h3>
+					<h3>Questions <span>({questions.length})</span></h3>
 					<div className="lk-add-question-buttons">
 						<button
 							type="button"
-							className="button"
+							className="lk-add-question-btn"
 							onClick={() => addQuestion('multiple_choice')}
 						>
 							+ Multiple Choice
 						</button>
 						<button
 							type="button"
-							className="button"
+							className="lk-add-question-btn"
 							onClick={() => addQuestion('true_false')}
 						>
-							+ True/False
+							⊕ True / False
 						</button>
 					</div>
 				</div>
 
 				{questions.length === 0 ? (
 					<div className="lk-no-questions">
-						<p>No questions yet. Click a button above to add your first question.</p>
+						<div className="dashicons dashicons-menu-alt3"></div>
+						<p>No questions yet</p>
+						<small>Click a button above to add your first question.</small>
 					</div>
 				) : (
 					<DndContext
@@ -308,7 +307,14 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType }) => {
 			<div className="lk-quiz-actions">
 				<button
 					type="button"
-					className="button button-primary button-large"
+					className="lk-btn lk-btn-secondary"
+					onClick={() => {}}
+				>
+					Cancel
+				</button>
+				<button
+					type="button"
+					className="lk-btn lk-btn-primary"
 					onClick={saveQuiz}
 					disabled={saving}
 				>

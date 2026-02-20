@@ -11,6 +11,7 @@
 import { __ } from '@wordpress/i18n';
 import { Modal, Button, TextControl, TextareaControl, TabPanel, CheckboxControl } from '@wordpress/components';
 import { useState, useEffect } from '@wordpress/element';
+import { createPortal } from 'react-dom';
 import CourseStructure from './CourseStructure';
 import EnrollmentManager from './EnrollmentManager';
 import QuizModal from './QuizModal';
@@ -74,8 +75,19 @@ const CourseDetailModal = ({
 
 	const handleEditQuiz = (context) => {
 		// context can be a lesson object, module object, or { type: 'course' }
+		console.log('handleEditQuiz START:', context);
+		console.log('Before setState - quizModalOpen:', quizModalOpen);
+		console.log('Before setState - selectedLesson:', selectedLesson);
+		
 		setSelectedLesson(context);
 		setQuizModalOpen(true);
+		
+		console.log('After setState called');
+		
+		// Check state in next tick
+		setTimeout(() => {
+			console.log('After setState timeout - should be updated now');
+		}, 100);
 	};
 
 	if (!isOpen || !course) {
@@ -221,20 +233,32 @@ const CourseDetailModal = ({
 				</div>
 			</div>
 		</Modal>
-		{quizModalOpen && (
-			<QuizModal
-				isOpen={quizModalOpen}
-				onClose={() => {
-					setQuizModalOpen(false);
-					setSelectedLesson(null);
-				}}
-				lessonId={selectedLesson?.type === 'module' || selectedLesson?.type === 'course' ? null : selectedLesson?.id}
-				moduleId={selectedLesson?.type === 'module' ? selectedLesson.id : null}
-				courseId={selectedLesson?.type === 'course' || !selectedLesson?.id ? course.id : null}
-				lessonTitle={selectedLesson?.title || 'Quiz'}
-				contextType={selectedLesson?.type || 'lesson'}
-			/>
-		)}
+		{(() => {
+			console.log('Render check at return:', { quizModalOpen, selectedLesson, course });
+			if (quizModalOpen) {
+				console.log('Attempting to render QuizModal via portal...');
+				// Render quiz modal via portal at document.body level to escape parent modal
+				return createPortal(
+					<QuizModal
+						isOpen={quizModalOpen}
+						onClose={() => {
+							console.log('QuizModal onClose called');
+							setQuizModalOpen(false);
+							setSelectedLesson(null);
+						}}
+						lessonId={selectedLesson?.type === 'module' || selectedLesson?.type === 'course' ? null : selectedLesson?.id}
+						moduleId={selectedLesson?.type === 'module' ? selectedLesson.id : null}
+						courseId={selectedLesson?.type === 'course' || !selectedLesson?.id ? course.id : null}
+						lessonTitle={selectedLesson?.title || 'Quiz'}
+						contextType={selectedLesson?.type || 'lesson'}
+					/>,
+					document.body
+				);
+			} else {
+				console.log('quizModalOpen is false, not rendering QuizModal');
+				return null;
+			}
+		})()}
 		</>
 	);
 };
