@@ -342,7 +342,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 			<div class="passed-banner">
 				<h3>🎉 <?php esc_html_e( 'Quiz Passed!', 'learnkit' ); ?></h3>
 				<p style="font-size: 20px; margin: 10px 0;"><?php printf( esc_html__( 'Your best score: %d%%', 'learnkit' ), (int) $best_attempt->score ); ?></p>
-				<p style="margin: 15px 0 0 0; font-size: 14px; opacity: 0.9;">
+				<p style="margin: 15px 0 20px 0; font-size: 14px; opacity: 0.9;">
 					<?php
 					if ( $attempts_allowed === 0 || $attempts_used < $attempts_allowed ) {
 						esc_html_e( 'You\'ve already passed, but you can retake to improve your score if you wish.', 'learnkit' );
@@ -351,6 +351,17 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 					}
 					?>
 				</p>
+				<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+					<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
+						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button" style="background: #757575;">
+							<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
+						</a>
+					<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
+						<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="submit-button" style="background: #757575;">
+							<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
+						</a>
+					<?php endif; ?>
+				</div>
 			</div>
 		<?php endif; ?>
 
@@ -361,6 +372,17 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				<?php if ( $best_attempt ) : ?>
 					<p><?php printf( esc_html__( 'Your best score: %d%%', 'learnkit' ), (int) $best_attempt->score ); ?></p>
 				<?php endif; ?>
+				<div style="margin-top: 20px;">
+					<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
+						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button" style="background: #757575;">
+							<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
+						</a>
+					<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
+						<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="submit-button" style="background: #757575;">
+							<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
+						</a>
+					<?php endif; ?>
+				</div>
 			</div>
 		<?php else : ?>
 
