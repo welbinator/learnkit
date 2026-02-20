@@ -270,27 +270,6 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 		font-size: 20px;
 	}
 
-	.lk-enroll-button,
-	.lk-start-button {
-		display: inline-block;
-		padding: 14px 32px;
-		background: #2271b1;
-		color: #fff;
-		text-decoration: none;
-		border-radius: 6px;
-		font-size: 18px;
-		font-weight: 600;
-		border: none;
-		cursor: pointer;
-		transition: background 0.2s;
-	}
-
-	.lk-enroll-button:hover,
-	.lk-start-button:hover {
-		background: #135e96;
-		color: #fff;
-	}
-
 	.lk-login-prompt {
 		background: #f0f0f1;
 		padding: 20px;
@@ -329,11 +308,11 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 				<?php endif; ?>
 
 				<?php if ( $is_enrolled ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="lk-start-button">
+					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="lk-start-button btn--primary">
 						Continue Learning →
 					</a>
 				<?php elseif ( $user_id && $self_enrollment ) : ?>
-					<button class="lk-enroll-button" data-course-id="<?php echo esc_attr( $course_id ); ?>">
+					<button class="lk-enroll-button btn--primary" data-course-id="<?php echo esc_attr( $course_id ); ?>">
 						Enroll Now
 					</button>
 				<?php elseif ( ! $user_id ) : ?>
