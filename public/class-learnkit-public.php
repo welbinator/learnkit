@@ -76,6 +76,13 @@ class LearnKit_Public {
 			}
 		}
 
+		if ( is_singular( 'lk_quiz' ) ) {
+			$plugin_template = plugin_dir_path( __FILE__ ) . 'templates/single-lk-quiz.php';
+			if ( file_exists( $plugin_template ) ) {
+				return $plugin_template;
+			}
+		}
+
 		return $template;
 	}
 
