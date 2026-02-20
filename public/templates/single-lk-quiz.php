@@ -270,13 +270,26 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="submit-button">
 					<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
 				</a>
+			<?php elseif ( $result_passed && ( $attempts_allowed === 0 || $attempts_used < $attempts_allowed ) ) : ?>
+				<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="submit-button">
+					<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
+				</a>
 			<?php endif; ?>
 			<?php if ( $lesson_id ) : ?>
-				<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button" style="margin-left: 10px;">
+				<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button" style="margin-left: 10px; background: #757575;">
 					<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
+				</a>
+			<?php elseif ( $module_id || $course_id ) : ?>
+				<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="submit-button" style="margin-left: 10px; background: #757575;">
+					<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
 				</a>
 			<?php endif; ?>
 		</div>
+		<?php
+		// Don't show quiz form again after completion, just show navigation.
+		get_footer();
+		return;
+		?>
 	<?php endif; ?>
 
 	<?php if ( ! $user_id ) : ?>
@@ -371,7 +384,23 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				</div>
 			<?php endif; ?>
 
-			<form id="learnkit-quiz-form" method="post">
+			<?php if ( $time_limit > 0 ) : ?>
+				<!-- Start Quiz Button for Timed Quizzes -->
+				<div id="quiz-start-screen" style="text-align: center; padding: 40px 20px;">
+					<h2><?php esc_html_e( 'Ready to Begin?', 'learnkit' ); ?></h2>
+					<p style="font-size: 18px; margin: 20px 0;">
+						<?php printf( esc_html__( 'This quiz is timed. You will have %d minutes to complete %d questions.', 'learnkit' ), $time_limit, count( $questions ) ); ?>
+					</p>
+					<p style="color: #d63638; font-weight: 600; margin-bottom: 30px;">
+						<?php esc_html_e( 'The timer will start as soon as you click the button below.', 'learnkit' ); ?>
+					</p>
+					<button type="button" id="start-quiz-button" class="submit-button">
+						<?php esc_html_e( 'Start Quiz', 'learnkit' ); ?>
+					</button>
+				</div>
+			<?php endif; ?>
+
+			<form id="learnkit-quiz-form" method="post" style="<?php echo $time_limit > 0 ? 'display: none;' : ''; ?>">
 				<?php wp_nonce_field( 'learnkit_submit_quiz_' . $quiz_id, 'learnkit_quiz_nonce' ); ?>
 				<input type="hidden" name="quiz_id" value="<?php echo esc_attr( $quiz_id ); ?>">
 				<input type="hidden" name="start_time" value="<?php echo esc_attr( time() ); ?>">
@@ -422,27 +451,42 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 			<?php if ( $time_limit > 0 ) : ?>
 				<script>
 					(function() {
+						const startButton = document.getElementById('start-quiz-button');
+						const startScreen = document.getElementById('quiz-start-screen');
+						const form = document.getElementById('learnkit-quiz-form');
+						const timerDisplay = document.getElementById('time-remaining');
 						const timeLimit = <?php echo (int) $time_limit; ?> * 60; // Convert to seconds
 						let timeRemaining = timeLimit;
-						const timerDisplay = document.getElementById('time-remaining');
-						const form = document.getElementById('learnkit-quiz-form');
+						let countdown;
 
-						const countdown = setInterval(function() {
-							timeRemaining--;
-							const minutes = Math.floor(timeRemaining / 60);
-							const seconds = timeRemaining % 60;
-							timerDisplay.textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+						// Start quiz button handler
+						if (startButton) {
+							startButton.addEventListener('click', function() {
+								// Hide start screen, show quiz
+								startScreen.style.display = 'none';
+								form.style.display = 'block';
 
-							if (timeRemaining <= 0) {
-								clearInterval(countdown);
-								alert('<?php esc_html_e( 'Time is up! Submitting your quiz...', 'learnkit' ); ?>');
-								form.submit();
-							}
-						}, 1000);
+								// Start countdown
+								countdown = setInterval(function() {
+									timeRemaining--;
+									const minutes = Math.floor(timeRemaining / 60);
+									const seconds = timeRemaining % 60;
+									timerDisplay.textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+
+									if (timeRemaining <= 0) {
+										clearInterval(countdown);
+										alert('<?php esc_html_e( 'Time is up! Submitting your quiz...', 'learnkit' ); ?>');
+										form.submit();
+									}
+								}, 1000);
+							});
+						}
 
 						// Clear timer on submit
 						form.addEventListener('submit', function() {
-							clearInterval(countdown);
+							if (countdown) {
+								clearInterval(countdown);
+							}
 						});
 					})();
 				</script>
