@@ -328,10 +328,16 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 		<?php if ( $has_passed ) : ?>
 			<div class="passed-banner">
 				<h3>🎉 <?php esc_html_e( 'Quiz Passed!', 'learnkit' ); ?></h3>
-				<p><?php printf( esc_html__( 'Your best score: %d%%', 'learnkit' ), (int) $best_attempt->score ); ?></p>
-				<?php if ( $attempts_allowed === 0 || $attempts_used < $attempts_allowed ) : ?>
-					<p><?php esc_html_e( 'You can retake the quiz to improve your score.', 'learnkit' ); ?></p>
-				<?php endif; ?>
+				<p style="font-size: 20px; margin: 10px 0;"><?php printf( esc_html__( 'Your best score: %d%%', 'learnkit' ), (int) $best_attempt->score ); ?></p>
+				<p style="margin: 15px 0 0 0; font-size: 14px; opacity: 0.9;">
+					<?php
+					if ( $attempts_allowed === 0 || $attempts_used < $attempts_allowed ) {
+						esc_html_e( 'You\'ve already passed, but you can retake to improve your score if you wish.', 'learnkit' );
+					} else {
+						esc_html_e( 'Congratulations! You\'ve completed this quiz successfully.', 'learnkit' );
+					}
+					?>
+				</p>
 			</div>
 		<?php endif; ?>
 

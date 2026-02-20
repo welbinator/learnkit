@@ -446,11 +446,36 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 									)
 								);
 								if ( $lesson_quiz ) :
+									// Check if user has taken this quiz.
+									$quiz_attempt = null;
+									if ( $is_enrolled && $user_id ) {
+										// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+										$quiz_attempt = $wpdb->get_row(
+											$wpdb->prepare(
+												"SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts 
+												WHERE user_id = %d AND quiz_id = %d 
+												ORDER BY score DESC, completed_at DESC 
+												LIMIT 1",
+												$user_id,
+												$lesson_quiz->ID
+											)
+										);
+									}
 									?>
 									<div class="lk-lesson-item" style="padding-left: 48px; background: #f9f9f9;">
 										<a href="<?php echo esc_url( get_permalink( $lesson_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #2271b1;">
 											📝 <?php echo esc_html( $lesson_quiz->post_title ); ?>
+											<?php if ( $quiz_attempt ) : ?>
+												<span style="font-size: 13px; margin-left: 8px; color: <?php echo $quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+													(<?php echo esc_html( $quiz_attempt->score ); ?>% - <?php echo $quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
+												</span>
+											<?php endif; ?>
 										</a>
+										<?php if ( $is_enrolled && $quiz_attempt ) : ?>
+											<span class="lk-lesson-status" style="color: <?php echo $quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+												<?php echo $quiz_attempt->passed ? '✓' : '✗'; ?>
+											</span>
+										<?php endif; ?>
 									</div>
 								<?php endif; ?>
 							<?php endforeach; ?>
@@ -475,11 +500,36 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 								)
 							);
 							if ( $module_quiz ) :
+								// Check if user has taken this quiz.
+								$module_quiz_attempt = null;
+								if ( $is_enrolled && $user_id ) {
+									// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+									$module_quiz_attempt = $wpdb->get_row(
+										$wpdb->prepare(
+											"SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts 
+											WHERE user_id = %d AND quiz_id = %d 
+											ORDER BY score DESC, completed_at DESC 
+											LIMIT 1",
+											$user_id,
+											$module_quiz->ID
+										)
+									);
+								}
 								?>
 								<div class="lk-lesson-item" style="background: #fff3cd; border-top: 2px solid #ffc107;">
 									<a href="<?php echo esc_url( get_permalink( $module_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #856404; font-weight: 600;">
 										🎯 Module Quiz: <?php echo esc_html( $module_quiz->post_title ); ?>
+										<?php if ( $module_quiz_attempt ) : ?>
+											<span style="font-size: 13px; margin-left: 8px; color: <?php echo $module_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+												(<?php echo esc_html( $module_quiz_attempt->score ); ?>% - <?php echo $module_quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
+											</span>
+										<?php endif; ?>
 									</a>
+									<?php if ( $is_enrolled && $module_quiz_attempt ) : ?>
+										<span class="lk-lesson-status" style="color: <?php echo $module_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+											<?php echo $module_quiz_attempt->passed ? '✓' : '✗'; ?>
+										</span>
+									<?php endif; ?>
 								</div>
 							<?php endif; ?>
 						</div>
@@ -520,10 +570,37 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 						</div>
 						<div class="lk-lessons-list">
 							<?php foreach ( $course_quizzes as $course_quiz ) : ?>
+								<?php
+								// Check if user has taken this quiz.
+								$course_quiz_attempt = null;
+								if ( $is_enrolled && $user_id ) {
+									// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+									$course_quiz_attempt = $wpdb->get_row(
+										$wpdb->prepare(
+											"SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts 
+											WHERE user_id = %d AND quiz_id = %d 
+											ORDER BY score DESC, completed_at DESC 
+											LIMIT 1",
+											$user_id,
+											$course_quiz->ID
+										)
+									);
+								}
+								?>
 								<div class="lk-lesson-item" style="background: #fff;">
 									<a href="<?php echo esc_url( get_permalink( $course_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #00a32a; font-weight: 600;">
 										🎓 <?php echo esc_html( $course_quiz->post_title ); ?>
+										<?php if ( $course_quiz_attempt ) : ?>
+											<span style="font-size: 13px; margin-left: 8px; color: <?php echo $course_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+												(<?php echo esc_html( $course_quiz_attempt->score ); ?>% - <?php echo $course_quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
+											</span>
+										<?php endif; ?>
 									</a>
+									<?php if ( $is_enrolled && $course_quiz_attempt ) : ?>
+										<span class="lk-lesson-status" style="color: <?php echo $course_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+											<?php echo $course_quiz_attempt->passed ? '✓' : '✗'; ?>
+										</span>
+									<?php endif; ?>
 								</div>
 							<?php endforeach; ?>
 						</div>
