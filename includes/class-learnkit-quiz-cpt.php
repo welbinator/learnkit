@@ -101,6 +101,9 @@ class LearnKit_Quiz_CPT {
 				'single'            => true,
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'absint',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
@@ -114,6 +117,9 @@ class LearnKit_Quiz_CPT {
 				'single'            => true,
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'absint',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
@@ -127,6 +133,9 @@ class LearnKit_Quiz_CPT {
 				'single'            => true,
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'absint',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
@@ -141,6 +150,9 @@ class LearnKit_Quiz_CPT {
 				'default'           => 70,
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'absint',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
@@ -155,6 +167,9 @@ class LearnKit_Quiz_CPT {
 				'default'           => 0,
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'absint',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
@@ -169,6 +184,9 @@ class LearnKit_Quiz_CPT {
 				'default'           => 0,
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'absint',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
@@ -183,6 +201,9 @@ class LearnKit_Quiz_CPT {
 				'default'           => false,
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'rest_sanitize_boolean',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
@@ -197,6 +218,9 @@ class LearnKit_Quiz_CPT {
 				'default'           => '[]',
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'sanitize_textarea_field',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 	}
