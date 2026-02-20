@@ -216,9 +216,8 @@ class LearnKit_Public {
 				'passed'       => $passed ? 1 : 0,
 				'answers'      => wp_json_encode( $answers ),
 				'completed_at' => current_time( 'mysql' ),
-				'time_taken'   => $time_taken,
 			),
-			array( '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%d' )
+			array( '%d', '%d', '%d', '%d', '%d', '%s', '%s' )
 		);
 
 		// Redirect to results page with query params.
