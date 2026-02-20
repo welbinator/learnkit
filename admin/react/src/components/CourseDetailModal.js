@@ -198,7 +198,7 @@ const CourseDetailModal = ({
 									<p style={{ color: '#757575', marginBottom: '20px' }}>
 										{__('Course-level quizzes are standalone assessments not tied to specific lessons.', 'learnkit')}
 									</p>
-									<Button variant="secondary" onClick={() => handleEditQuiz({ id: null, title: 'Course Quiz' })}>
+									<Button variant="secondary" onClick={() => handleEditQuiz({ id: null, title: 'Course Quiz', type: 'course' })}>
 										{__('+ Add Course Quiz', 'learnkit')}
 									</Button>
 									{/* TODO: List existing course quizzes here */}
@@ -221,15 +221,18 @@ const CourseDetailModal = ({
 				</div>
 			</div>
 		</Modal>
-		{quizModalOpen && selectedLesson && (
+		{quizModalOpen && (
 			<QuizModal
 				isOpen={quizModalOpen}
 				onClose={() => {
 					setQuizModalOpen(false);
 					setSelectedLesson(null);
 				}}
-				lessonId={selectedLesson.id}
-				lessonTitle={selectedLesson.title}
+				lessonId={selectedLesson?.type === 'module' || selectedLesson?.type === 'course' ? null : selectedLesson?.id}
+				moduleId={selectedLesson?.type === 'module' ? selectedLesson.id : null}
+				courseId={selectedLesson?.type === 'course' || !selectedLesson?.id ? course.id : null}
+				lessonTitle={selectedLesson?.title || 'Quiz'}
+				contextType={selectedLesson?.type || 'lesson'}
 			/>
 		)}
 		</>
