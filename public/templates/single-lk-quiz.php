@@ -275,11 +275,11 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 					<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
 				</a>
 			<?php endif; ?>
-			<?php if ( $lesson_id ) : ?>
+			<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
 				<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button" style="margin-left: 10px; background: #757575;">
 					<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
 				</a>
-			<?php elseif ( $module_id || $course_id ) : ?>
+			<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
 				<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="submit-button" style="margin-left: 10px; background: #757575;">
 					<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
 				</a>
