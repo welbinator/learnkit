@@ -136,7 +136,7 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType }) => {
 			if (response.ok) {
 				const data = await response.json();
 				setQuiz(data);
-				alert('Quiz saved successfully!');
+				alert('Quiz saved successfully! Close and reopen this course to see "Edit Quiz" button.');
 			} else {
 				throw new Error('Save failed');
 			}
