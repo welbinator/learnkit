@@ -225,9 +225,13 @@ class LearnKit_Courses_Controller {
 			}
 		}
 
-		// Handle self-enrollment flag.
-		if ( isset( $request['self_enrollment'] ) ) {
-			update_post_meta( $course_id, '_lk_self_enrollment', (bool) $request['self_enrollment'] );
+		// Handle access type flag.
+		if ( isset( $request['access_type'] ) ) {
+			$access_type = sanitize_text_field( $request['access_type'] );
+			if ( ! in_array( $access_type, array( 'free', 'paid' ), true ) ) {
+				$access_type = 'free';
+			}
+			update_post_meta( $course_id, '_lk_access_type', $access_type );
 		}
 
 		return new WP_REST_Response(
@@ -367,20 +371,37 @@ class LearnKit_Courses_Controller {
 		) )->found_posts;
 
 		return array(
-			'id'              => $course->ID,
-			'title'           => $course->post_title,
-			'content'         => $course->post_content,
-			'excerpt'         => $course->post_excerpt,
-			'status'          => $course->post_status,
-			'author'          => $course->post_author,
-			'date_created'    => $course->post_date,
-			'date_modified'   => $course->post_modified,
-			'permalink'       => get_permalink( $course->ID ),
-			'featured_image'  => get_the_post_thumbnail_url( $course->ID, 'large' ),
-			'edit_link'       => get_edit_post_link( $course->ID, 'raw' ),
-			'self_enrollment' => (bool) get_post_meta( $course->ID, '_lk_self_enrollment', true ),
-			'module_count'    => $module_count,
+			'id'             => $course->ID,
+			'title'          => $course->post_title,
+			'content'        => $course->post_content,
+			'excerpt'        => $course->post_excerpt,
+			'status'         => $course->post_status,
+			'author'         => $course->post_author,
+			'date_created'   => $course->post_date,
+			'date_modified'  => $course->post_modified,
+			'permalink'      => get_permalink( $course->ID ),
+			'featured_image' => get_the_post_thumbnail_url( $course->ID, 'large' ),
+			'edit_link'      => get_edit_post_link( $course->ID, 'raw' ),
+			'access_type'    => $this->get_course_access_type( $course->ID ),
+			'module_count'   => $module_count,
 		);
+	}
+
+	/**
+	 * Get the access type for a course, with backward compatibility.
+	 *
+	 * @since    0.5.0
+	 * @param    int $course_id Course post ID.
+	 * @return   string Access type: 'free' or 'paid'.
+	 */
+	private function get_course_access_type( $course_id ) {
+		$access_type = get_post_meta( $course_id, '_lk_access_type', true );
+		if ( ! empty( $access_type ) ) {
+			return $access_type;
+		}
+		// Backward compat: if old self-enrollment flag is set and true, treat as free.
+		$self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
+		return $self_enrollment ? 'free' : 'free';
 	}
 
 	/**

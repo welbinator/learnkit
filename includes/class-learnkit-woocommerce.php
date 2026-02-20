@@ -43,6 +43,7 @@ class LearnKit_WooCommerce {
 
 		// Order lifecycle hooks.
 		add_action( 'woocommerce_order_status_completed', array( $this, 'handle_order_completed' ) );
+		add_action( 'woocommerce_order_status_processing', array( $this, 'handle_order_completed' ) );
 		add_action( 'woocommerce_order_status_refunded', array( $this, 'handle_order_unenroll' ) );
 		add_action( 'woocommerce_order_status_cancelled', array( $this, 'handle_order_unenroll' ) );
 	}

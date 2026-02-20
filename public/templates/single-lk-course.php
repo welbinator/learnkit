@@ -78,8 +78,12 @@ if ( $user_id ) {
 	}
 }
 
-// Check if self-enrollment is enabled.
-$self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
+// Determine access type with backward compatibility.
+$access_type = get_post_meta( $course_id, '_lk_access_type', true );
+if ( empty( $access_type ) ) {
+	$access_type = get_post_meta( $course_id, '_lk_self_enrollment', true ) ? 'free' : 'free';
+}
+$self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for template compat.
 ?>
 
 <style>

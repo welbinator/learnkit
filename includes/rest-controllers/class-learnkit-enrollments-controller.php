@@ -45,7 +45,7 @@ class LearnKit_Enrollments_Controller {
 					'callback'            => array( $this, 'create_enrollment' ),
 					'permission_callback' => array( $this, 'check_enrollment_permission' ),
 					'args'                => array(
-						'user_id' => array(
+						'user_id'   => array(
 							'required'          => true,
 							'validate_callback' => function ( $param ) {
 								return is_numeric( $param );
@@ -126,7 +126,7 @@ class LearnKit_Enrollments_Controller {
 			);
 		}
 
-		// Non-admins can only enroll themselves, and only in self-enrollment courses.
+		// Non-admins can only enroll themselves, and only in free-access courses.
 		$current_user_id = get_current_user_id();
 		if ( ! current_user_can( 'edit_posts' ) ) {
 			if ( $current_user_id !== $user_id ) {
@@ -135,10 +135,15 @@ class LearnKit_Enrollments_Controller {
 					403
 				);
 			}
-			$self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
-			if ( ! $self_enrollment ) {
+			$access_type = get_post_meta( $course_id, '_lk_access_type', true );
+			if ( empty( $access_type ) ) {
+				// Backward compat: old _lk_self_enrollment flag.
+				$self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
+				$access_type     = $self_enrollment ? 'free' : 'free';
+			}
+			if ( 'free' !== $access_type ) {
 				return new WP_REST_Response(
-					array( 'message' => __( 'Self-enrollment is not enabled for this course.', 'learnkit' ) ),
+					array( 'message' => __( 'This course requires purchase to enroll.', 'learnkit' ) ),
 					403
 				);
 			}
@@ -322,7 +327,7 @@ class LearnKit_Enrollments_Controller {
 	 * @return   bool True if user can access.
 	 */
 	public function check_user_permission( $request ) {
-		$user_id        = (int) $request['user_id'];
+		$user_id         = (int) $request['user_id'];
 		$current_user_id = get_current_user_id();
 
 		return $current_user_id === $user_id || current_user_can( 'edit_posts' );

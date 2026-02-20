@@ -118,7 +118,7 @@ class LearnKit_Course_Catalog {
 		$enrolled_course_ids = array();
 		if ( is_user_logged_in() ) {
 			global $wpdb;
-			$user_id = get_current_user_id();
+			$user_id           = get_current_user_id();
 			$enrollments_table = $wpdb->prefix . 'learnkit_enrollments';
 
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -156,7 +156,7 @@ class LearnKit_Course_Catalog {
 
 					$lesson_count = 0;
 					foreach ( $modules as $module ) {
-						$lessons = get_posts(
+						$lessons       = get_posts(
 							array(
 								'post_type'      => 'lk_lesson',
 								'posts_per_page' => -1,
@@ -169,8 +169,12 @@ class LearnKit_Course_Catalog {
 
 					$module_count = count( $modules );
 
-					// Check if self-enrollment is enabled.
-					$self_enroll_enabled = get_post_meta( $course_id, '_lk_self_enrollment', true );
+					// Determine access type with backward compatibility.
+					$access_type = get_post_meta( $course_id, '_lk_access_type', true );
+					if ( empty( $access_type ) ) {
+						$access_type = get_post_meta( $course_id, '_lk_self_enrollment', true ) ? 'free' : 'free';
+					}
+					$self_enroll_enabled = ( 'free' === $access_type );
 					?>
 					<div class="learnkit-catalog-course <?php echo $is_enrolled ? 'enrolled' : ''; ?>">
 						<div class="course-thumbnail">
@@ -216,7 +220,21 @@ class LearnKit_Course_Catalog {
 										<?php esc_html_e( 'Enroll Now', 'learnkit' ); ?>
 									</button>
 								<?php elseif ( is_user_logged_in() ) : ?>
-									<span class="enrollment-closed"><?php esc_html_e( 'Enrollment Closed', 'learnkit' ); ?></span>
+									<?php
+									/**
+									 * Action: learnkit_course_enrollment_cta
+									 *
+									 * Fires in the catalog card CTA area for courses that are not free self-enroll.
+									 * WooCommerce and other integrations hook here to show Buy Now buttons.
+									 *
+									 * @since 0.5.0
+									 *
+									 * @param int  $course_id   The course post ID.
+									 * @param int  $user_id     The current user ID (0 if not logged in).
+									 * @param bool $is_enrolled Whether the current user is enrolled.
+									 */
+									do_action( 'learnkit_course_enrollment_cta', $course_id, get_current_user_id(), $is_enrolled );
+									?>
 								<?php else : ?>
 									<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="button button-login">
 										<?php esc_html_e( 'Login to Enroll', 'learnkit' ); ?>
@@ -250,14 +268,17 @@ class LearnKit_Course_Catalog {
 			wp_send_json_error( array( 'message' => __( 'Invalid course ID.', 'learnkit' ) ) );
 		}
 
-		// Check if self-enrollment is enabled.
-		$self_enroll_enabled = get_post_meta( $course_id, '_lk_self_enrollment', true );
-		if ( ! $self_enroll_enabled ) {
-			wp_send_json_error( array( 'message' => __( 'Self-enrollment is not enabled for this course.', 'learnkit' ) ) );
+		// Check if free enrollment is enabled.
+		$access_type = get_post_meta( $course_id, '_lk_access_type', true );
+		if ( empty( $access_type ) ) {
+			$access_type = get_post_meta( $course_id, '_lk_self_enrollment', true ) ? 'free' : 'free';
+		}
+		if ( 'free' !== $access_type ) {
+			wp_send_json_error( array( 'message' => __( 'This course requires purchase to enroll.', 'learnkit' ) ) );
 		}
 
 		global $wpdb;
-		$user_id = get_current_user_id();
+		$user_id           = get_current_user_id();
 		$enrollments_table = $wpdb->prefix . 'learnkit_enrollments';
 
 		// Check if already enrolled.

@@ -48,7 +48,7 @@ export async function getCourses() {
 		description: course.excerpt || '',
 		status: course.status,
 		featuredImage: course.featured_image || '',
-		selfEnrollment: course.self_enrollment || false,
+		accessType: course.access_type || 'free',
 		moduleCount: course.module_count || 0,
 	}));
 }
@@ -89,7 +89,7 @@ export async function updateCourse(courseId, courseData) {
 			title: courseData.title,
 			excerpt: courseData.description || '',
 			featured_image_url: courseData.featuredImage || '',
-			self_enrollment: courseData.selfEnrollment || false,
+			access_type: courseData.accessType || 'free',
 		},
 	});
 }
