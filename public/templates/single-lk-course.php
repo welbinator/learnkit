@@ -297,7 +297,7 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 		text-decoration: none;
 	}
 
-	:where(.lk-enroll-button, .lk-start-button):hover {
+	:where(.lk-enroll-button, .lk-start-button):where(:hover) {
 		background: var(--btn-background-hover, #135e96);
 		color: var(--btn-text-color, #fff);
 	}
