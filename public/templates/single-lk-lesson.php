@@ -104,6 +104,41 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 		}
 	}
 }
+
+// Check enrollment — gate lesson access.
+$user_id     = get_current_user_id();
+$is_enrolled = false;
+if ( $course_id && $user_id ) {
+	global $wpdb;
+	$is_enrolled = (bool) $wpdb->get_var(
+		$wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+			"SELECT id FROM {$wpdb->prefix}learnkit_enrollments WHERE user_id = %d AND course_id = %d",
+			$user_id,
+			$course_id
+		)
+	);
+}
+
+if ( ! $is_enrolled ) {
+	?>
+	<div style="max-width: 680px; margin: 80px auto; padding: 0 20px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+		<div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+		<h2 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; color: #1a1a1a;">Enrollment Required</h2>
+		<p style="font-size: 16px; color: #555; margin-bottom: 32px; line-height: 1.6;">
+			<?php esc_html_e( 'You need to be enrolled in this course to access lessons.', 'learnkit' ); ?>
+		</p>
+		<?php if ( $course_id ) : ?>
+			<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>"
+				style="display: inline-block; background: #2271b1; color: #fff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: 600;">
+				<?php esc_html_e( 'View Course', 'learnkit' ); ?>
+			</a>
+		<?php endif; ?>
+	</div>
+	<?php
+	get_footer();
+	return;
+}
 ?>
 
 <div class="learnkit-lesson-viewer">
