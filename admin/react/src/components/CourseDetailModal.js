@@ -13,6 +13,7 @@ import { Modal, Button, TextControl, TextareaControl, TabPanel, CheckboxControl 
 import { useState, useEffect } from '@wordpress/element';
 import CourseStructure from './CourseStructure';
 import EnrollmentManager from './EnrollmentManager';
+import QuizModal from './QuizModal';
 
 const CourseDetailModal = ({
 	course,
@@ -30,6 +31,8 @@ const CourseDetailModal = ({
 	const [description, setDescription] = useState('');
 	const [featuredImage, setFeaturedImage] = useState('');
 	const [selfEnrollment, setSelfEnrollment] = useState(false);
+	const [quizModalOpen, setQuizModalOpen] = useState(false);
+	const [selectedLesson, setSelectedLesson] = useState(null);
 
 	// Update form fields when course changes
 	useEffect(() => {
@@ -69,11 +72,17 @@ const CourseDetailModal = ({
 		});
 	};
 
+	const handleEditQuiz = (lesson) => {
+		setSelectedLesson(lesson);
+		setQuizModalOpen(true);
+	};
+
 	if (!isOpen || !course) {
 		return null;
 	}
 
 	return (
+		<>
 		<Modal
 			title={__('Edit Course', 'learnkit')}
 			onRequestClose={onClose}
@@ -162,6 +171,7 @@ const CourseDetailModal = ({
 										onDeleteModule={onDeleteModule}
 										onCreateLesson={onCreateLesson}
 										onReorderModules={onReorderModules}
+										onEditQuiz={handleEditQuiz}
 									/>
 								</div>
 							);
@@ -191,6 +201,18 @@ const CourseDetailModal = ({
 				</div>
 			</div>
 		</Modal>
+		{quizModalOpen && selectedLesson && (
+			<QuizModal
+				isOpen={quizModalOpen}
+				onClose={() => {
+					setQuizModalOpen(false);
+					setSelectedLesson(null);
+				}}
+				lessonId={selectedLesson.id}
+				lessonTitle={selectedLesson.title}
+			/>
+		)}
+		</>
 	);
 };
 

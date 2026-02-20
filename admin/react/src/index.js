@@ -10,6 +10,7 @@
 import { render } from '@wordpress/element';
 import App from './App';
 import './style.css';
+import './quiz-builder-styles.css';
 
 // Mount React app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
