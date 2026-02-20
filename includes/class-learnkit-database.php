@@ -58,12 +58,31 @@ class LearnKit_Database {
 			KEY lesson_id (lesson_id)
 		) $charset_collate;";
 
+		// Quiz attempts table.
+		$quiz_attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
+		$quiz_attempts_sql   = "CREATE TABLE $quiz_attempts_table (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			user_id bigint(20) unsigned NOT NULL,
+			quiz_id bigint(20) unsigned NOT NULL,
+			score int(11) NOT NULL,
+			max_score int(11) NOT NULL,
+			passed tinyint(1) NOT NULL DEFAULT 0,
+			started_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			completed_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			answers longtext DEFAULT NULL,
+			PRIMARY KEY  (id),
+			KEY user_id (user_id),
+			KEY quiz_id (quiz_id),
+			KEY passed (passed)
+		) $charset_collate;";
+
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta( $enrollments_sql );
 		dbDelta( $progress_sql );
+		dbDelta( $quiz_attempts_sql );
 
 		// Store database version.
-		update_option( 'learnkit_db_version', '1.0' );
+		update_option( 'learnkit_db_version', '1.1' );
 	}
 
 	/**
@@ -74,10 +93,12 @@ class LearnKit_Database {
 	public static function drop_tables() {
 		global $wpdb;
 
-		$enrollments_table = $wpdb->prefix . 'learnkit_enrollments';
-		$progress_table    = $wpdb->prefix . 'learnkit_progress';
+		$enrollments_table   = $wpdb->prefix . 'learnkit_enrollments';
+		$progress_table      = $wpdb->prefix . 'learnkit_progress';
+		$quiz_attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$wpdb->query( "DROP TABLE IF EXISTS $quiz_attempts_table" );
 		$wpdb->query( "DROP TABLE IF EXISTS $progress_table" );
 		$wpdb->query( "DROP TABLE IF EXISTS $enrollments_table" );
 		// phpcs:enable WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared

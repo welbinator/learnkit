@@ -36,7 +36,9 @@
         "phpmd": "phpmd includes,admin,public text phpmd.xml",
         "test": "phpunit",
         "test-coverage": "phpunit --coverage-html coverage",
+        "syntax-check": "find includes admin public -name '*.php' -print0 | xargs -0 -n1 php -l",
         "lint": [
+            "@syntax-check",
             "@phpcs",
             "@phpmd"
         ]

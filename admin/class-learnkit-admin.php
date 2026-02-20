@@ -92,10 +92,19 @@ class LearnKit_Admin {
 
 		// Check if React build exists, otherwise use development warning.
 		if ( file_exists( LEARNKIT_PLUGIN_DIR . 'assets/js/learnkit-admin.js' ) ) {
-			// Enqueue React styles.
+			// Enqueue React styles (main styles).
 			wp_enqueue_style(
 				$this->plugin_name . '-react',
 				LEARNKIT_PLUGIN_URL . 'assets/js/style-index.css',
+				array(),
+				$this->version,
+				'all'
+			);
+
+			// Enqueue Quiz Builder styles.
+			wp_enqueue_style(
+				$this->plugin_name . '-quiz',
+				LEARNKIT_PLUGIN_URL . 'assets/js/index.css',
 				array(),
 				$this->version,
 				'all'
@@ -189,6 +198,16 @@ class LearnKit_Admin {
 			'edit.php?post_type=lk_lesson'
 		);
 
+		// Quiz Reports submenu.
+		add_submenu_page(
+			'learnkit',
+			__( 'Quiz Reports', 'learnkit' ),
+			__( 'Quiz Reports', 'learnkit' ),
+			'manage_options',
+			'learnkit-quiz-reports',
+			array( $this, 'render_quiz_reports_page' )
+		);
+
 		// Settings submenu (placeholder for future).
 		add_submenu_page(
 			'learnkit',
@@ -238,5 +257,14 @@ class LearnKit_Admin {
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Render the Quiz Reports page.
+	 *
+	 * @since    0.4.0
+	 */
+	public function render_quiz_reports_page() {
+		require_once plugin_dir_path( __FILE__ ) . 'quiz-reports.php';
 	}
 }

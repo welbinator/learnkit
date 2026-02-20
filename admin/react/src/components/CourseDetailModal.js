@@ -11,8 +11,10 @@
 import { __ } from '@wordpress/i18n';
 import { Modal, Button, TextControl, TextareaControl, TabPanel, CheckboxControl } from '@wordpress/components';
 import { useState, useEffect } from '@wordpress/element';
+import { createPortal } from 'react-dom';
 import CourseStructure from './CourseStructure';
 import EnrollmentManager from './EnrollmentManager';
+import QuizModal from './QuizModal';
 
 const CourseDetailModal = ({
 	course,
@@ -30,6 +32,8 @@ const CourseDetailModal = ({
 	const [description, setDescription] = useState('');
 	const [featuredImage, setFeaturedImage] = useState('');
 	const [selfEnrollment, setSelfEnrollment] = useState(false);
+	const [quizModalOpen, setQuizModalOpen] = useState(false);
+	const [selectedLesson, setSelectedLesson] = useState(null);
 
 	// Update form fields when course changes
 	useEffect(() => {
@@ -69,11 +73,29 @@ const CourseDetailModal = ({
 		});
 	};
 
+	const handleEditQuiz = (context) => {
+		// context can be a lesson object, module object, or { type: 'course' }
+		console.log('handleEditQuiz START:', context);
+		console.log('Before setState - quizModalOpen:', quizModalOpen);
+		console.log('Before setState - selectedLesson:', selectedLesson);
+		
+		setSelectedLesson(context);
+		setQuizModalOpen(true);
+		
+		console.log('After setState called');
+		
+		// Check state in next tick
+		setTimeout(() => {
+			console.log('After setState timeout - should be updated now');
+		}, 100);
+	};
+
 	if (!isOpen || !course) {
 		return null;
 	}
 
 	return (
+		<>
 		<Modal
 			title={__('Edit Course', 'learnkit')}
 			onRequestClose={onClose}
@@ -143,6 +165,10 @@ const CourseDetailModal = ({
 							name: 'enrollments',
 							title: __('Enrollments', 'learnkit'),
 						},
+						{
+							name: 'quizzes',
+							title: __('Course Quizzes', 'learnkit'),
+						},
 					]}
 				>
 					{(tab) => {
@@ -162,6 +188,7 @@ const CourseDetailModal = ({
 										onDeleteModule={onDeleteModule}
 										onCreateLesson={onCreateLesson}
 										onReorderModules={onReorderModules}
+										onEditQuiz={handleEditQuiz}
 									/>
 								</div>
 							);
@@ -173,6 +200,21 @@ const CourseDetailModal = ({
 									courseId={course.id}
 									courseName={title}
 								/>
+							);
+						}
+
+						if (tab.name === 'quizzes') {
+							return (
+								<div className="quizzes-section">
+									<h3>{__('Course-Level Quizzes', 'learnkit')}</h3>
+									<p style={{ color: '#757575', marginBottom: '20px' }}>
+										{__('Course-level quizzes are standalone assessments not tied to specific lessons.', 'learnkit')}
+									</p>
+									<Button variant="secondary" onClick={() => handleEditQuiz({ id: null, title: 'Course Quiz', type: 'course' })}>
+										{__('+ Add Course Quiz', 'learnkit')}
+									</Button>
+									{/* TODO: List existing course quizzes here */}
+								</div>
 							);
 						}
 
@@ -191,6 +233,33 @@ const CourseDetailModal = ({
 				</div>
 			</div>
 		</Modal>
+		{(() => {
+			console.log('Render check at return:', { quizModalOpen, selectedLesson, course });
+			if (quizModalOpen) {
+				console.log('Attempting to render QuizModal via portal...');
+				// Render quiz modal via portal at document.body level to escape parent modal
+				return createPortal(
+					<QuizModal
+						isOpen={quizModalOpen}
+						onClose={() => {
+							console.log('QuizModal onClose called');
+							setQuizModalOpen(false);
+							setSelectedLesson(null);
+						}}
+						lessonId={selectedLesson?.type === 'module' || selectedLesson?.type === 'course' ? null : selectedLesson?.id}
+						moduleId={selectedLesson?.type === 'module' ? selectedLesson.id : null}
+						courseId={selectedLesson?.type === 'course' || !selectedLesson?.id ? course.id : null}
+						lessonTitle={selectedLesson?.title || 'Quiz'}
+						contextType={selectedLesson?.type || 'lesson'}
+					/>,
+					document.body
+				);
+			} else {
+				console.log('quizModalOpen is false, not rendering QuizModal');
+				return null;
+			}
+		})()}
+		</>
 	);
 };
 

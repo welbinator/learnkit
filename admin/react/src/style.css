@@ -188,6 +188,16 @@
 	max-height: 90vh;
 }
 
+/* Quiz Modal - Higher z-index to appear above course modal */
+.learnkit-quiz-modal.components-modal__screen-overlay {
+	z-index: 100002 !important;
+}
+
+.learnkit-quiz-modal .components-modal__frame {
+	max-width: 900px;
+	max-height: 90vh;
+}
+
 .modal-content {
 	padding: 8px 0;
 }

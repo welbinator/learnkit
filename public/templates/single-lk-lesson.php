@@ -52,6 +52,58 @@ foreach ( $lessons as $index => $l ) {
 		break;
 	}
 }
+
+// Check if we're on last lesson of module - find next module's first lesson.
+$next_module_first_lesson = null;
+if ( ! $next_lesson_id && $course_id && $module_id ) {
+	// Get all modules in this course.
+	$modules_query = new WP_Query(
+		array(
+			'post_type'      => 'lk_module',
+			'posts_per_page' => -1,
+			'post_status'    => 'publish',
+			'meta_key'       => '_lk_course_id',
+			'meta_value'     => $course_id,
+			'orderby'        => 'menu_order',
+			'order'          => 'ASC',
+		)
+	);
+
+	$modules            = $modules_query->posts;
+	$current_module_idx = null;
+
+	// Find current module index.
+	foreach ( $modules as $idx => $mod ) {
+		if ( (int) $mod->ID === (int) $module_id ) {
+			$current_module_idx = $idx;
+			break;
+		}
+	}
+
+	// If there's a next module, get its first lesson.
+	if ( null !== $current_module_idx && isset( $modules[ $current_module_idx + 1 ] ) ) {
+		$next_module    = $modules[ $current_module_idx + 1 ];
+		$next_mod_query = new WP_Query(
+			array(
+				'post_type'      => 'lk_lesson',
+				'posts_per_page' => 1,
+				'post_status'    => 'publish',
+				'meta_key'       => '_lk_module_id',
+				'meta_value'     => $next_module->ID,
+				'orderby'        => 'menu_order',
+				'order'          => 'ASC',
+			)
+		);
+
+		if ( $next_mod_query->have_posts() ) {
+			$next_module_first_lesson = array(
+				'id'          => $next_mod_query->posts[0]->ID,
+				'title'       => $next_mod_query->posts[0]->post_title,
+				'module_name' => $next_module->post_title,
+			);
+		}
+	}
+}
 ?>
 
 <div class="learnkit-lesson-viewer">
@@ -96,6 +148,28 @@ foreach ( $lessons as $index => $l ) {
 					>
 						<span class="checkmark">✓</span> Mark as Complete
 					</button>
+
+					<?php
+					// Check if there's a quiz for this lesson.
+					global $wpdb;
+					$quiz = $wpdb->get_row(
+						$wpdb->prepare(
+							"SELECT ID FROM {$wpdb->posts} p 
+							INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
+							WHERE p.post_type = 'lk_quiz' 
+							AND pm.meta_key = '_lk_lesson_id' 
+							AND pm.meta_value = %d 
+							LIMIT 1",
+							$lesson_id
+						)
+					);
+
+					if ( $quiz ) :
+						?>
+						<a href="<?php echo esc_url( get_permalink( $quiz->ID ) ); ?>" class="learnkit-quiz-button">
+							<span class="quiz-icon">📝</span> Take Quiz
+						</a>
+					<?php endif; ?>
 				<?php else : ?>
 					<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="learnkit-login-prompt">
 						Log in to track your progress
@@ -117,6 +191,13 @@ foreach ( $lessons as $index => $l ) {
 				<?php if ( $next_lesson_id ) : ?>
 					<a href="<?php echo esc_url( get_permalink( $next_lesson_id ) ); ?>" class="learnkit-nav-button next">
 						Next Lesson <span class="arrow">→</span>
+					</a>
+				<?php elseif ( $next_module_first_lesson ) : ?>
+					<a href="<?php echo esc_url( get_permalink( $next_module_first_lesson['id'] ) ); ?>" class="learnkit-nav-button next next-module">
+						<div style="display: flex; flex-direction: column; align-items: flex-end;">
+							<span style="font-size: 12px; opacity: 0.8;">Next Module:</span>
+							<span><?php echo esc_html( $next_module_first_lesson['module_name'] ); ?> <span class="arrow">→</span></span>
+						</div>
 					</a>
 				<?php else : ?>
 					<span class="learnkit-nav-button next disabled">
@@ -250,6 +331,31 @@ foreach ( $lessons as $index => $l ) {
 	background: #008a20;
 }
 
+.learnkit-quiz-button {
+	background: #2271b1;
+	color: #ffffff;
+	border: none;
+	padding: 0.75rem 1.5rem;
+	border-radius: 4px;
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	transition: background 0.2s;
+	text-decoration: none;
+	margin-left: 1rem;
+}
+
+.learnkit-quiz-button:hover {
+	background: #135e96;
+}
+
+.quiz-icon {
+	font-size: 1.25rem;
+}
+
 .learnkit-login-prompt {
 	color: #2271b1;
 	text-decoration: none;
@@ -280,6 +386,14 @@ foreach ( $lessons as $index => $l ) {
 
 .learnkit-nav-button:hover {
 	background: #1d5d8a;
+}
+
+.learnkit-nav-button.next-module {
+	background: #00a32a;
+}
+
+.learnkit-nav-button.next-module:hover {
+	background: #008a20;
 }
 
 .learnkit-nav-button.disabled {
