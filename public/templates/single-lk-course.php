@@ -34,8 +34,8 @@ $modules = get_posts(
 // Check enrollment status.
 $is_enrolled = false;
 $progress    = array(
-	'completed' => 0,
-	'total'     => 0,
+	'completed'  => 0,
+	'total'      => 0,
 	'percentage' => 0,
 );
 
@@ -43,7 +43,7 @@ if ( $user_id ) {
 	global $wpdb;
 	$enrollments_table = $wpdb->prefix . 'learnkit_enrollments';
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-	$is_enrolled       = (bool) $wpdb->get_var(
+	$is_enrolled = (bool) $wpdb->get_var(
 		$wpdb->prepare(
 			"SELECT id FROM {$wpdb->prefix}learnkit_enrollments WHERE user_id = %d AND course_id = %d",
 			$user_id,
@@ -67,21 +67,21 @@ if ( $user_id ) {
 					),
 				)
 			);
-			$all_lessons = array_merge( $all_lessons, wp_list_pluck( $module_lessons, 'ID' ) );
+			$all_lessons    = array_merge( $all_lessons, wp_list_pluck( $module_lessons, 'ID' ) );
 		}
 
 		$progress['total'] = count( $all_lessons );
 
 		if ( $progress['total'] > 0 ) {
-			$placeholders      = implode( ',', array_fill( 0, count( $all_lessons ), '%d' ) );
+			$placeholders = implode( ',', array_fill( 0, count( $all_lessons ), '%d' ) );
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$completed_lessons = $wpdb->get_col(
+			$completed_lessons      = $wpdb->get_col(
 				$wpdb->prepare(
 					"SELECT lesson_id FROM {$wpdb->prefix}learnkit_progress WHERE user_id = %d AND lesson_id IN ($placeholders)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 					array_merge( array( $user_id ), $all_lessons )
 				)
 			);
-			$progress['completed'] = count( $completed_lessons );
+			$progress['completed']  = count( $completed_lessons );
 			$progress['percentage'] = round( ( $progress['completed'] / $progress['total'] ) * 100 );
 		}
 	}
@@ -260,29 +260,46 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 		color: #2271b1;
 	}
 
+	.lk-lesson-locked {
+		color: #999;
+		cursor: default;
+		font-style: italic;
+	}
+
 	.lk-lesson-status {
 		font-size: 20px;
 	}
 
-	.lk-enroll-button,
-	.lk-start-button {
-		display: inline-block;
-		padding: 14px 32px;
-		background: #2271b1;
-		color: #fff;
-		text-decoration: none;
-		border-radius: 6px;
-		font-size: 18px;
-		font-weight: 600;
-		border: none;
+	:where(.lk-enroll-button, .lk-start-button) {
+		background: var(--btn-background, #2271b1);
+		color: var(--btn-text-color, #fff);
+		padding-block: var(--btn-padding-block, 0.75em);
+		padding-inline: var(--btn-padding-inline, 1.5em);
+		inline-size: var(--btn-width, auto);
+		min-inline-size: var(--btn-min-width);
+		line-height: var(--btn-line-height);
+		font-family: var(--btn-font-family);
+		font-size: var(--btn-font-size, var(--text-m));
+		font-weight: var(--btn-font-weight);
+		font-style: var(--btn-font-style);
+		text-transform: var(--btn-text-transform);
+		letter-spacing: var(--btn-letter-spacing);
+		border-width: var(--btn-border-width);
+		border-style: var(--btn-border-style);
+		border-radius: var(--btn-border-radius, 6px);
+		border-color: var(--btn-border-color);
+		transition: var(--btn-transition, var(--transition));
+		justify-content: var(--btn-justify-content, center);
+		align-items: var(--btn-align-items, center);
+		text-align: var(--btn-text-align, center);
+		display: var(--btn-display, inline-flex);
 		cursor: pointer;
-		transition: background 0.2s;
+		text-decoration: none;
 	}
 
-	.lk-enroll-button:hover,
-	.lk-start-button:hover {
-		background: #135e96;
-		color: #fff;
+	:where(.lk-enroll-button, .lk-start-button):where(:hover) {
+		background: var(--btn-background-hover, #135e96);
+		color: var(--btn-text-color, #fff);
 	}
 
 	.lk-login-prompt {
@@ -323,11 +340,11 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 				<?php endif; ?>
 
 				<?php if ( $is_enrolled ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="lk-start-button">
+					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="lk-start-button btn--primary">
 						Continue Learning →
 					</a>
 				<?php elseif ( $user_id && $self_enrollment ) : ?>
-					<button class="lk-enroll-button" data-course-id="<?php echo esc_attr( $course_id ); ?>">
+					<button class="lk-enroll-button btn--primary" data-course-id="<?php echo esc_attr( $course_id ); ?>">
 						Enroll Now
 					</button>
 				<?php elseif ( ! $user_id ) : ?>
@@ -421,12 +438,16 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 						<div class="lk-lessons-list">
 							<?php foreach ( $lessons as $lesson ) : ?>
 								<div class="lk-lesson-item">
-									<a href="<?php echo esc_url( get_permalink( $lesson->ID ) ); ?>" class="lk-lesson-title">
-										📖 <?php echo esc_html( $lesson->post_title ); ?>
-									</a>
 									<?php if ( $is_enrolled ) : ?>
+										<a href="<?php echo esc_url( get_permalink( $lesson->ID ) ); ?>" class="lk-lesson-title">
+											📖 <?php echo esc_html( $lesson->post_title ); ?>
+										</a>
 										<span class="lk-lesson-status">
 											<?php echo in_array( (int) $lesson->ID, array_map( 'intval', $completed_lesson_ids ), true ) ? '✓' : '○'; ?>
+										</span>
+									<?php else : ?>
+										<span class="lk-lesson-title lk-lesson-locked">
+											🔒 <?php echo esc_html( $lesson->post_title ); ?>
 										</span>
 									<?php endif; ?>
 								</div>
@@ -463,17 +484,23 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 									}
 									?>
 									<div class="lk-lesson-item" style="padding-left: 48px; background: #f9f9f9;">
-										<a href="<?php echo esc_url( get_permalink( $lesson_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #2271b1;">
-											📝 <?php echo esc_html( $lesson_quiz->post_title ); ?>
+										<?php if ( $is_enrolled ) : ?>
+											<a href="<?php echo esc_url( get_permalink( $lesson_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #2271b1;">
+												📝 <?php echo esc_html( $lesson_quiz->post_title ); ?>
+												<?php if ( $quiz_attempt ) : ?>
+													<span style="font-size: 13px; margin-left: 8px; color: <?php echo $quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+														(<?php echo esc_html( $quiz_attempt->score ); ?>% - <?php echo $quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
+													</span>
+												<?php endif; ?>
+											</a>
 											<?php if ( $quiz_attempt ) : ?>
-												<span style="font-size: 13px; margin-left: 8px; color: <?php echo $quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
-													(<?php echo esc_html( $quiz_attempt->score ); ?>% - <?php echo $quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
+												<span class="lk-lesson-status" style="color: <?php echo $quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+													<?php echo $quiz_attempt->passed ? '✓' : '✗'; ?>
 												</span>
 											<?php endif; ?>
-										</a>
-										<?php if ( $is_enrolled && $quiz_attempt ) : ?>
-											<span class="lk-lesson-status" style="color: <?php echo $quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
-												<?php echo $quiz_attempt->passed ? '✓' : '✗'; ?>
+										<?php else : ?>
+											<span class="lk-lesson-title lk-lesson-locked" style="color: #999;">
+												🔒 <?php echo esc_html( $lesson_quiz->post_title ); ?>
 											</span>
 										<?php endif; ?>
 									</div>
@@ -517,17 +544,23 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 								}
 								?>
 								<div class="lk-lesson-item" style="background: #fff3cd; border-top: 2px solid #ffc107;">
-									<a href="<?php echo esc_url( get_permalink( $module_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #856404; font-weight: 600;">
-										🎯 Module Quiz: <?php echo esc_html( $module_quiz->post_title ); ?>
+									<?php if ( $is_enrolled ) : ?>
+										<a href="<?php echo esc_url( get_permalink( $module_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #856404; font-weight: 600;">
+											🎯 Module Quiz: <?php echo esc_html( $module_quiz->post_title ); ?>
+											<?php if ( $module_quiz_attempt ) : ?>
+												<span style="font-size: 13px; margin-left: 8px; color: <?php echo $module_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+													(<?php echo esc_html( $module_quiz_attempt->score ); ?>% - <?php echo $module_quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
+												</span>
+											<?php endif; ?>
+										</a>
 										<?php if ( $module_quiz_attempt ) : ?>
-											<span style="font-size: 13px; margin-left: 8px; color: <?php echo $module_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
-												(<?php echo esc_html( $module_quiz_attempt->score ); ?>% - <?php echo $module_quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
+											<span class="lk-lesson-status" style="color: <?php echo $module_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+												<?php echo $module_quiz_attempt->passed ? '✓' : '✗'; ?>
 											</span>
 										<?php endif; ?>
-									</a>
-									<?php if ( $is_enrolled && $module_quiz_attempt ) : ?>
-										<span class="lk-lesson-status" style="color: <?php echo $module_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
-											<?php echo $module_quiz_attempt->passed ? '✓' : '✗'; ?>
+									<?php else : ?>
+										<span class="lk-lesson-title lk-lesson-locked" style="color: #999;">
+											🔒 Module Quiz: <?php echo esc_html( $module_quiz->post_title ); ?>
 										</span>
 									<?php endif; ?>
 								</div>
@@ -588,17 +621,23 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 								}
 								?>
 								<div class="lk-lesson-item" style="background: #fff;">
-									<a href="<?php echo esc_url( get_permalink( $course_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #00a32a; font-weight: 600;">
-										🎓 <?php echo esc_html( $course_quiz->post_title ); ?>
+									<?php if ( $is_enrolled ) : ?>
+										<a href="<?php echo esc_url( get_permalink( $course_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #00a32a; font-weight: 600;">
+											🎓 <?php echo esc_html( $course_quiz->post_title ); ?>
+											<?php if ( $course_quiz_attempt ) : ?>
+												<span style="font-size: 13px; margin-left: 8px; color: <?php echo $course_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+													(<?php echo esc_html( $course_quiz_attempt->score ); ?>% - <?php echo $course_quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
+												</span>
+											<?php endif; ?>
+										</a>
 										<?php if ( $course_quiz_attempt ) : ?>
-											<span style="font-size: 13px; margin-left: 8px; color: <?php echo $course_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
-												(<?php echo esc_html( $course_quiz_attempt->score ); ?>% - <?php echo $course_quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
+											<span class="lk-lesson-status" style="color: <?php echo $course_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+												<?php echo $course_quiz_attempt->passed ? '✓' : '✗'; ?>
 											</span>
 										<?php endif; ?>
-									</a>
-									<?php if ( $is_enrolled && $course_quiz_attempt ) : ?>
-										<span class="lk-lesson-status" style="color: <?php echo $course_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
-											<?php echo $course_quiz_attempt->passed ? '✓' : '✗'; ?>
+									<?php else : ?>
+										<span class="lk-lesson-title lk-lesson-locked" style="color: #999;">
+											🔒 <?php echo esc_html( $course_quiz->post_title ); ?>
 										</span>
 									<?php endif; ?>
 								</div>

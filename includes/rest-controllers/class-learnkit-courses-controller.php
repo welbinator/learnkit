@@ -351,6 +351,21 @@ class LearnKit_Courses_Controller {
 	 * @return   array Course data.
 	 */
 	private function prepare_course_response( $course ) {
+		$module_count = (int) ( new WP_Query(
+			array(
+				'post_type'      => 'lk_module',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+					array(
+						'key'   => '_lk_course_id',
+						'value' => $course->ID,
+					),
+				),
+			)
+		) )->found_posts;
+
 		return array(
 			'id'              => $course->ID,
 			'title'           => $course->post_title,
@@ -364,6 +379,7 @@ class LearnKit_Courses_Controller {
 			'featured_image'  => get_the_post_thumbnail_url( $course->ID, 'large' ),
 			'edit_link'       => get_edit_post_link( $course->ID, 'raw' ),
 			'self_enrollment' => (bool) get_post_meta( $course->ID, '_lk_self_enrollment', true ),
+			'module_count'    => $module_count,
 		);
 	}
 
@@ -375,14 +391,14 @@ class LearnKit_Courses_Controller {
 	 */
 	private function get_course_args() {
 		return array(
-			'title'   => array(
+			'title'              => array(
 				'required'          => true,
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'content' => array(
+			'content'            => array(
 				'sanitize_callback' => 'wp_kses_post',
 			),
-			'excerpt' => array(
+			'excerpt'            => array(
 				'sanitize_callback' => 'sanitize_textarea_field',
 			),
 			'featured_image_url' => array(

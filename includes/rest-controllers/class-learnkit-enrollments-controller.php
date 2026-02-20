@@ -43,7 +43,7 @@ class LearnKit_Enrollments_Controller {
 				array(
 					'methods'             => WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_enrollment' ),
-					'permission_callback' => array( $this, 'check_admin_permission' ),
+					'permission_callback' => array( $this, 'check_enrollment_permission' ),
 					'args'                => array(
 						'user_id' => array(
 							'required'          => true,
@@ -124,6 +124,24 @@ class LearnKit_Enrollments_Controller {
 				array( 'message' => __( 'Course not found', 'learnkit' ) ),
 				404
 			);
+		}
+
+		// Non-admins can only enroll themselves, and only in self-enrollment courses.
+		$current_user_id = get_current_user_id();
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			if ( $current_user_id !== $user_id ) {
+				return new WP_REST_Response(
+					array( 'message' => __( 'You can only enroll yourself.', 'learnkit' ) ),
+					403
+				);
+			}
+			$self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
+			if ( ! $self_enrollment ) {
+				return new WP_REST_Response(
+					array( 'message' => __( 'Self-enrollment is not enabled for this course.', 'learnkit' ) ),
+					403
+				);
+			}
 		}
 
 		$table = $wpdb->prefix . 'learnkit_enrollments';
@@ -274,6 +292,16 @@ class LearnKit_Enrollments_Controller {
 		}
 
 		return new WP_REST_Response( $enrollments, 200 );
+	}
+
+	/**
+	 * Check enrollment permission — logged-in users can attempt self-enrollment.
+	 *
+	 * @since    0.3.3
+	 * @return   bool True if user is logged in.
+	 */
+	public function check_enrollment_permission() {
+		return is_user_logged_in();
 	}
 
 	/**

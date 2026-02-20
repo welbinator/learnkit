@@ -31,8 +31,8 @@ $is_enrolled = false;
 
 if ( $course_id && $user_id ) {
 	global $wpdb;
-	$table_name  = $wpdb->prefix . 'learnkit_enrollments';
-	$enrollment  = $wpdb->get_row(
+	$table_name = $wpdb->prefix . 'learnkit_enrollments';
+	$enrollment = $wpdb->get_row(
 		$wpdb->prepare(
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
 			"SELECT * FROM $table_name WHERE user_id = %d AND course_id = %d",
@@ -179,22 +179,8 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 		text-align: center;
 		margin-top: 40px;
 	}
-	.submit-button {
-		background: #2271b1;
-		color: #fff;
-		border: none;
-		padding: 15px 40px;
-		font-size: 18px;
-		font-weight: 600;
-		border-radius: 6px;
-		cursor: pointer;
-		transition: background 0.2s;
-	}
-	.submit-button:hover {
-		background: #135e96;
-	}
 	.submit-button:disabled {
-		background: #ccc;
+		opacity: 0.5;
 		cursor: not-allowed;
 	}
 	.quiz-attempts-info {
@@ -242,9 +228,68 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 <div class="learnkit-quiz-container">
 	<?php
 	// Show results if quiz was just submitted.
-	if ( isset( $_GET['quiz_result'] ) && 'submitted' === $_GET['quiz_result'] ) :
-		$result_score  = isset( $_GET['score'] ) ? (int) $_GET['score'] : 0;
-		$result_passed = isset( $_GET['passed'] ) && '1' === $_GET['passed'];
+	if ( isset( $_GET['quiz_result'] ) && 'submitted' === $_GET['quiz_result'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$result_score  = isset( $_GET['score'] ) ? (int) $_GET['score'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$result_passed = isset( $_GET['passed'] ) && '1' === $_GET['passed']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		// Load the most recent attempt for answer review (Option C).
+		$latest_attempt   = null;
+		$attempt_answers  = array();
+		$question_results = array();
+
+		if ( $user_id ) {
+			global $wpdb;
+			$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$latest_attempt = $wpdb->get_row(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+					"SELECT * FROM $attempts_table WHERE user_id = %d AND quiz_id = %d ORDER BY completed_at DESC LIMIT 1",
+					$user_id,
+					$quiz_id
+				)
+			);
+		}
+
+		if ( $latest_attempt && ! empty( $latest_attempt->answers ) ) {
+			$attempt_answers = json_decode( $latest_attempt->answers, true );
+			if ( ! is_array( $attempt_answers ) ) {
+				$attempt_answers = array();
+			}
+		}
+
+		// Cross-reference answers with questions for the breakdown.
+		// The PHP form handler keys answers by question 'id'; the REST endpoint keys by numeric index.
+		// Support both formats.
+		if ( ! empty( $questions ) && ! empty( $attempt_answers ) ) {
+			// Determine which keying scheme is in use.
+			// If the first question's 'id' value is a key in attempt_answers, use id-based lookup.
+			$first_question = reset( $questions );
+			$use_id_key     = isset( $first_question['id'] ) && array_key_exists( (string) $first_question['id'], $attempt_answers );
+
+			foreach ( $questions as $index => $question ) {
+				if ( $use_id_key ) {
+					$lookup_key = (string) $question['id'];
+				} else {
+					$lookup_key = (string) $index;
+				}
+
+				$user_answer_idx = isset( $attempt_answers[ $lookup_key ] ) ? (int) $attempt_answers[ $lookup_key ] : -1;
+				$correct_idx     = isset( $question['correctAnswer'] ) ? (int) $question['correctAnswer'] : 0;
+				$is_correct      = $user_answer_idx === $correct_idx && $user_answer_idx >= 0;
+
+				$question_results[] = array(
+					'question'        => $question['question'],
+					'options'         => $question['options'],
+					'user_answer'     => $user_answer_idx >= 0 ? $question['options'][ $user_answer_idx ] : '',
+					'user_answer_idx' => $user_answer_idx,
+					'correct_answer'  => $question['options'][ $correct_idx ],
+					'correct_idx'     => $correct_idx,
+					'is_correct'      => $is_correct,
+					'points'          => (int) $question['points'],
+				);
+			}
+		}
 		?>
 		<div class="<?php echo esc_attr( $result_passed ? 'passed-banner' : 'not-enrolled' ); ?>">
 			<h2>
@@ -273,25 +318,214 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				}
 				?>
 			</p>
-			<?php if ( false === $result_passed && ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) ) : ?>
-				<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="submit-button">
-					<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
-				</a>
-			<?php elseif ( true === $result_passed && ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) ) : ?>
-				<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="submit-button">
-					<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
-				</a>
-			<?php endif; ?>
-			<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
-				<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button" style="margin-left: 10px; background: #757575;">
-					<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
-				</a>
-			<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
-				<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="submit-button" style="margin-left: 10px; background: #757575;">
-					<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
-				</a>
-			<?php endif; ?>
+			<div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+				<?php if ( false === $result_passed && ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) ) : ?>
+					<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="submit-button btn--primary">
+						<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
+					</a>
+				<?php elseif ( true === $result_passed && ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) ) : ?>
+					<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="submit-button btn--primary">
+						<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
+					</a>
+				<?php endif; ?>
+				<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
+					<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button btn--secondary">
+						<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
+					</a>
+				<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
+					<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="submit-button btn--secondary">
+						<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
+					</a>
+				<?php endif; ?>
+			</div>
 		</div>
+
+		<?php if ( ! empty( $question_results ) ) : ?>
+			<div class="lk-answer-review">
+				<h3 class="lk-answer-review__title"><?php esc_html_e( 'Answer Review', 'learnkit' ); ?></h3>
+				<?php foreach ( $question_results as $qnum => $qr ) : ?>
+					<div class="lk-answer-review__question <?php echo esc_attr( $qr['is_correct'] ? 'lk-answer-review__question--correct' : 'lk-answer-review__question--incorrect' ); ?>">
+						<div class="lk-answer-review__question-header">
+							<span class="lk-answer-review__question-number">
+								<?php
+								/* translators: %d: Question number */
+								printf( esc_html__( 'Question %d', 'learnkit' ), (int) $qnum + 1 );
+								?>
+							</span>
+							<span class="lk-answer-review__result-badge <?php echo esc_attr( $qr['is_correct'] ? 'lk-answer-review__result-badge--correct' : 'lk-answer-review__result-badge--incorrect' ); ?>">
+								<?php
+								if ( $qr['is_correct'] ) {
+									echo '✓ ' . esc_html__( 'Correct', 'learnkit' );
+								} else {
+									echo '✗ ' . esc_html__( 'Incorrect', 'learnkit' );
+								}
+								?>
+							</span>
+							<span class="lk-answer-review__points">
+								<?php
+								if ( $qr['is_correct'] ) {
+									/* translators: 1: Points earned, 2: Total points for question */
+									printf( esc_html__( '%1$d / %2$d pts', 'learnkit' ), (int) $qr['points'], (int) $qr['points'] );
+								} else {
+									/* translators: 1: Points earned (0), 2: Total points for question */
+									printf( esc_html__( '%1$d / %2$d pts', 'learnkit' ), 0, (int) $qr['points'] );
+								}
+								?>
+							</span>
+						</div>
+						<p class="lk-answer-review__question-text"><?php echo esc_html( $qr['question'] ); ?></p>
+						<ul class="lk-answer-review__options">
+							<?php foreach ( $qr['options'] as $opt_idx => $opt_text ) : ?>
+								<?php
+								$is_user_choice    = $opt_idx === $qr['user_answer_idx'];
+								$is_correct_choice = $opt_idx === $qr['correct_idx'];
+								$option_class      = 'lk-answer-review__option';
+								if ( $is_correct_choice ) {
+									$option_class .= ' lk-answer-review__option--correct';
+								} elseif ( $is_user_choice && ! $is_correct_choice ) {
+									$option_class .= ' lk-answer-review__option--wrong';
+								}
+								?>
+								<li class="<?php echo esc_attr( $option_class ); ?>">
+									<?php if ( $is_correct_choice ) : ?>
+										<span class="lk-answer-review__option-icon">✓</span>
+									<?php elseif ( $is_user_choice ) : ?>
+										<span class="lk-answer-review__option-icon">✗</span>
+									<?php else : ?>
+										<span class="lk-answer-review__option-icon lk-answer-review__option-icon--empty">○</span>
+									<?php endif; ?>
+									<?php echo esc_html( $opt_text ); ?>
+									<?php if ( $is_correct_choice && ! $is_user_choice ) : ?>
+										<em class="lk-answer-review__correct-label"><?php esc_html_e( '(correct answer)', 'learnkit' ); ?></em>
+									<?php endif; ?>
+									<?php if ( $is_user_choice ) : ?>
+										<em class="lk-answer-review__your-label"><?php esc_html_e( '(your answer)', 'learnkit' ); ?></em>
+									<?php endif; ?>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
+				<?php endforeach; ?>
+			</div>
+
+			<style>
+				.lk-answer-review {
+					margin-top: 40px;
+				}
+				.lk-answer-review__title {
+					font-size: 22px;
+					font-weight: 700;
+					color: #1a1a1a;
+					margin-bottom: 20px;
+					padding-bottom: 10px;
+					border-bottom: 2px solid #e0e0e0;
+				}
+				.lk-answer-review__question {
+					background: #fff;
+					border: 2px solid #e0e0e0;
+					border-radius: 10px;
+					padding: 20px 24px;
+					margin-bottom: 16px;
+				}
+				.lk-answer-review__question--correct {
+					border-color: #28a745;
+					background: #f6fff8;
+				}
+				.lk-answer-review__question--incorrect {
+					border-color: #dc3545;
+					background: #fff6f6;
+				}
+				.lk-answer-review__question-header {
+					display: flex;
+					align-items: center;
+					gap: 12px;
+					margin-bottom: 10px;
+					flex-wrap: wrap;
+				}
+				.lk-answer-review__question-number {
+					font-weight: 700;
+					color: #555;
+					font-size: 13px;
+					text-transform: uppercase;
+					letter-spacing: 0.04em;
+				}
+				.lk-answer-review__result-badge {
+					font-size: 13px;
+					font-weight: 700;
+					padding: 2px 10px;
+					border-radius: 20px;
+				}
+				.lk-answer-review__result-badge--correct {
+					background: #d4edda;
+					color: #155724;
+				}
+				.lk-answer-review__result-badge--incorrect {
+					background: #f8d7da;
+					color: #721c24;
+				}
+				.lk-answer-review__points {
+					margin-left: auto;
+					font-size: 13px;
+					color: #666;
+					font-weight: 600;
+				}
+				.lk-answer-review__question-text {
+					font-size: 16px;
+					font-weight: 600;
+					color: #1a1a1a;
+					margin: 0 0 14px 0;
+				}
+				.lk-answer-review__options {
+					list-style: none;
+					padding: 0;
+					margin: 0;
+					display: flex;
+					flex-direction: column;
+					gap: 8px;
+				}
+				.lk-answer-review__option {
+					display: flex;
+					align-items: center;
+					gap: 8px;
+					padding: 10px 14px;
+					border-radius: 6px;
+					border: 1px solid #e0e0e0;
+					background: #fafafa;
+					font-size: 15px;
+					color: #333;
+				}
+				.lk-answer-review__option--correct {
+					border-color: #28a745;
+					background: #d4edda;
+					color: #155724;
+					font-weight: 600;
+				}
+				.lk-answer-review__option--wrong {
+					border-color: #dc3545;
+					background: #f8d7da;
+					color: #721c24;
+					font-weight: 600;
+				}
+				.lk-answer-review__option-icon {
+					font-size: 15px;
+					font-weight: 700;
+					flex-shrink: 0;
+					width: 20px;
+					text-align: center;
+				}
+				.lk-answer-review__option-icon--empty {
+					color: #bbb;
+					font-weight: 400;
+				}
+				.lk-answer-review__correct-label,
+				.lk-answer-review__your-label {
+					margin-left: 6px;
+					font-size: 12px;
+					opacity: 0.75;
+					font-style: italic;
+				}
+			</style>
+		<?php endif; ?>
 		<?php
 		// Don't show quiz form again after completion, just show navigation.
 		get_footer();
@@ -303,7 +537,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 		<div class="not-enrolled">
 			<h3><?php esc_html_e( 'Login Required', 'learnkit' ); ?></h3>
 			<p><?php esc_html_e( 'You must be logged in to take this quiz.', 'learnkit' ); ?></p>
-			<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="submit-button">
+			<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="submit-button btn--primary">
 				<?php esc_html_e( 'Log In', 'learnkit' ); ?>
 			</a>
 		</div>
@@ -312,7 +546,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 			<h3><?php esc_html_e( 'Enrollment Required', 'learnkit' ); ?></h3>
 			<p><?php esc_html_e( 'You must be enrolled in this course to take this quiz.', 'learnkit' ); ?></p>
 			<?php if ( $course_id ) : ?>
-				<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>" class="submit-button">
+				<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>" class="submit-button btn--primary">
 					<?php esc_html_e( 'View Course', 'learnkit' ); ?>
 				</a>
 			<?php endif; ?>
@@ -365,11 +599,11 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				</p>
 				<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
 					<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button" style="background: #757575;">
+						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button btn--secondary">
 							<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
 						</a>
 					<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="submit-button" style="background: #757575;">
+						<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="submit-button btn--secondary">
 							<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
 						</a>
 					<?php endif; ?>
@@ -396,11 +630,11 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				<?php endif; ?>
 				<div style="margin-top: 20px;">
 					<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button" style="background: #757575;">
+						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="submit-button btn--secondary">
 							<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
 						</a>
 					<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="submit-button" style="background: #757575;">
+						<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="submit-button btn--secondary">
 							<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
 						</a>
 					<?php endif; ?>
@@ -441,7 +675,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 					<p style="color: #d63638; font-weight: 600; margin-bottom: 30px;">
 						<?php esc_html_e( 'The timer will start as soon as you click the button below.', 'learnkit' ); ?>
 					</p>
-					<button type="button" id="start-quiz-button" class="submit-button">
+					<button type="button" id="start-quiz-button" class="submit-button btn--primary">
 						<?php esc_html_e( 'Start Quiz', 'learnkit' ); ?>
 					</button>
 				</div>
@@ -489,7 +723,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				<?php endforeach; ?>
 
 				<div class="quiz-submit">
-					<button type="submit" class="submit-button">
+					<button type="submit" class="submit-button btn--primary">
 						<?php esc_html_e( 'Submit Quiz', 'learnkit' ); ?>
 					</button>
 				</div>

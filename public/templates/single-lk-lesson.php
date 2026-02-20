@@ -55,6 +55,7 @@ foreach ( $lessons as $index => $l ) {
 
 // Check if we're on last lesson of module - find next module's first lesson.
 $next_module_first_lesson = null;
+$next_module_quiz         = null;
 if ( ! $next_lesson_id && $course_id && $module_id ) {
 	// Get all modules in this course.
 	$modules_query = new WP_Query(
@@ -80,7 +81,7 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 		}
 	}
 
-	// If there's a next module, get its first lesson.
+	// If there's a next module, get its first lesson — or its quiz if it has no lessons.
 	if ( null !== $current_module_idx && isset( $modules[ $current_module_idx + 1 ] ) ) {
 		$next_module    = $modules[ $current_module_idx + 1 ];
 		$next_mod_query = new WP_Query(
@@ -101,8 +102,66 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 				'title'       => $next_mod_query->posts[0]->post_title,
 				'module_name' => $next_module->post_title,
 			);
+		} else {
+			// No lessons in next module — check for a quiz instead.
+			global $wpdb;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$module_quiz = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT p.ID, p.post_title FROM {$wpdb->posts} p
+					INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+					WHERE p.post_type = 'lk_quiz'
+					AND p.post_status = 'publish'
+					AND pm.meta_key = '_lk_module_id'
+					AND pm.meta_value = %d
+					LIMIT 1",
+					$next_module->ID
+				)
+			);
+			if ( $module_quiz ) {
+				$next_module_quiz = array(
+					'id'          => $module_quiz->ID,
+					'title'       => $module_quiz->post_title,
+					'module_name' => $next_module->post_title,
+				);
+			}
 		}
 	}
+}
+
+// Check enrollment — gate lesson access.
+$user_id     = get_current_user_id();
+$is_enrolled = false;
+if ( $course_id && $user_id ) {
+	global $wpdb;
+	$is_enrolled = (bool) $wpdb->get_var(
+		$wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+			"SELECT id FROM {$wpdb->prefix}learnkit_enrollments WHERE user_id = %d AND course_id = %d",
+			$user_id,
+			$course_id
+		)
+	);
+}
+
+if ( ! $is_enrolled ) {
+	?>
+	<div style="max-width: 680px; margin: 80px auto; padding: 0 20px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+		<div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+		<h2 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; color: #1a1a1a;">Enrollment Required</h2>
+		<p style="font-size: 16px; color: #555; margin-bottom: 32px; line-height: 1.6;">
+			<?php esc_html_e( 'You need to be enrolled in this course to access lessons.', 'learnkit' ); ?>
+		</p>
+		<?php if ( $course_id ) : ?>
+			<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>"
+				style="display: inline-block; background: #2271b1; color: #fff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: 600;">
+				<?php esc_html_e( 'View Course', 'learnkit' ); ?>
+			</a>
+		<?php endif; ?>
+	</div>
+	<?php
+	get_footer();
+	return;
 }
 ?>
 
@@ -142,23 +201,76 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 		<div class="learnkit-lesson-footer">
 			<div class="learnkit-lesson-progress">
 				<?php if ( is_user_logged_in() ) : ?>
-					<button 
-						class="learnkit-mark-complete" 
-						data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
-					>
-						<span class="checkmark">✓</span> Mark as Complete
-					</button>
+					<?php
+					// Check if there's a required quiz that must be passed before completing.
+					global $wpdb;
+
+					$required_quiz = $wpdb->get_row(
+						$wpdb->prepare(
+							"SELECT p.ID FROM {$wpdb->posts} p
+							INNER JOIN {$wpdb->postmeta} pm_lesson ON p.ID = pm_lesson.post_id
+								AND pm_lesson.meta_key = '_lk_lesson_id'
+								AND pm_lesson.meta_value = %d
+							INNER JOIN {$wpdb->postmeta} pm_required ON p.ID = pm_required.post_id
+								AND pm_required.meta_key = '_lk_required_to_complete'
+								AND pm_required.meta_value = '1'
+							WHERE p.post_type = 'lk_quiz'
+							AND p.post_status = 'publish'
+							LIMIT 1",
+							$lesson_id
+						)
+					);
+
+					$quiz_gate_active = false;
+
+					if ( $required_quiz ) {
+						// Check whether the current user has a passing attempt for this quiz.
+						$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+						$passing_attempt = $wpdb->get_var(
+							$wpdb->prepare(
+								// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+								"SELECT COUNT(*) FROM $attempts_table WHERE user_id = %d AND quiz_id = %d AND passed = 1",
+								get_current_user_id(),
+								(int) $required_quiz->ID
+							)
+						);
+
+						$quiz_gate_active = empty( $passing_attempt ) || 0 === (int) $passing_attempt;
+					}
+
+					if ( $quiz_gate_active ) :
+						?>
+						<button
+							class="learnkit-mark-complete btn--primary"
+							data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
+							disabled
+							aria-disabled="true"
+							style="cursor: not-allowed; opacity: 0.5;"
+						>
+							<span class="checkmark">✓</span> Mark as Complete
+						</button>
+						<p class="learnkit-quiz-gate-notice" style="margin: 8px 0 0; font-size: 0.875rem; color: #d63638; font-weight: 600;">
+							<?php esc_html_e( 'Complete the quiz to finish this lesson', 'learnkit' ); ?>
+						</p>
+					<?php else : ?>
+						<button
+							class="learnkit-mark-complete btn--primary"
+							data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
+						>
+							<span class="checkmark">✓</span> Mark as Complete
+						</button>
+					<?php endif; ?>
 
 					<?php
-					// Check if there's a quiz for this lesson.
-					global $wpdb;
+					// Check if there's any quiz for this lesson (for Take Quiz button).
 					$quiz = $wpdb->get_row(
 						$wpdb->prepare(
-							"SELECT ID FROM {$wpdb->posts} p 
-							INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
-							WHERE p.post_type = 'lk_quiz' 
-							AND pm.meta_key = '_lk_lesson_id' 
-							AND pm.meta_value = %d 
+							"SELECT ID FROM {$wpdb->posts} p
+							INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+							WHERE p.post_type = 'lk_quiz'
+							AND pm.meta_key = '_lk_lesson_id'
+							AND pm.meta_value = %d
 							LIMIT 1",
 							$lesson_id
 						)
@@ -166,7 +278,7 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 
 					if ( $quiz ) :
 						?>
-						<a href="<?php echo esc_url( get_permalink( $quiz->ID ) ); ?>" class="learnkit-quiz-button">
+						<a href="<?php echo esc_url( get_permalink( $quiz->ID ) ); ?>" class="learnkit-quiz-button btn--primary">
 							<span class="quiz-icon">📝</span> Take Quiz
 						</a>
 					<?php endif; ?>
@@ -179,7 +291,7 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 
 			<div class="learnkit-lesson-navigation">
 				<?php if ( $prev_lesson_id ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $prev_lesson_id ) ); ?>" class="learnkit-nav-button prev">
+					<a href="<?php echo esc_url( get_permalink( $prev_lesson_id ) ); ?>" class="learnkit-nav-button prev btn--primary">
 						<span class="arrow">←</span> Previous Lesson
 					</a>
 				<?php else : ?>
@@ -189,14 +301,21 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 				<?php endif; ?>
 
 				<?php if ( $next_lesson_id ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $next_lesson_id ) ); ?>" class="learnkit-nav-button next">
+					<a href="<?php echo esc_url( get_permalink( $next_lesson_id ) ); ?>" class="learnkit-nav-button next btn--primary">
 						Next Lesson <span class="arrow">→</span>
 					</a>
 				<?php elseif ( $next_module_first_lesson ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $next_module_first_lesson['id'] ) ); ?>" class="learnkit-nav-button next next-module">
+					<a href="<?php echo esc_url( get_permalink( $next_module_first_lesson['id'] ) ); ?>" class="learnkit-nav-button next next-module btn--primary">
 						<div style="display: flex; flex-direction: column; align-items: flex-end;">
 							<span style="font-size: 12px; opacity: 0.8;">Next Module:</span>
 							<span><?php echo esc_html( $next_module_first_lesson['module_name'] ); ?> <span class="arrow">→</span></span>
+						</div>
+					</a>
+				<?php elseif ( $next_module_quiz ) : ?>
+					<a href="<?php echo esc_url( get_permalink( $next_module_quiz['id'] ) ); ?>" class="learnkit-nav-button next next-module btn--primary">
+						<div style="display: flex; flex-direction: column; align-items: flex-end;">
+							<span style="font-size: 12px; opacity: 0.8;">Next: <?php echo esc_html( $next_module_quiz['module_name'] ); ?></span>
+							<span>📝 Take Module Quiz <span class="arrow">→</span></span>
 						</div>
 					</a>
 				<?php else : ?>

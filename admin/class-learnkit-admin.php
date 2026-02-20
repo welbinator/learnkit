@@ -198,16 +198,6 @@ class LearnKit_Admin {
 			'edit.php?post_type=lk_lesson'
 		);
 
-		// Quiz Reports submenu.
-		add_submenu_page(
-			'learnkit',
-			__( 'Quiz Reports', 'learnkit' ),
-			__( 'Quiz Reports', 'learnkit' ),
-			'manage_options',
-			'learnkit-quiz-reports',
-			array( $this, 'render_quiz_reports_page' )
-		);
-
 		// Settings submenu (placeholder for future).
 		add_submenu_page(
 			'learnkit',

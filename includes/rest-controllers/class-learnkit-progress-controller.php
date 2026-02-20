@@ -96,6 +96,45 @@ class LearnKit_Progress_Controller {
 			);
 		}
 
+		// Backend gate: enforce required quiz passage before allowing completion.
+		$required_quiz = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT p.ID FROM {$wpdb->posts} p
+				INNER JOIN {$wpdb->postmeta} pm_lesson ON p.ID = pm_lesson.post_id
+					AND pm_lesson.meta_key = '_lk_lesson_id'
+					AND pm_lesson.meta_value = %d
+				INNER JOIN {$wpdb->postmeta} pm_required ON p.ID = pm_required.post_id
+					AND pm_required.meta_key = '_lk_required_to_complete'
+					AND pm_required.meta_value = '1'
+				WHERE p.post_type = 'lk_quiz'
+				AND p.post_status = 'publish'
+				LIMIT 1",
+				$lesson_id
+			)
+		);
+
+		if ( $required_quiz ) {
+			$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$passing_attempt = $wpdb->get_var(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+					"SELECT COUNT(*) FROM $attempts_table WHERE user_id = %d AND quiz_id = %d AND passed = 1",
+					$user_id,
+					(int) $required_quiz->ID
+				)
+			);
+
+			if ( empty( $passing_attempt ) || 0 === (int) $passing_attempt ) {
+				return new WP_REST_Response(
+					array(
+						'message' => __( 'You must pass the quiz before marking this lesson complete.', 'learnkit' ),
+					),
+					403
+				);
+			}
+		}
+
 		$table = $wpdb->prefix . 'learnkit_progress';
 
 		// Insert or update progress record.
@@ -215,9 +254,9 @@ class LearnKit_Progress_Controller {
 		if ( empty( $module_ids ) ) {
 			return new WP_REST_Response(
 				array(
-					'total_lessons'      => 0,
-					'completed_lessons'  => 0,
-					'progress_percent'   => 0,
+					'total_lessons'        => 0,
+					'completed_lessons'    => 0,
+					'progress_percent'     => 0,
 					'completed_lesson_ids' => array(),
 				),
 				200
@@ -245,9 +284,9 @@ class LearnKit_Progress_Controller {
 		if ( empty( $lesson_ids ) ) {
 			return new WP_REST_Response(
 				array(
-					'total_lessons'      => 0,
-					'completed_lessons'  => 0,
-					'progress_percent'   => 0,
+					'total_lessons'        => 0,
+					'completed_lessons'    => 0,
+					'progress_percent'     => 0,
 					'completed_lesson_ids' => array(),
 				),
 				200
@@ -255,8 +294,8 @@ class LearnKit_Progress_Controller {
 		}
 
 		// Get completed lessons.
-		$table             = $wpdb->prefix . 'learnkit_progress';
-		$placeholders      = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
+		$table        = $wpdb->prefix . 'learnkit_progress';
+		$placeholders = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$completed = $wpdb->get_col(
@@ -267,8 +306,8 @@ class LearnKit_Progress_Controller {
 		);
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
-		$completed_count   = count( $completed );
-		$progress_percent  = $total_lessons > 0 ? round( ( $completed_count / $total_lessons ) * 100 ) : 0;
+		$completed_count  = count( $completed );
+		$progress_percent = $total_lessons > 0 ? round( ( $completed_count / $total_lessons ) * 100 ) : 0;
 
 		return new WP_REST_Response(
 			array(
@@ -320,8 +359,8 @@ class LearnKit_Progress_Controller {
 		}
 
 		// Get completed lessons.
-		$table             = $wpdb->prefix . 'learnkit_progress';
-		$placeholders      = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
+		$table        = $wpdb->prefix . 'learnkit_progress';
+		$placeholders = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$completed = $wpdb->get_col(
