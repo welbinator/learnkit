@@ -92,9 +92,18 @@ class LearnKit_Admin {
 
 		// Check if React build exists, otherwise use development warning.
 		if ( file_exists( LEARNKIT_PLUGIN_DIR . 'assets/js/learnkit-admin.js' ) ) {
-			// Enqueue React styles.
+			// Enqueue React styles (main styles).
 			wp_enqueue_style(
 				$this->plugin_name . '-react',
+				LEARNKIT_PLUGIN_URL . 'assets/js/style-index.css',
+				array(),
+				$this->version,
+				'all'
+			);
+
+			// Enqueue Quiz Builder styles.
+			wp_enqueue_style(
+				$this->plugin_name . '-quiz',
 				LEARNKIT_PLUGIN_URL . 'assets/js/index.css',
 				array(),
 				$this->version,
