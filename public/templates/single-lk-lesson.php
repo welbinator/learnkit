@@ -142,23 +142,76 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 		<div class="learnkit-lesson-footer">
 			<div class="learnkit-lesson-progress">
 				<?php if ( is_user_logged_in() ) : ?>
-					<button 
-						class="learnkit-mark-complete" 
-						data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
-					>
-						<span class="checkmark">✓</span> Mark as Complete
-					</button>
+					<?php
+					// Check if there's a required quiz that must be passed before completing.
+					global $wpdb;
+
+					$required_quiz = $wpdb->get_row(
+						$wpdb->prepare(
+							"SELECT p.ID FROM {$wpdb->posts} p
+							INNER JOIN {$wpdb->postmeta} pm_lesson ON p.ID = pm_lesson.post_id
+								AND pm_lesson.meta_key = '_lk_lesson_id'
+								AND pm_lesson.meta_value = %d
+							INNER JOIN {$wpdb->postmeta} pm_required ON p.ID = pm_required.post_id
+								AND pm_required.meta_key = '_lk_required_to_complete'
+								AND pm_required.meta_value = '1'
+							WHERE p.post_type = 'lk_quiz'
+							AND p.post_status = 'publish'
+							LIMIT 1",
+							$lesson_id
+						)
+					);
+
+					$quiz_gate_active = false;
+
+					if ( $required_quiz ) {
+						// Check whether the current user has a passing attempt for this quiz.
+						$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+						$passing_attempt = $wpdb->get_var(
+							$wpdb->prepare(
+								// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+								"SELECT COUNT(*) FROM $attempts_table WHERE user_id = %d AND quiz_id = %d AND passed = 1",
+								get_current_user_id(),
+								(int) $required_quiz->ID
+							)
+						);
+
+						$quiz_gate_active = empty( $passing_attempt ) || 0 === (int) $passing_attempt;
+					}
+
+					if ( $quiz_gate_active ) :
+						?>
+						<button
+							class="learnkit-mark-complete"
+							data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
+							disabled
+							aria-disabled="true"
+							style="background: #ccc; cursor: not-allowed; opacity: 0.7;"
+						>
+							<span class="checkmark">✓</span> Mark as Complete
+						</button>
+						<p class="learnkit-quiz-gate-notice" style="margin: 8px 0 0; font-size: 0.875rem; color: #d63638; font-weight: 600;">
+							<?php esc_html_e( 'Complete the quiz to finish this lesson', 'learnkit' ); ?>
+						</p>
+					<?php else : ?>
+						<button
+							class="learnkit-mark-complete"
+							data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
+						>
+							<span class="checkmark">✓</span> Mark as Complete
+						</button>
+					<?php endif; ?>
 
 					<?php
-					// Check if there's a quiz for this lesson.
-					global $wpdb;
+					// Check if there's any quiz for this lesson (for Take Quiz button).
 					$quiz = $wpdb->get_row(
 						$wpdb->prepare(
-							"SELECT ID FROM {$wpdb->posts} p 
-							INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
-							WHERE p.post_type = 'lk_quiz' 
-							AND pm.meta_key = '_lk_lesson_id' 
-							AND pm.meta_value = %d 
+							"SELECT ID FROM {$wpdb->posts} p
+							INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+							WHERE p.post_type = 'lk_quiz'
+							AND pm.meta_key = '_lk_lesson_id'
+							AND pm.meta_value = %d
 							LIMIT 1",
 							$lesson_id
 						)
