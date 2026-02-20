@@ -72,6 +72,8 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 	 */
 	public function get_quizzes( $request ) {
 		$lesson_id = $request->get_param( 'lesson_id' );
+		$module_id = $request->get_param( 'module_id' );
+		$course_id = $request->get_param( 'course_id' );
 
 		$args = array(
 			'post_type'      => 'lk_quiz',
@@ -79,13 +81,32 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 			'post_status'    => 'any',
 		);
 
+		// Build meta query based on which ID is provided.
+		$meta_query = array();
+
 		if ( $lesson_id ) {
-			$args['meta_query'] = array(
-				array(
-					'key'   => '_lk_lesson_id',
-					'value' => $lesson_id,
-				),
+			$meta_query[] = array(
+				'key'   => '_lk_lesson_id',
+				'value' => $lesson_id,
 			);
+		}
+
+		if ( $module_id ) {
+			$meta_query[] = array(
+				'key'   => '_lk_module_id',
+				'value' => $module_id,
+			);
+		}
+
+		if ( $course_id ) {
+			$meta_query[] = array(
+				'key'   => '_lk_course_id',
+				'value' => $course_id,
+			);
+		}
+
+		if ( ! empty( $meta_query ) ) {
+			$args['meta_query'] = $meta_query;
 		}
 
 		$quizzes = get_posts( $args );
@@ -96,12 +117,14 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 				'id'    => $quiz->ID,
 				'title' => $quiz->post_title,
 				'meta'  => array(
-					'_lk_lesson_id'          => get_post_meta( $quiz->ID, '_lk_lesson_id', true ),
-					'_lk_passing_score'      => get_post_meta( $quiz->ID, '_lk_passing_score', true ),
-					'_lk_time_limit'         => get_post_meta( $quiz->ID, '_lk_time_limit', true ),
-					'_lk_attempts_allowed'   => get_post_meta( $quiz->ID, '_lk_attempts_allowed', true ),
+					'_lk_lesson_id'            => get_post_meta( $quiz->ID, '_lk_lesson_id', true ),
+					'_lk_module_id'            => get_post_meta( $quiz->ID, '_lk_module_id', true ),
+					'_lk_course_id'            => get_post_meta( $quiz->ID, '_lk_course_id', true ),
+					'_lk_passing_score'        => get_post_meta( $quiz->ID, '_lk_passing_score', true ),
+					'_lk_time_limit'           => get_post_meta( $quiz->ID, '_lk_time_limit', true ),
+					'_lk_attempts_allowed'     => get_post_meta( $quiz->ID, '_lk_attempts_allowed', true ),
 					'_lk_required_to_complete' => get_post_meta( $quiz->ID, '_lk_required_to_complete', true ),
-					'_lk_questions'          => get_post_meta( $quiz->ID, '_lk_questions', true ),
+					'_lk_questions'            => get_post_meta( $quiz->ID, '_lk_questions', true ),
 				),
 			);
 		}
