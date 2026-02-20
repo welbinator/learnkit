@@ -305,7 +305,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				}
 
 				$user_answer_idx = isset( $attempt_answers[ $lookup_key ] ) ? (int) $attempt_answers[ $lookup_key ] : -1;
-				$correct_idx     = isset( $question['correctAnswer'] ) ? (int) $question['correctAnswer'] : 0;
+				$correct_idx     = isset( $question['correctAnswer'] ) ? (int) $question['correctAnswer'] : (int) $question['correct'];
 				$is_correct      = $user_answer_idx === $correct_idx && $user_answer_idx >= 0;
 
 				$question_results[] = array(

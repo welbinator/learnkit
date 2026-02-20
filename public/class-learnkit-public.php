@@ -191,7 +191,7 @@ class LearnKit_Public {
 			$max_score += (int) $question['points'];
 
 			$user_answer    = isset( $answers[ $question['id'] ] ) ? $answers[ $question['id'] ] : -1;
-			$correct_answer = (int) $question['correctAnswer'];
+			$correct_answer = isset( $question['correctAnswer'] ) ? (int) $question['correctAnswer'] : (int) $question['correct'];
 
 			if ( $user_answer === $correct_answer ) {
 				$score += (int) $question['points'];
@@ -212,12 +212,13 @@ class LearnKit_Public {
 				'user_id'      => $user_id,
 				'quiz_id'      => $quiz_id,
 				'score'        => $score_percentage,
+				'max_score'    => $max_score,
 				'passed'       => $passed ? 1 : 0,
 				'answers'      => wp_json_encode( $answers ),
 				'completed_at' => current_time( 'mysql' ),
 				'time_taken'   => $time_taken,
 			),
-			array( '%d', '%d', '%d', '%d', '%s', '%s', '%d' )
+			array( '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%d' )
 		);
 
 		// Redirect to results page with query params.
