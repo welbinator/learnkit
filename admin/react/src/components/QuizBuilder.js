@@ -7,9 +7,9 @@ import { CSS } from '@dnd-kit/utilities';
 /**
  * Quiz Builder Component
  * 
- * Allows instructors to create and manage quiz questions for a lesson.
+ * Allows instructors to create and manage quiz questions for a lesson, module, or course.
  */
-const QuizBuilder = ({ lessonId }) => {
+const QuizBuilder = ({ lessonId, moduleId, courseId, contextType }) => {
 	const [quiz, setQuiz] = useState(null);
 	const [questions, setQuestions] = useState([]);
 	const [settings, setSettings] = useState({
@@ -29,16 +29,31 @@ const QuizBuilder = ({ lessonId }) => {
 		})
 	);
 
+	// Determine the context ID
+	const contextId = lessonId || moduleId || courseId;
+
 	// Load quiz data
 	useEffect(() => {
-		loadQuiz();
-	}, [lessonId]);
+		if (contextId) {
+			loadQuiz();
+		}
+	}, [contextId]);
 
 	const loadQuiz = async () => {
 		setLoading(true);
 		try {
-			// Check if quiz exists for this lesson
-			const response = await fetch(`${window.wpApiSettings.root}learnkit/v1/quizzes?lesson_id=${lessonId}`, {
+			// Build query param based on context type
+			let queryParam = '';
+			if (lessonId) {
+				queryParam = `lesson_id=${lessonId}`;
+			} else if (moduleId) {
+				queryParam = `module_id=${moduleId}`;
+			} else if (courseId) {
+				queryParam = `course_id=${courseId}`;
+			}
+
+			// Check if quiz exists for this context
+			const response = await fetch(`${window.wpApiSettings.root}learnkit/v1/quizzes?${queryParam}`, {
 				headers: {
 					'X-WP-Nonce': window.wpApiSettings.nonce
 				}
@@ -60,6 +75,7 @@ const QuizBuilder = ({ lessonId }) => {
 			}
 		} catch (error) {
 			console.error('Error loading quiz:', error);
+			alert('Failed to load quiz: ' + error.message);
 		} finally {
 			setLoading(false);
 		}
@@ -68,11 +84,23 @@ const QuizBuilder = ({ lessonId }) => {
 	const saveQuiz = async () => {
 		setSaving(true);
 		try {
+			// Determine quiz title based on context
+			let quizTitle = 'Quiz';
+			if (lessonId) {
+				quizTitle = `Quiz for Lesson ${lessonId}`;
+			} else if (moduleId) {
+				quizTitle = `Quiz for Module ${moduleId}`;
+			} else if (courseId) {
+				quizTitle = `Quiz for Course ${courseId}`;
+			}
+
 			const quizData = {
-				title: `Quiz for Lesson ${lessonId}`,
+				title: quizTitle,
 				status: 'publish',
 				meta: {
-					_lk_lesson_id: lessonId,
+					_lk_lesson_id: lessonId || '',
+					_lk_module_id: moduleId || '',
+					_lk_course_id: courseId || '',
 					_lk_passing_score: settings.passingScore,
 					_lk_time_limit: settings.timeLimit,
 					_lk_attempts_allowed: settings.attemptsAllowed,
@@ -161,6 +189,15 @@ const QuizBuilder = ({ lessonId }) => {
 			});
 		}
 	};
+
+	// Safety check - ensure we have a context ID
+	if (!contextId) {
+		return (
+			<div className="lk-error" style={{ padding: '20px', color: '#dc3545' }}>
+				<p>Error: No context ID provided. Please provide a lessonId, moduleId, or courseId.</p>
+			</div>
+		);
+	}
 
 	if (loading) {
 		return <div className="lk-loading">Loading quiz...</div>;
