@@ -19,16 +19,20 @@ global $wpdb;
 $attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
 
 // Get all quiz attempts.
-$attempts = $wpdb->get_results(
-	"SELECT 
-		a.*, 
-		u.display_name as user_name,
-		q.post_title as quiz_title
-	FROM $attempts_table a
-	LEFT JOIN {$wpdb->users} u ON a.user_id = u.ID
-	LEFT JOIN {$wpdb->posts} q ON a.quiz_id = q.ID
-	ORDER BY a.completed_at DESC
-	LIMIT 100"
+$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
+$attempts       = $wpdb->get_results(
+	$wpdb->prepare(
+		"SELECT 
+			a.*, 
+			u.display_name as user_name,
+			q.post_title as quiz_title
+		FROM {$wpdb->prefix}learnkit_quiz_attempts a
+		LEFT JOIN {$wpdb->users} u ON a.user_id = u.ID
+		LEFT JOIN {$wpdb->posts} q ON a.quiz_id = q.ID
+		ORDER BY a.completed_at DESC
+		LIMIT %d",
+		100
+	)
 );
 
 ?>

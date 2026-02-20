@@ -152,10 +152,9 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 					<?php
 					// Check if there's a quiz for this lesson.
 					global $wpdb;
-					$quiz_table = $wpdb->prefix . 'posts';
-					$quiz       = $wpdb->get_row(
+					$quiz = $wpdb->get_row(
 						$wpdb->prepare(
-							"SELECT ID FROM $quiz_table p 
+							"SELECT ID FROM {$wpdb->posts} p 
 							INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
 							WHERE p.post_type = 'lk_quiz' 
 							AND pm.meta_key = '_lk_lesson_id' 

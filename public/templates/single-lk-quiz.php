@@ -34,6 +34,7 @@ if ( $course_id && $user_id ) {
 	$table_name  = $wpdb->prefix . 'learnkit_enrollments';
 	$enrollment  = $wpdb->get_row(
 		$wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
 			"SELECT * FROM $table_name WHERE user_id = %d AND course_id = %d",
 			$user_id,
 			$course_id
@@ -57,6 +58,7 @@ if ( $user_id ) {
 	$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
 	$attempts       = $wpdb->get_results(
 		$wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
 			"SELECT * FROM $attempts_table WHERE user_id = %d AND quiz_id = %d ORDER BY completed_at DESC",
 			$user_id,
 			$quiz_id
@@ -255,22 +257,27 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				?>
 			</h2>
 			<p style="font-size: 24px; font-weight: bold;">
-				<?php printf( esc_html__( 'Your Score: %d%%', 'learnkit' ), $result_score ); ?>
+				<?php
+				/* translators: %d: User's quiz score percentage */
+				printf( esc_html__( 'Your Score: %d%%', 'learnkit' ), (int) $result_score );
+				?>
 			</p>
 			<p>
 				<?php
-				if ( $result_passed ) {
-					printf( esc_html__( 'You need %d%% to pass. Great job!', 'learnkit' ), $passing_score );
+				if ( true === $result_passed ) {
+					/* translators: %d: Minimum passing score percentage */
+					printf( esc_html__( 'You need %d%% to pass. Great job!', 'learnkit' ), (int) $passing_score );
 				} else {
-					printf( esc_html__( 'You need %d%% to pass. Try again!', 'learnkit' ), $passing_score );
+					/* translators: %d: Minimum passing score percentage */
+					printf( esc_html__( 'You need %d%% to pass. Try again!', 'learnkit' ), (int) $passing_score );
 				}
 				?>
 			</p>
-			<?php if ( ! $result_passed && ( $attempts_allowed === 0 || $attempts_used < $attempts_allowed ) ) : ?>
+			<?php if ( false === $result_passed && ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) ) : ?>
 				<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="submit-button">
 					<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
 				</a>
-			<?php elseif ( $result_passed && ( $attempts_allowed === 0 || $attempts_used < $attempts_allowed ) ) : ?>
+			<?php elseif ( true === $result_passed && ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) ) : ?>
 				<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="submit-button">
 					<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
 				</a>
@@ -341,10 +348,15 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 		<?php if ( $has_passed ) : ?>
 			<div class="passed-banner">
 				<h3>🎉 <?php esc_html_e( 'Quiz Passed!', 'learnkit' ); ?></h3>
-				<p style="font-size: 20px; margin: 10px 0;"><?php printf( esc_html__( 'Your best score: %d%%', 'learnkit' ), (int) $best_attempt->score ); ?></p>
+				<p style="font-size: 20px; margin: 10px 0;">
+				<?php
+				/* translators: %d: Best quiz score percentage */
+				printf( esc_html__( 'Your best score: %d%%', 'learnkit' ), (int) $best_attempt->score );
+				?>
+			</p>
 				<p style="margin: 15px 0 20px 0; font-size: 14px; opacity: 0.9;">
 					<?php
-					if ( $attempts_allowed === 0 || $attempts_used < $attempts_allowed ) {
+					if ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) {
 						esc_html_e( 'You\'ve already passed, but you can retake to improve your score if you wish.', 'learnkit' );
 					} else {
 						esc_html_e( 'Congratulations! You\'ve completed this quiz successfully.', 'learnkit' );
@@ -368,9 +380,19 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 		<?php if ( $attempts_allowed > 0 && $attempts_used >= $attempts_allowed && ! $has_passed ) : ?>
 			<div class="not-enrolled">
 				<h3><?php esc_html_e( 'No Attempts Remaining', 'learnkit' ); ?></h3>
-				<p><?php printf( esc_html__( 'You have used all %d attempts for this quiz.', 'learnkit' ), $attempts_allowed ); ?></p>
+				<p>
+				<?php
+				/* translators: %d: Maximum attempts allowed */
+				printf( esc_html__( 'You have used all %d attempts for this quiz.', 'learnkit' ), (int) $attempts_allowed );
+				?>
+				</p>
 				<?php if ( $best_attempt ) : ?>
-					<p><?php printf( esc_html__( 'Your best score: %d%%', 'learnkit' ), (int) $best_attempt->score ); ?></p>
+					<p>
+					<?php
+					/* translators: %d: Best quiz score percentage */
+					printf( esc_html__( 'Your best score: %d%%', 'learnkit' ), (int) $best_attempt->score );
+					?>
+				</p>
 				<?php endif; ?>
 				<div style="margin-top: 20px;">
 					<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
@@ -411,7 +433,10 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				<div id="quiz-start-screen" style="text-align: center; padding: 40px 20px;">
 					<h2><?php esc_html_e( 'Ready to Begin?', 'learnkit' ); ?></h2>
 					<p style="font-size: 18px; margin: 20px 0;">
-						<?php printf( esc_html__( 'This quiz is timed. You will have %d minutes to complete %d questions.', 'learnkit' ), $time_limit, count( $questions ) ); ?>
+						<?php
+						/* translators: 1: Time limit in minutes, 2: Number of questions */
+						printf( esc_html__( 'This quiz is timed. You will have %1\$d minutes to complete %2\$d questions.', 'learnkit' ), (int) $time_limit, count( $questions ) );
+						?>
 					</p>
 					<p style="color: #d63638; font-weight: 600; margin-bottom: 30px;">
 						<?php esc_html_e( 'The timer will start as soon as you click the button below.', 'learnkit' ); ?>
@@ -441,7 +466,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 								<?php echo esc_html( $question['question'] ); ?>
 							</div>
 							<div class="question-points">
-								<?php echo esc_html( $question['points'] ); ?> <?php echo esc_html( $question['points'] === 1 ? __( 'pt', 'learnkit' ) : __( 'pts', 'learnkit' ) ); ?>
+								<?php echo esc_html( $question['points'] ); ?> <?php echo esc_html( 1 === $question['points'] ? __( 'pt', 'learnkit' ) : __( 'pts', 'learnkit' ) ); ?>
 							</div>
 						</div>
 						<div class="quiz-options">
