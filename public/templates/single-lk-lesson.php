@@ -155,6 +155,45 @@ if ( ! $is_enrolled ) {
 	get_footer();
 	return;
 }
+
+// Check drip availability.
+$is_available = LearnKit_Drip::is_lesson_available( $lesson_id, $user_id );
+if ( ! $is_available ) {
+	$unlock_date = LearnKit_Drip::get_unlock_date( $lesson_id, $user_id );
+	?>
+	<div class="lk-lesson-locked-drip" style="max-width: 680px; margin: 80px auto; padding: 0 20px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+		<div style="font-size: 48px; margin-bottom: 20px;">🔓</div>
+		<h2 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; color: #1a1a1a;">
+			<?php esc_html_e( 'This lesson is not yet available', 'learnkit' ); ?>
+		</h2>
+		<?php if ( $unlock_date ) : ?>
+			<p style="font-size: 16px; color: #555; margin-bottom: 32px; line-height: 1.6;">
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %s: unlock date */
+						__( 'Available on: %s', 'learnkit' ),
+						$unlock_date->format( get_option( 'date_format' ) )
+					)
+				);
+				?>
+			</p>
+		<?php else : ?>
+			<p style="font-size: 16px; color: #555; margin-bottom: 32px; line-height: 1.6;">
+				<?php esc_html_e( 'This lesson will become available soon.', 'learnkit' ); ?>
+			</p>
+		<?php endif; ?>
+		<?php if ( $course_id ) : ?>
+			<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>"
+				style="display: inline-block; background: #2271b1; color: #fff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: 600;">
+				<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
+			</a>
+		<?php endif; ?>
+	</div>
+	<?php
+	get_footer();
+	return;
+}
 ?>
 
 <div class="learnkit-lesson-viewer">

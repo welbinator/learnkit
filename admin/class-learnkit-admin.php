@@ -207,6 +207,16 @@ class LearnKit_Admin {
 			'learnkit-settings',
 			array( $this, 'render_settings_page' )
 		);
+
+		// Email Settings submenu.
+		add_submenu_page(
+			'learnkit',
+			__( 'Email Settings', 'learnkit' ),
+			__( 'Email Settings', 'learnkit' ),
+			'manage_options',
+			'learnkit-email-settings',
+			array( $this, 'render_email_settings_page' )
+		);
 	}
 
 	/**
@@ -256,5 +266,109 @@ class LearnKit_Admin {
 	 */
 	public function render_quiz_reports_page() {
 		require_once plugin_dir_path( __FILE__ ) . 'quiz-reports.php';
+	}
+
+	/**
+	 * Render the Email Settings page.
+	 *
+	 * @since    0.5.0
+	 */
+	public function render_email_settings_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// Save handler.
+		if ( isset( $_POST['learnkit_email_settings_nonce'] ) ) {
+			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['learnkit_email_settings_nonce'] ) ), 'learnkit_email_settings' ) ) {
+				wp_die( esc_html__( 'Nonce verification failed.', 'learnkit' ) );
+			}
+
+			$settings = array(
+				'from_name'        => sanitize_text_field( wp_unslash( $_POST['from_name'] ?? get_bloginfo( 'name' ) ) ),
+				'from_email'       => sanitize_email( wp_unslash( $_POST['from_email'] ?? get_option( 'admin_email' ) ) ),
+				'welcome_enabled'  => ! empty( $_POST['welcome_enabled'] ),
+				'reminder_enabled' => ! empty( $_POST['reminder_enabled'] ),
+				'reminder_delay'   => max( 1, absint( wp_unslash( $_POST['reminder_delay'] ?? '7' ) ) ),
+			);
+
+			update_option( 'learnkit_email_settings', $settings );
+			echo '<div class="notice notice-success"><p>' . esc_html__( 'Email settings saved.', 'learnkit' ) . '</p></div>';
+		}
+
+		$settings = get_option(
+			'learnkit_email_settings',
+			array(
+				'from_name'        => get_bloginfo( 'name' ),
+				'from_email'       => get_option( 'admin_email' ),
+				'welcome_enabled'  => true,
+				'reminder_enabled' => true,
+				'reminder_delay'   => 7,
+			)
+		);
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Email Settings', 'learnkit' ); ?></h1>
+			<form method="post" action="">
+				<?php wp_nonce_field( 'learnkit_email_settings', 'learnkit_email_settings_nonce' ); ?>
+				<table class="form-table">
+					<tr>
+						<th scope="row">
+							<label for="from_name"><?php esc_html_e( 'From Name', 'learnkit' ); ?></label>
+						</th>
+						<td>
+							<input type="text" id="from_name" name="from_name"
+								value="<?php echo esc_attr( $settings['from_name'] ); ?>"
+								class="regular-text" />
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">
+							<label for="from_email"><?php esc_html_e( 'From Email', 'learnkit' ); ?></label>
+						</th>
+						<td>
+							<input type="email" id="from_email" name="from_email"
+								value="<?php echo esc_attr( $settings['from_email'] ); ?>"
+								class="regular-text" />
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Welcome Email', 'learnkit' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="welcome_enabled" value="1"
+									<?php checked( $settings['welcome_enabled'] ); ?> />
+								<?php esc_html_e( 'Send welcome email on enrollment', 'learnkit' ); ?>
+							</label>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Reminder Email', 'learnkit' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="reminder_enabled" value="1"
+									<?php checked( $settings['reminder_enabled'] ); ?> />
+								<?php esc_html_e( 'Send reminder email for inactive students', 'learnkit' ); ?>
+							</label>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">
+							<label for="reminder_delay"><?php esc_html_e( 'Reminder Delay (days)', 'learnkit' ); ?></label>
+						</th>
+						<td>
+							<input type="number" id="reminder_delay" name="reminder_delay"
+								value="<?php echo esc_attr( $settings['reminder_delay'] ); ?>"
+								min="1" max="365" class="small-text" />
+							<p class="description">
+								<?php esc_html_e( 'Days of inactivity before sending a reminder.', 'learnkit' ); ?>
+							</p>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button( __( 'Save Email Settings', 'learnkit' ) ); ?>
+			</form>
+		</div>
+		<?php
 	}
 }

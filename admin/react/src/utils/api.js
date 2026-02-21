@@ -162,6 +162,16 @@ export async function reorderModules(courseId, moduleIds) {
 }
 
 /**
+ * Update a lesson (including drip meta).
+ */
+export async function updateLesson(lessonId, lessonData) {
+	return await apiRequest(`/lessons/${lessonId}`, {
+		method: 'POST',
+		body: lessonData,
+	});
+}
+
+/**
  * Get enrollments for a course.
  */
 export async function getEnrollments(courseId) {

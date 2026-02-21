@@ -15,6 +15,7 @@ import { createPortal } from 'react-dom';
 import CourseStructure from './CourseStructure';
 import EnrollmentManager from './EnrollmentManager';
 import QuizModal from './QuizModal';
+import LessonEditorModal from './LessonEditorModal';
 
 const CourseDetailModal = ({
 	course,
@@ -34,6 +35,8 @@ const CourseDetailModal = ({
 	const [accessType, setAccessType] = useState('free');
 	const [quizModalOpen, setQuizModalOpen] = useState(false);
 	const [selectedLesson, setSelectedLesson] = useState(null);
+	const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
+	const [editingLesson, setEditingLesson] = useState(null);
 
 	// Update form fields when course changes
 	useEffect(() => {
@@ -88,6 +91,16 @@ const CourseDetailModal = ({
 		setTimeout(() => {
 			console.log('After setState timeout - should be updated now');
 		}, 100);
+	};
+
+	const handleEditLesson = (lesson) => {
+		setEditingLesson(lesson);
+		setLessonEditorOpen(true);
+	};
+
+	const handleLessonSaved = () => {
+		setLessonEditorOpen(false);
+		setEditingLesson(null);
 	};
 
 	if (!isOpen || !course) {
@@ -191,6 +204,7 @@ const CourseDetailModal = ({
 										onEditModule={onEditModule}
 										onDeleteModule={onDeleteModule}
 										onCreateLesson={onCreateLesson}
+										onEditLesson={handleEditLesson}
 										onReorderModules={onReorderModules}
 										onEditQuiz={handleEditQuiz}
 									/>
@@ -263,6 +277,17 @@ const CourseDetailModal = ({
 				return null;
 			}
 		})()}
+		{lessonEditorOpen && editingLesson && createPortal(
+			<LessonEditorModal
+				lesson={editingLesson}
+				onSave={handleLessonSaved}
+				onClose={() => {
+					setLessonEditorOpen(false);
+					setEditingLesson(null);
+				}}
+			/>,
+			document.body
+		)}
 		</>
 	);
 };
