@@ -85,7 +85,7 @@ class LearnKit_WooCommerce {
 		$meta_query   = (array) $q->get( 'meta_query' );
 		$meta_query[] = array(
 			'key'     => '_learnkit_course_ids',
-			'value'   => '"' . $course_id . '"',
+			'value'   => 'i:' . $course_id . ';',
 			'compare' => 'LIKE',
 		);
 		$q->set( 'meta_query', $meta_query );
@@ -310,7 +310,7 @@ class LearnKit_WooCommerce {
 				'meta_query'     => array(
 					array(
 						'key'     => '_learnkit_course_ids',
-						'value'   => '"' . $course_id . '"',
+						'value'   => 'i:' . $course_id . ';',
 						'compare' => 'LIKE',
 					),
 				),
