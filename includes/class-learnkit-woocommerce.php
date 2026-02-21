@@ -46,6 +46,49 @@ class LearnKit_WooCommerce {
 		add_action( 'woocommerce_order_status_processing', array( $this, 'handle_order_completed' ) );
 		add_action( 'woocommerce_order_status_refunded', array( $this, 'handle_order_unenroll' ) );
 		add_action( 'woocommerce_order_status_cancelled', array( $this, 'handle_order_unenroll' ) );
+
+		// Course products archive — query var + filter.
+		add_filter( 'query_vars', array( $this, 'register_query_vars' ) );
+		add_action( 'woocommerce_product_query', array( $this, 'filter_products_by_course' ) );
+	}
+
+	/**
+	 * Register the learnkit_course query var so WooCommerce archives accept it.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @param array $vars Existing public query vars.
+	 * @return array
+	 */
+	public function register_query_vars( $vars ) {
+		$vars[] = 'learnkit_course';
+		return $vars;
+	}
+
+	/**
+	 * Filter WooCommerce product archive queries by learnkit_course query var.
+	 *
+	 * When ?learnkit_course=<course_id> is present on the shop archive,
+	 * only products that have that course ID in _learnkit_course_ids are shown.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @param WP_Query $q The product query.
+	 */
+	public function filter_products_by_course( $q ) {
+		$course_id = (int) get_query_var( 'learnkit_course' );
+		if ( ! $course_id ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+		$meta_query   = (array) $q->get( 'meta_query' );
+		$meta_query[] = array(
+			'key'     => '_learnkit_course_ids',
+			'value'   => '"' . $course_id . '"',
+			'compare' => 'LIKE',
+		);
+		$q->set( 'meta_query', $meta_query );
 	}
 
 	/**
@@ -244,24 +287,26 @@ class LearnKit_WooCommerce {
 	}
 
 	/**
-	 * Find a WooCommerce product linked to a given course.
+	 * Find WooCommerce products linked to a given course.
 	 *
-	 * Returns the first published product that has the course ID in its
-	 * `_learnkit_course_ids` meta array, or null if none exists.
+	 * Returns all published products that have the course ID in their
+	 * `_learnkit_course_ids` meta array.
 	 *
 	 * @since 0.4.0
 	 *
 	 * @param int $course_id The lk_course post ID.
-	 * @return WC_Product|null Product object or null.
+	 * @return WC_Product[] Array of product objects (may be empty).
 	 */
-	public static function get_product_for_course( $course_id ) {
+	public static function get_products_for_course( $course_id ) {
 		$course_id = (int) $course_id;
 
-		$products = get_posts(
+		$posts = get_posts(
 			array(
 				'post_type'      => 'product',
 				'post_status'    => 'publish',
-				'posts_per_page' => 1,
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				'meta_query'     => array(
 					array(
 						'key'     => '_learnkit_course_ids',
@@ -272,11 +317,45 @@ class LearnKit_WooCommerce {
 			)
 		);
 
-		if ( empty( $products ) ) {
-			return null;
+		if ( empty( $posts ) ) {
+			return array();
 		}
 
-		return wc_get_product( $products[0]->ID );
+		return array_values( array_filter( array_map( 'wc_get_product', $posts ) ) );
+	}
+
+	/**
+	 * Returns the first published product for a course, or null if none.
+	 * Kept for backward compatibility.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @param int $course_id The lk_course post ID.
+	 * @return WC_Product|null Product object or null.
+	 */
+	public static function get_product_for_course( $course_id ) {
+		$products = self::get_products_for_course( $course_id );
+		return ! empty( $products ) ? $products[0] : null;
+	}
+
+	/**
+	 * Returns the URL for the course CTA button.
+	 *
+	 * Single product → direct product permalink.
+	 * Multiple products → shop archive filtered by ?learnkit_course=<id>.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @param int   $course_id The lk_course post ID.
+	 * @param array $products  Array of WC_Product objects for this course.
+	 * @return string URL.
+	 */
+	public static function get_course_cta_url( $course_id, $products ) {
+		if ( 1 === count( $products ) ) {
+			return $products[0]->get_permalink();
+		}
+
+		return add_query_arg( 'learnkit_course', (int) $course_id, wc_get_page_permalink( 'shop' ) );
 	}
 
 	/**
@@ -292,8 +371,8 @@ class LearnKit_WooCommerce {
 	 * @param bool $is_enrolled Whether the user is enrolled.
 	 */
 	public static function render_course_cta( $course_id, $user_id, $is_enrolled ) {
-		$product = self::get_product_for_course( $course_id );
-		if ( ! $product ) {
+		$products = self::get_products_for_course( $course_id );
+		if ( empty( $products ) ) {
 			return;
 		}
 
@@ -318,15 +397,16 @@ class LearnKit_WooCommerce {
 			return;
 		}
 
-		// User is NOT enrolled — show price + Buy Now button.
-		$product_url = $product->get_permalink();
-		$price_html  = $product->get_price_html();
+		// User is NOT enrolled.
+		// Single product → link directly. Multiple → link to filtered shop archive.
+		$cta_url    = self::get_course_cta_url( $course_id, $products );
+		$price_html = $products[0]->get_price_html();
 
 		echo '<div class="lk-woo-cta">';
 		if ( $price_html ) {
 			echo '<span class="lk-woo-price">' . wp_kses_post( $price_html ) . '</span>';
 		}
-		echo '<a href="' . esc_url( $product_url ) . '" class="lk-buy-now-button btn--primary">';
+		echo '<a href="' . esc_url( $cta_url ) . '" class="lk-buy-now-button btn--primary">';
 		esc_html_e( 'Buy Now', 'learnkit' );
 		echo '</a>';
 		echo '</div>';
