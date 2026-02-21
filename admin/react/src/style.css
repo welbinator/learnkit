@@ -613,3 +613,14 @@
 	cursor: pointer;
 	transition: all 0.2s;
 }
+
+/* Lesson Items */
+li.lesson-item {
+	border: 1px solid #dcdcde;
+	padding: 10px;
+	border-radius: 5px;
+}
+
+li.lesson-item:hover {
+	box-shadow: 0px 0px 2px #0000002b;
+}
