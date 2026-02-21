@@ -163,3 +163,9 @@
 	background: var(--btn-background-hover, #135e96);
 	color: var(--btn-text-color, #fff);
 }
+
+.lk-not-available {
+	color: var(--color-text-light, #888);
+	font-size: 0.9em;
+	font-style: italic;
+}

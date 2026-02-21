@@ -373,6 +373,7 @@ class LearnKit_WooCommerce {
 	public static function render_course_cta( $course_id, $user_id, $is_enrolled ) {
 		$products = self::get_products_for_course( $course_id );
 		if ( empty( $products ) ) {
+			echo '<span class="lk-not-available">' . esc_html__( 'Not available', 'learnkit' ) . '</span>';
 			return;
 		}
 
