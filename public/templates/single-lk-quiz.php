@@ -30,17 +30,7 @@ $user_id     = get_current_user_id();
 $is_enrolled = false;
 
 if ( $course_id && $user_id ) {
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'learnkit_enrollments';
-	$enrollment = $wpdb->get_row(
-		$wpdb->prepare(
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-			"SELECT * FROM $table_name WHERE user_id = %d AND course_id = %d",
-			$user_id,
-			$course_id
-		)
-	);
-	$is_enrolled = ! empty( $enrollment );
+	$is_enrolled = learnkit_is_enrolled( $user_id, (int) $course_id );
 }
 
 // Get quiz settings.

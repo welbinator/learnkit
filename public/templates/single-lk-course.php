@@ -40,16 +40,7 @@ $progress    = array(
 );
 
 if ( $user_id ) {
-	global $wpdb;
-	$enrollments_table = $wpdb->prefix . 'learnkit_enrollments';
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-	$is_enrolled = (bool) $wpdb->get_var(
-		$wpdb->prepare(
-			"SELECT id FROM {$wpdb->prefix}learnkit_enrollments WHERE user_id = %d AND course_id = %d",
-			$user_id,
-			$course_id
-		)
-	);
+	$is_enrolled = learnkit_is_enrolled( $user_id, $course_id );
 
 	if ( $is_enrolled ) {
 		// Calculate progress.
@@ -87,8 +78,12 @@ if ( $user_id ) {
 	}
 }
 
-// Check if self-enrollment is enabled.
-$self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
+// Determine access type with backward compatibility.
+$access_type = get_post_meta( $course_id, '_lk_access_type', true );
+if ( empty( $access_type ) ) {
+	$access_type = get_post_meta( $course_id, '_lk_self_enrollment', true ) ? 'free' : 'free';
+}
+$self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for template compat.
 ?>
 
 <style>
@@ -270,7 +265,7 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 		font-size: 20px;
 	}
 
-	:where(.lk-enroll-button, .lk-start-button) {
+	:where(.lk-enroll-button, .lk-start-button, .lk-buy-now-button) {
 		background: var(--btn-background, #2271b1);
 		color: var(--btn-text-color, #fff);
 		padding-block: var(--btn-padding-block, 0.75em);
@@ -297,7 +292,7 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 		text-decoration: none;
 	}
 
-	:where(.lk-enroll-button, .lk-start-button):where(:hover) {
+	:where(.lk-enroll-button, .lk-start-button, .lk-buy-now-button):where(:hover) {
 		background: var(--btn-background-hover, #135e96);
 		color: var(--btn-text-color, #fff);
 	}
@@ -352,6 +347,23 @@ $self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 						<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>">Login to Enroll</a>
 					</div>
 				<?php endif; ?>
+
+				<?php
+				/**
+				 * Action: learnkit_course_enrollment_cta
+				 *
+				 * Fires after the standard enrollment controls on the course page.
+				 * WooCommerce and other integrations hook here to show Buy Now buttons
+				 * or membership prompts.
+				 *
+				 * @since 0.4.0
+				 *
+				 * @param int  $course_id   The course post ID.
+				 * @param int  $user_id     The current user ID (0 if not logged in).
+				 * @param bool $is_enrolled Whether the current user is enrolled.
+				 */
+				do_action( 'learnkit_course_enrollment_cta', $course_id, $user_id, $is_enrolled );
+				?>
 			</div>
 
 			<?php if ( has_post_thumbnail() ) : ?>

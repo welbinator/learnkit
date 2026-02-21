@@ -3,7 +3,7 @@
  * Plugin Name: LearnKit
  * Plugin URI: https://github.com/welbinator/learnkit
  * Description: Modern WordPress LMS plugin for course creators who value simplicity, performance, and fair pricing. Create, deliver, and monetize online courses with a beautiful, intuitive interface.
- * Version: 0.3.2
+ * Version: 0.4.0
  * Author: James Welbes
  * Author URI: https://jameswelbes.com
  * License: GPL v2 or later
@@ -26,7 +26,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 0.1.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'LEARNKIT_VERSION', '0.3.2' );
+define( 'LEARNKIT_VERSION', '0.4.0' );
 
 /**
  * Plugin directory path.
@@ -47,6 +47,12 @@ define( 'LEARNKIT_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
  * Load Composer autoloader for dependencies (FPDF for certificates).
  */
 require_once LEARNKIT_PLUGIN_DIR . 'vendor/autoload.php';
+
+/**
+ * Public Enrollment API — must be loaded before any code that calls
+ * learnkit_enroll_user(), learnkit_unenroll_user(), or learnkit_is_enrolled().
+ */
+require_once LEARNKIT_PLUGIN_DIR . 'includes/learnkit-enrollment-api.php';
 
 /**
  * The code that runs during plugin activation.
@@ -89,3 +95,29 @@ function run_learnkit() {
 	$plugin->run();
 }
 run_learnkit();
+
+/**
+ * Load WooCommerce integration when WooCommerce is active.
+ *
+ * We hook into `plugins_loaded` so WooCommerce is guaranteed to have
+ * registered its classes before we try to use them.
+ */
+add_action(
+	'plugins_loaded',
+	function () {
+		if ( class_exists( 'WooCommerce' ) ) {
+			require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-woocommerce.php';
+
+			$learnkit_woo = new LearnKit_WooCommerce();
+			$learnkit_woo->register();
+
+			// Hook the Buy Now / Enrolled badge CTA into the course template action.
+			add_action(
+				'learnkit_course_enrollment_cta',
+				array( 'LearnKit_WooCommerce', 'render_course_cta' ),
+				10,
+				3
+			);
+		}
+	}
+);

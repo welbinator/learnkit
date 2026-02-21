@@ -133,15 +133,7 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 $user_id     = get_current_user_id();
 $is_enrolled = false;
 if ( $course_id && $user_id ) {
-	global $wpdb;
-	$is_enrolled = (bool) $wpdb->get_var(
-		$wpdb->prepare(
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-			"SELECT id FROM {$wpdb->prefix}learnkit_enrollments WHERE user_id = %d AND course_id = %d",
-			$user_id,
-			$course_id
-		)
-	);
+	$is_enrolled = learnkit_is_enrolled( $user_id, (int) $course_id );
 }
 
 if ( ! $is_enrolled ) {

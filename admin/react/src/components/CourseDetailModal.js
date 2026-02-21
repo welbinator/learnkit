@@ -9,7 +9,7 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { Modal, Button, TextControl, TextareaControl, TabPanel, CheckboxControl } from '@wordpress/components';
+import { Modal, Button, TextControl, TextareaControl, TabPanel, SelectControl } from '@wordpress/components';
 import { useState, useEffect } from '@wordpress/element';
 import { createPortal } from 'react-dom';
 import CourseStructure from './CourseStructure';
@@ -31,7 +31,7 @@ const CourseDetailModal = ({
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
 	const [featuredImage, setFeaturedImage] = useState('');
-	const [selfEnrollment, setSelfEnrollment] = useState(false);
+	const [accessType, setAccessType] = useState('free');
 	const [quizModalOpen, setQuizModalOpen] = useState(false);
 	const [selectedLesson, setSelectedLesson] = useState(null);
 
@@ -41,7 +41,7 @@ const CourseDetailModal = ({
 			setTitle(course.title || '');
 			setDescription(course.description || '');
 			setFeaturedImage(course.featuredImage || '');
-			setSelfEnrollment(course.selfEnrollment || false);
+			setAccessType(course.accessType || 'free');
 		}
 	}, [course]);
 
@@ -69,7 +69,7 @@ const CourseDetailModal = ({
 			title,
 			description,
 			featuredImage,
-			selfEnrollment,
+			accessType,
 		});
 	};
 
@@ -144,12 +144,16 @@ const CourseDetailModal = ({
 					rows={4}
 				/>
 
-				{/* Self-Enrollment Toggle */}
-				<CheckboxControl
-					label={__('Enable Self-Enrollment', 'learnkit')}
-					help={__('Allow students to enroll themselves in this course from the catalog.', 'learnkit')}
-					checked={selfEnrollment}
-					onChange={setSelfEnrollment}
+				{/* Access Type */}
+				<SelectControl
+					label={__('Access Type', 'learnkit')}
+					help={__('Free: anyone can self-enroll. Paid: requires WooCommerce product purchase.', 'learnkit')}
+					value={accessType}
+					onChange={setAccessType}
+					options={[
+						{ label: __('Free (Self-Enrollment)', 'learnkit'), value: 'free' },
+						{ label: __('Paid (Requires Purchase)', 'learnkit'), value: 'paid' },
+					]}
 				/>
 
 				{/* Tabbed Content */}

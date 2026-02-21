@@ -40,6 +40,8 @@ class LearnKit_Database {
 			enrolled_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			status varchar(20) NOT NULL DEFAULT 'active',
 			completed_at datetime DEFAULT NULL,
+			source varchar(50) NOT NULL DEFAULT 'manual',
+			expires_at datetime DEFAULT NULL,
 			PRIMARY KEY  (id),
 			UNIQUE KEY user_course (user_id, course_id),
 			KEY course_id (course_id),
@@ -82,7 +84,7 @@ class LearnKit_Database {
 		dbDelta( $quiz_attempts_sql );
 
 		// Store database version.
-		update_option( 'learnkit_db_version', '1.1' );
+		update_option( 'learnkit_db_version', '1.2' );
 	}
 
 	/**

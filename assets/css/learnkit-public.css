@@ -127,3 +127,45 @@
 		font-size: 1rem;
 	}
 }
+
+/* ==========================================================================
+   Shared Button Styles (buy-now, enroll, start, submit)
+   ========================================================================== */
+
+:where(.lk-buy-now-button) {
+	background: var(--btn-background, #2271b1);
+	color: var(--btn-text-color, #fff);
+	padding-block: var(--btn-padding-block, 0.75em);
+	padding-inline: var(--btn-padding-inline, 1.5em);
+	inline-size: var(--btn-width, auto);
+	min-inline-size: var(--btn-min-width);
+	line-height: var(--btn-line-height);
+	font-family: var(--btn-font-family);
+	font-size: var(--btn-font-size, var(--text-m));
+	font-weight: var(--btn-font-weight);
+	font-style: var(--btn-font-style);
+	text-transform: var(--btn-text-transform);
+	letter-spacing: var(--btn-letter-spacing);
+	border-width: var(--btn-border-width);
+	border-style: var(--btn-border-style);
+	border-radius: var(--btn-border-radius, 6px);
+	border-color: var(--btn-border-color);
+	transition: var(--btn-transition, var(--transition));
+	justify-content: var(--btn-justify-content, center);
+	align-items: var(--btn-align-items, center);
+	text-align: var(--btn-text-align, center);
+	display: var(--btn-display, inline-flex);
+	cursor: pointer;
+	text-decoration: none;
+}
+
+:where(.lk-buy-now-button):where(:hover) {
+	background: var(--btn-background-hover, #135e96);
+	color: var(--btn-text-color, #fff);
+}
+
+.lk-not-available {
+	color: var(--color-text-light, #888);
+	font-size: 0.9em;
+	font-style: italic;
+}

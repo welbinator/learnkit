@@ -95,8 +95,21 @@ class LearnKit_Public {
 	 * @since    0.1.0
 	 */
 	public function enqueue_styles() {
-		// Only load on LearnKit pages (courses, lessons).
-		if ( ! is_singular( array( 'lk_course', 'lk_module', 'lk_lesson' ) ) ) {
+		// Load on LearnKit CPT pages.
+		$is_learnkit_page = is_singular( array( 'lk_course', 'lk_module', 'lk_lesson', 'lk_quiz' ) );
+
+		// Also load on pages containing LearnKit shortcodes.
+		if ( ! $is_learnkit_page && is_singular() ) {
+			$post = get_post();
+			if ( $post && has_shortcode( $post->post_content, 'learnkit_catalog' ) ) {
+				$is_learnkit_page = true;
+			}
+			if ( $post && has_shortcode( $post->post_content, 'learnkit_dashboard' ) ) {
+				$is_learnkit_page = true;
+			}
+		}
+
+		if ( ! $is_learnkit_page ) {
 			return;
 		}
 
@@ -115,8 +128,18 @@ class LearnKit_Public {
 	 * @since    0.1.0
 	 */
 	public function enqueue_scripts() {
-		// Only load on LearnKit pages.
-		if ( ! is_singular( array( 'lk_course', 'lk_module', 'lk_lesson' ) ) ) {
+		// Load on LearnKit CPT pages.
+		$is_learnkit_page = is_singular( array( 'lk_course', 'lk_module', 'lk_lesson', 'lk_quiz' ) );
+
+		// Also load on pages containing LearnKit shortcodes.
+		if ( ! $is_learnkit_page && is_singular() ) {
+			$post = get_post();
+			if ( $post && ( has_shortcode( $post->post_content, 'learnkit_catalog' ) || has_shortcode( $post->post_content, 'learnkit_dashboard' ) ) ) {
+				$is_learnkit_page = true;
+			}
+		}
+
+		if ( ! $is_learnkit_page ) {
 			return;
 		}
 
