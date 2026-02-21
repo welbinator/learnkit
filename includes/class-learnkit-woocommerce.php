@@ -402,13 +402,11 @@ class LearnKit_WooCommerce {
 		$cta_url    = self::get_course_cta_url( $course_id, $products );
 		$price_html = $products[0]->get_price_html();
 
-		echo '<div class="lk-woo-cta">';
-		if ( $price_html ) {
-			echo '<span class="lk-woo-price">' . wp_kses_post( $price_html ) . '</span>';
-		}
 		echo '<a href="' . esc_url( $cta_url ) . '" class="lk-buy-now-button btn--primary">';
-		esc_html_e( 'Buy Now', 'learnkit' );
+		esc_html_e( 'Enroll', 'learnkit' );
+		if ( $price_html ) {
+			echo ' &mdash; ' . wp_kses_post( $price_html );
+		}
 		echo '</a>';
-		echo '</div>';
 	}
 }

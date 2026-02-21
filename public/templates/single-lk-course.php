@@ -265,7 +265,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 		font-size: 20px;
 	}
 
-	:where(.lk-enroll-button, .lk-start-button) {
+	:where(.lk-enroll-button, .lk-start-button, .lk-buy-now-button) {
 		background: var(--btn-background, #2271b1);
 		color: var(--btn-text-color, #fff);
 		padding-block: var(--btn-padding-block, 0.75em);
@@ -292,7 +292,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 		text-decoration: none;
 	}
 
-	:where(.lk-enroll-button, .lk-start-button):where(:hover) {
+	:where(.lk-enroll-button, .lk-start-button, .lk-buy-now-button):where(:hover) {
 		background: var(--btn-background-hover, #135e96);
 		color: var(--btn-text-color, #fff);
 	}
