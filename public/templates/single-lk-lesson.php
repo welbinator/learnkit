@@ -265,8 +265,8 @@ if ( ! $is_available ) {
 						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 						$passing_attempt = $wpdb->get_var(
 							$wpdb->prepare(
-								// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-								"SELECT COUNT(*) FROM $attempts_table WHERE user_id = %d AND quiz_id = %d AND passed = 1",
+								'SELECT COUNT(*) FROM %i WHERE user_id = %d AND quiz_id = %d AND passed = 1',
+								$attempts_table,
 								get_current_user_id(),
 								(int) $required_quiz->ID
 							)

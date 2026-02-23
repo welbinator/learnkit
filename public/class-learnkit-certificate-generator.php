@@ -85,7 +85,8 @@ class LearnKit_Certificate_Generator {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$enrollment = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM $enrollments_table WHERE user_id = %d AND course_id = %d AND status = 'active'",
+				'SELECT * FROM %i WHERE user_id = %d AND course_id = %d AND status = \'active\'',
+				$enrollments_table,
 				$user_id,
 				$course_id
 			)
@@ -175,8 +176,8 @@ class LearnKit_Certificate_Generator {
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$completion_date = $wpdb->get_var(
 				$wpdb->prepare(
-					"SELECT MAX(completed_at) FROM $progress_table WHERE user_id = %d AND lesson_id IN ($placeholders_date)",
-					array_merge( array( $user_id ), $lesson_ids )
+					'SELECT MAX(completed_at) FROM %i WHERE user_id = %d AND lesson_id IN (' . $placeholders_date . ')',
+					array_merge( array( $progress_table, $user_id ), $lesson_ids )
 				)
 			);
 			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
