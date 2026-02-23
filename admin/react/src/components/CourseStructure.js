@@ -27,10 +27,12 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, onEditLesson, onDeleteLesson, onReorderLessons, onEditQuiz }) {
-	const [showLessonInput, setShowLessonInput] = useState(false);
-	const [lessonTitle, setLessonTitle] = useState('');
+function SortableModule({ moduleId, module, onEdit, onDelete, onEditLesson, onDeleteLesson, onReorderLessons, onEditQuiz }) {
 	const [localLessons, setLocalLessons] = useState(module?.lessons || []);
+
+	useEffect(() => {
+		setLocalLessons(module?.lessons || []);
+	}, [module?.lessons]);
 
 	const {
 		attributes,
@@ -51,14 +53,6 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 			coordinateGetter: sortableKeyboardCoordinates,
 		})
 	);
-
-	const handleAddLesson = () => {
-		if (lessonTitle.trim()) {
-			onCreateLesson(module.id, lessonTitle);
-			setLessonTitle('');
-			setShowLessonInput(false);
-		}
-	};
 
 	const handleDragEnd = (event) => {
 		const { active, over } = event;
@@ -84,35 +78,11 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 					<Button isSmall onClick={() => onEdit(module)}>
 						{__('Edit', 'learnkit')}
 					</Button>
-					<Button isSmall onClick={() => setShowLessonInput(!showLessonInput)}>
-						{__('+ Lesson', 'learnkit')}
-					</Button>
-					<Button isSmall onClick={() => onEditQuiz({ id: module.id, title: module.title, type: 'module' })}>
-						{__('Quiz', 'learnkit')}
-					</Button>
 					<Button isSmall isDestructive onClick={() => onDelete(module.id)}>
 						{__('Delete', 'learnkit')}
 					</Button>
 				</div>
 			</div>
-
-			{showLessonInput && (
-				<div className="lesson-input">
-					<input
-						type="text"
-						placeholder={__('Lesson title...', 'learnkit')}
-						value={lessonTitle}
-						onChange={(e) => setLessonTitle(e.target.value)}
-						onKeyPress={(e) => e.key === 'Enter' && handleAddLesson()}
-					/>
-					<Button variant="primary" isSmall onClick={handleAddLesson}>
-						{__('Add', 'learnkit')}
-					</Button>
-					<Button isSmall onClick={() => setShowLessonInput(false)}>
-						{__('Cancel', 'learnkit')}
-					</Button>
-				</div>
-			)}
 
 			{localLessons.length > 0 && (
 				<DndContext
@@ -139,8 +109,8 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 				</DndContext>
 			)}
 
-			{localLessons.length === 0 && !showLessonInput && (
-				<p className="empty-lessons">{__('No lessons yet. Add one!', 'learnkit')}</p>
+			{localLessons.length === 0 && (
+				<p className="empty-lessons">{__('No lessons yet. Edit this module to add lessons.', 'learnkit')}</p>
 			)}
 		</div>
 	);
@@ -185,7 +155,6 @@ function CourseStructure({
 	structure,
 	onEditModule,
 	onDeleteModule,
-	onCreateLesson,
 	onEditLesson,
 	onDeleteLesson,
 	onReorderModules,
@@ -260,7 +229,6 @@ function CourseStructure({
 							module={module}
 							onEdit={onEditModule}
 							onDelete={onDeleteModule}
-							onCreateLesson={onCreateLesson}
 							onEditLesson={onEditLesson}
 							onDeleteLesson={onDeleteLesson}
 							onReorderLessons={onReorderLessons}
