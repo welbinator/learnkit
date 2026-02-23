@@ -74,7 +74,6 @@ class LearnKit {
 		$this->plugin_name = 'learnkit';
 
 		$this->load_dependencies();
-		$this->set_locale();
 		$this->register_post_types();
 		$this->register_meta_boxes();
 		$this->define_admin_hooks();
@@ -88,7 +87,6 @@ class LearnKit {
 	 * Include the following files that make up the plugin:
 	 *
 	 * - LearnKit_Loader. Orchestrates the hooks of the plugin.
-	 * - LearnKit_i18n. Defines internationalization functionality.
 	 * - LearnKit_Admin. Defines all hooks for the admin area.
 	 * - LearnKit_Public. Defines all hooks for the public side of the site.
 	 * - LearnKit_Post_Types. Registers custom post types.
@@ -106,12 +104,6 @@ class LearnKit {
 		 * core plugin.
 		 */
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-loader.php';
-
-		/**
-		 * The class responsible for defining internationalization functionality
-		 * of the plugin.
-		 */
-		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-i18n.php';
 
 		/**
 		 * The class responsible for defining custom post types.
@@ -165,21 +157,6 @@ class LearnKit {
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-rest-api.php';
 
 		$this->loader = new LearnKit_Loader();
-	}
-
-	/**
-	 * Define the locale for this plugin for internationalization.
-	 *
-	 * Uses the LearnKit_i18n class in order to set the domain and to register the hook
-	 * with WordPress.
-	 *
-	 * @since    0.1.0
-	 * @access   private
-	 */
-	private function set_locale() {
-		$plugin_i18n = new LearnKit_i18n();
-
-		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
 	}
 
 	/**
