@@ -86,7 +86,7 @@ add_action( 'learnkit_user_completed_course', array( 'LearnKit_Emails', 'schedul
  * The code that runs during plugin activation.
  * This action is documented in includes/class-learnkit-activator.php
  */
-function activate_learnkit() {
+function activate_learnkit() { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- Standard WP plugin activation hook pattern.
 	require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-activator.php';
 	require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-cron.php';
 	LearnKit_Activator::activate();
@@ -97,7 +97,7 @@ function activate_learnkit() {
  * The code that runs during plugin deactivation.
  * This action is documented in includes/class-learnkit-deactivator.php
  */
-function deactivate_learnkit() {
+function deactivate_learnkit() { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- Standard WP plugin deactivation hook pattern.
 	require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-deactivator.php';
 	require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-cron.php';
 	LearnKit_Deactivator::deactivate();
@@ -122,7 +122,7 @@ require LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit.php';
  *
  * @since 0.1.0
  */
-function run_learnkit() {
+function run_learnkit() { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- Standard WP plugin bootstrap pattern.
 	$plugin = new LearnKit();
 	$plugin->run();
 }

@@ -15,6 +15,8 @@
  * @subpackage LearnKit/includes
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- lk_ prefix is the plugin prefix; learnkit_ is not required.
+
 /**
  * Migrate modules from post_parent to _lk_course_id meta.
  *

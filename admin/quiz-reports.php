@@ -6,6 +6,8 @@
  * @since   0.4.0
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Admin page-scoped variables, not true PHP globals.
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
