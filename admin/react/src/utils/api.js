@@ -267,6 +267,13 @@ export async function createEnrollment(userId, courseId) {
 /**
  * Delete an enrollment.
  */
+export async function deleteLesson(lessonId) {
+	return await apiRequest(`/lessons/${lessonId}`, {
+		method: 'DELETE',
+	});
+}
+
+
 export async function deleteEnrollment(enrollmentId) {
 	return await apiRequest(`/enrollments/${enrollmentId}`, {
 		method: 'DELETE',

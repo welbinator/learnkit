@@ -25,6 +25,7 @@ import {
 	updateModule,
 	deleteModule,
 	createLesson,
+	deleteLesson,
 	reorderModules
 } from './utils/api';
 
@@ -174,6 +175,21 @@ const CourseBuilder = () => {
 		}
 	};
 
+	const handleDeleteLesson = async (lessonId, courseId) => {
+		if (!confirm(__('Are you sure you want to delete this lesson? This cannot be undone.', 'learnkit'))) {
+			return;
+		}
+		try {
+			await deleteLesson(lessonId);
+			const resolvedCourseId = courseId || selectedCourseId || selectedCourse?.id;
+			if (resolvedCourseId) {
+				await loadCourseStructure(resolvedCourseId);
+			}
+		} catch (error) {
+			console.error('Failed to delete lesson:', error);
+		}
+	};
+
 	const handleReorderModules = async (reorderedModules) => {
 		// reorderedModules is now the full array of module objects (not just IDs)
 		// Update local state immediately for smooth UX
@@ -246,6 +262,7 @@ const CourseBuilder = () => {
 				onDeleteModule={handleDeleteModule}
 				onCreateModule={handleCreateModule}
 				onCreateLesson={handleCreateLesson}
+				onDeleteLesson={handleDeleteLesson}
 				onReorderModules={handleReorderModules}
 				onReloadStructure={loadCourseStructure}
 			/>
