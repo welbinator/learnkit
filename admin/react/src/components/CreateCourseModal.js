@@ -16,6 +16,23 @@ const CreateCourseModal = ({ isOpen, onClose, onSave }) => {
 	const [description, setDescription] = useState('');
 	const [featuredImage, setFeaturedImage] = useState('');
 
+	const handleFeaturedImageUpload = () => {
+		const mediaUploader = wp.media({
+			title: __('Select Featured Image', 'learnkit'),
+			button: {
+				text: __('Use this image', 'learnkit'),
+			},
+			multiple: false,
+		});
+
+		mediaUploader.on('select', () => {
+			const attachment = mediaUploader.state().get('selection').first().toJSON();
+			setFeaturedImage(attachment.url);
+		});
+
+		mediaUploader.open();
+	};
+
 	const handleSave = () => {
 		if (!title.trim()) {
 			alert(__('Please enter a course title', 'learnkit'));
@@ -56,12 +73,25 @@ const CreateCourseModal = ({ isOpen, onClose, onSave }) => {
 				{/* Featured Image */}
 				<div className="featured-image-section">
 					<label>{__('Featured Image', 'learnkit')}</label>
-					<div className="featured-image-upload">
-						<div className="upload-placeholder">
-							<span className="dashicons dashicons-format-image"></span>
-							<p>{__('Click to upload', 'learnkit')}</p>
+					{featuredImage ? (
+						<div className="featured-image-preview">
+							<img src={featuredImage} alt={__('Featured image preview', 'learnkit')} />
+							<button
+								type="button"
+								className="remove-image"
+								onClick={() => setFeaturedImage('')}
+							>
+								{__('Remove', 'learnkit')}
+							</button>
 						</div>
-					</div>
+					) : (
+						<div className="featured-image-upload" onClick={handleFeaturedImageUpload}>
+							<div className="upload-placeholder">
+								<span className="dashicons dashicons-format-image"></span>
+								<p>{__('Click to upload', 'learnkit')}</p>
+							</div>
+						</div>
+					)}
 				</div>
 
 				{/* Course Title */}
