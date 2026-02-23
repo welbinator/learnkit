@@ -46,7 +46,7 @@ $attempts = array();
 if ( $user_id ) {
 	global $wpdb;
 	$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
-	$attempts       = $wpdb->get_results(
+	$attempts       = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 		$wpdb->prepare(
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
 			"SELECT * FROM $attempts_table WHERE user_id = %d AND quiz_id = %d ORDER BY completed_at DESC",
