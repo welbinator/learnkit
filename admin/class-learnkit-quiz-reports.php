@@ -98,7 +98,7 @@ class LearnKit_Quiz_Reports {
 		$quiz_id = (int) $filters['quiz_id'];
 		$user_id = (int) $filters['user_id'];
 		$passed  = $filters['passed'];
-		$table   = $wpdb->prefix . 'learnkit_quiz_attempts';
+		$table   = esc_sql( $wpdb->prefix . 'learnkit_quiz_attempts' );
 
 		// Build query with proper parameterized WHERE clause.
 		if ( $quiz_id && $user_id ) {
