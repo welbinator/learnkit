@@ -1,7 +1,7 @@
 === LearnKit ===
 Contributors: welbinator
 Tags: lms, courses, elearning, quizzes, learning management
-Requires at least: 6.0
+Requires at least: 6.2
 Tested up to: 6.7
 Requires PHP: 7.4
 Stable tag: 0.5.0

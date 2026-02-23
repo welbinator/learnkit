@@ -72,7 +72,8 @@ class LearnKit_Student_Dashboard {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$enrollments = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM $enrollments_table WHERE user_id = %d AND status = 'active' ORDER BY enrolled_at DESC",
+				'SELECT * FROM %i WHERE user_id = %d AND status = \'active\' ORDER BY enrolled_at DESC',
+				$enrollments_table,
 				$user_id
 			),
 			ARRAY_A
