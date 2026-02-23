@@ -151,12 +151,11 @@ class LearnKit_Public {
 			true
 		);
 
-		// Pass data to JavaScript for AJAX and API calls.
+		// Pass data to JavaScript for API calls.
 		wp_localize_script(
 			$this->plugin_name,
 			'learnkitPublic',
 			array(
-				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
 				'apiUrl'      => rest_url( 'learnkit/v1' ),
 				'nonce'       => wp_create_nonce( 'wp_rest' ),
 				'currentUser' => get_current_user_id(),
@@ -331,7 +330,7 @@ class LearnKit_Public {
 				'max_score'    => $score_data['max_score'],
 				'passed'       => $score_data['passed'] ? 1 : 0,
 				'answers'      => wp_json_encode( $answers ),
-				'completed_at' => current_time( 'mysql' ),
+				'completed_at' => gmdate( 'Y-m-d H:i:s' ),
 			),
 			array( '%d', '%d', '%d', '%d', '%d', '%s', '%s' )
 		);

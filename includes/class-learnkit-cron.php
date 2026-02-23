@@ -101,20 +101,32 @@ class LearnKit_Cron {
 		}
 
 		foreach ( $items as $item ) {
-			$success = LearnKit_Emails::send( $item );
+			try {
+				$success = LearnKit_Emails::send( $item );
 
-			if ( $success ) {
-				$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-					$table,
-					array(
-						'status'  => 'sent',
-						'sent_at' => current_time( 'mysql', true ),
-					),
-					array( 'id' => (int) $item->id ),
-					array( '%s', '%s' ),
-					array( '%d' )
-				);
-			} else {
+				if ( $success ) {
+					$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+						$table,
+						array(
+							'status'  => 'sent',
+							'sent_at' => current_time( 'mysql', true ),
+						),
+						array( 'id' => (int) $item->id ),
+						array( '%s', '%s' ),
+						array( '%d' )
+					);
+				} else {
+					$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+						$table,
+						array( 'status' => 'failed' ),
+						array( 'id' => (int) $item->id ),
+						array( '%s' ),
+						array( '%d' )
+					);
+				}
+			} catch ( Exception $e ) {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+				error_log( '[LearnKit] Email send failed for queue item ' . $item->id . ': ' . $e->getMessage() );
 				$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 					$table,
 					array( 'status' => 'failed' ),

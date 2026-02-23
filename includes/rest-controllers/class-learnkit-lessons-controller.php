@@ -19,16 +19,7 @@
  * @subpackage LearnKit/includes/rest-controllers
  * @author     James Welbes <james.welbes@gmail.com>
  */
-class LearnKit_Lessons_Controller {
-
-	/**
-	 * The namespace for our REST API.
-	 *
-	 * @since    0.2.13
-	 * @access   private
-	 * @var      string    $namespace    The namespace for REST API routes.
-	 */
-	private $namespace = 'learnkit/v1';
+class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Register lesson routes.
@@ -433,30 +424,5 @@ class LearnKit_Lessons_Controller {
 				},
 			),
 		);
-	}
-
-	/**
-	 * Check read permission.
-	 *
-	 * @since    0.2.13
-	 * @return   bool True if user can read.
-	 */
-	public function check_read_permission() {
-		return current_user_can( 'edit_posts' );
-	}
-
-	/**
-	 * Check write permission.
-	 *
-	 * @since    0.2.13
-	 * @param    WP_REST_Request $request Full request data.
-	 * @return   bool True if user can write.
-	 */
-	public function check_write_permission( $request ) {
-		$id = isset( $request['id'] ) ? (int) $request['id'] : 0;
-		if ( $id ) {
-			return current_user_can( 'edit_post', $id );
-		}
-		return current_user_can( 'edit_posts' );
 	}
 }

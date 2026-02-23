@@ -19,16 +19,7 @@
  * @subpackage LearnKit/includes/rest-controllers
  * @author     James Welbes <james.welbes@gmail.com>
  */
-class LearnKit_Progress_Controller {
-
-	/**
-	 * The namespace for our REST API.
-	 *
-	 * @since    0.2.14
-	 * @access   private
-	 * @var      string    $namespace    The namespace for REST API routes.
-	 */
-	private $namespace = 'learnkit/v1';
+class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Register progress routes.
@@ -142,7 +133,7 @@ class LearnKit_Progress_Controller {
 			array(
 				'user_id'      => $user_id,
 				'lesson_id'    => $lesson_id,
-				'completed_at' => current_time( 'mysql' ),
+				'completed_at' => gmdate( 'Y-m-d H:i:s' ),
 			),
 			array( '%d', '%d', '%s' )
 		);

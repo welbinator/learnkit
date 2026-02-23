@@ -19,16 +19,7 @@
  * @subpackage LearnKit/includes/rest-controllers
  * @author     James Welbes <james.welbes@gmail.com>
  */
-class LearnKit_Enrollments_Controller {
-
-	/**
-	 * The namespace for our REST API.
-	 *
-	 * @since    0.2.14
-	 * @access   private
-	 * @var      string    $namespace    The namespace for REST API routes.
-	 */
-	private $namespace = 'learnkit/v1';
+class LearnKit_Enrollments_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Register enrollment routes.
@@ -306,16 +297,6 @@ class LearnKit_Enrollments_Controller {
 	 */
 	public function check_enrollment_permission() {
 		return is_user_logged_in();
-	}
-
-	/**
-	 * Check admin permission.
-	 *
-	 * @since    0.2.14
-	 * @return   bool True if user can edit posts.
-	 */
-	public function check_admin_permission() {
-		return current_user_can( 'edit_posts' );
 	}
 
 	/**

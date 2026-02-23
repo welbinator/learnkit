@@ -19,7 +19,7 @@
  * @subpackage LearnKit/includes/rest-controllers
  * @author     James Welbes <james.welbes@gmail.com>
  */
-class LearnKit_Quiz_Controller extends WP_REST_Controller {
+class LearnKit_Quiz_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Register routes.
@@ -27,7 +27,7 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 	 * @since    0.4.0
 	 */
 	public function register_routes() {
-		$namespace = 'learnkit/v1';
+		$namespace = $this->namespace;
 
 		// Get quizzes (with optional lesson_id filter).
 		register_rest_route(
@@ -36,7 +36,7 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_quizzes' ),
-				'permission_callback' => array( $this, 'check_permission' ),
+				'permission_callback' => array( $this, 'check_read_permission' ),
 			)
 		);
 
@@ -65,7 +65,7 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_attempts' ),
-				'permission_callback' => array( $this, 'check_permission' ),
+				'permission_callback' => array( $this, 'check_read_permission' ),
 				'args'                => array(
 					'user_id' => array(
 						'type'              => 'integer',
@@ -225,7 +225,7 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 				'max_score'    => $max_score,
 				'passed'       => $passed ? 1 : 0,
 				'answers'      => wp_json_encode( $answers ),
-				'completed_at' => current_time( 'mysql' ),
+				'completed_at' => gmdate( 'Y-m-d H:i:s' ),
 			),
 			array( '%d', '%d', '%d', '%d', '%d', '%s', '%s' )
 		);
@@ -256,26 +256,28 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 
 		global $wpdb;
 
-		$where = $wpdb->prepare( 'quiz_id = %d', $quiz_id );
-
 		if ( $user_id ) {
-			$where .= $wpdb->prepare( ' AND user_id = %d', $user_id );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$attempts = $wpdb->get_results(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+					"SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE quiz_id = %d AND user_id = %d ORDER BY completed_at DESC",
+					$quiz_id,
+					$user_id
+				)
+			);
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$attempts = $wpdb->get_results(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+					"SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE quiz_id = %d ORDER BY completed_at DESC",
+					$quiz_id
+				)
+			);
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$attempts = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE $where ORDER BY completed_at DESC" );
-
 		return rest_ensure_response( $attempts );
-	}
-
-	/**
-	 * Check permission for quiz operations.
-	 *
-	 * @since    0.4.0
-	 * @return   bool    Whether user has permission.
-	 */
-	public function check_permission() {
-		return current_user_can( 'edit_posts' );
 	}
 
 	/**

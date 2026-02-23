@@ -65,7 +65,7 @@ function learnkit_enroll_user( $user_id, $course_id, $source = 'manual', $expire
 			'status'      => 'active',
 			'source'      => sanitize_text_field( $source ),
 			'expires_at'  => ! empty( $expires_at ) ? $expires_at : null,
-			'enrolled_at' => current_time( 'mysql' ),
+			'enrolled_at' => gmdate( 'Y-m-d H:i:s' ),
 		);
 		$format = array( '%s', '%s', '%s', '%s' );
 
@@ -103,7 +103,7 @@ function learnkit_enroll_user( $user_id, $course_id, $source = 'manual', $expire
 	$insert_data   = array(
 		'user_id'     => $user_id,
 		'course_id'   => $course_id,
-		'enrolled_at' => current_time( 'mysql' ),
+		'enrolled_at' => gmdate( 'Y-m-d H:i:s' ),
 		'status'      => 'active',
 		'source'      => sanitize_text_field( $source ),
 	);

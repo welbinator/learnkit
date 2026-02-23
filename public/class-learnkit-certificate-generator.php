@@ -175,7 +175,7 @@ class LearnKit_Certificate_Generator {
 		}
 
 		if ( ! $completion_date ) {
-			$completion_date = current_time( 'mysql' );
+			$completion_date = gmdate( 'Y-m-d H:i:s' );
 		}
 
 		$completion_date_formatted = gmdate( 'F j, Y', strtotime( $completion_date ) );

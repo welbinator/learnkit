@@ -97,7 +97,7 @@ class LearnKit_Emails {
 		if ( isset( $settings['welcome_enabled'] ) && ! $settings['welcome_enabled'] ) {
 			return;
 		}
-		self::queue_email( $user_id, $course_id, 'welcome', current_time( 'mysql' ), array() );
+		self::queue_email( $user_id, $course_id, 'welcome', gmdate( 'Y-m-d H:i:s' ), array() );
 	}
 
 	/**
@@ -108,7 +108,7 @@ class LearnKit_Emails {
 	 * @param  int $course_id Course post ID.
 	 */
 	public static function schedule_completion_email( $user_id, $course_id ) {
-		self::queue_email( $user_id, $course_id, 'completion', current_time( 'mysql' ), array() );
+		self::queue_email( $user_id, $course_id, 'completion', gmdate( 'Y-m-d H:i:s' ), array() );
 	}
 
 	/**
@@ -240,7 +240,7 @@ class LearnKit_Emails {
 			'welcome'
 		);
 
-		return self::mail( $user->user_email, $subject, $html_body, $body_text );
+		return self::mail( $user->user_email, $subject, $html_body );
 	}
 
 	/**
@@ -288,7 +288,7 @@ class LearnKit_Emails {
 			'lesson_unlock'
 		);
 
-		return self::mail( $user->user_email, $subject, $html_body, $body_text );
+		return self::mail( $user->user_email, $subject, $html_body );
 	}
 
 	/**
@@ -332,7 +332,7 @@ class LearnKit_Emails {
 			'reminder'
 		);
 
-		return self::mail( $user->user_email, $subject, $html_body, $body_text );
+		return self::mail( $user->user_email, $subject, $html_body );
 	}
 
 	/**
@@ -379,7 +379,7 @@ class LearnKit_Emails {
 			'completion'
 		);
 
-		return self::mail( $user->user_email, $subject, $html_body, $body_text );
+		return self::mail( $user->user_email, $subject, $html_body );
 	}
 
 	// -------------------------------------------------------------------------
@@ -597,16 +597,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 	}
 
 	/**
-	 * Send an email with HTML + plain text parts.
+	 * Send an email with an HTML body.
 	 *
 	 * @since  0.5.0
-	 * @param  string $to         Recipient address.
-	 * @param  string $subject    Email subject.
-	 * @param  string $html_body  Full HTML email.
-	 * @param  string $plain_body Plain text fallback.
+	 * @param  string $to        Recipient address.
+	 * @param  string $subject   Email subject.
+	 * @param  string $html_body Full HTML email.
 	 * @return bool
 	 */
-	private static function mail( $to, $subject, $html_body, $plain_body ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- kept for API compatibility
+	private static function mail( $to, $subject, $html_body ) {
 		// Set content type to HTML for this message.
 		$content_type_filter = static function () {
 			return 'text/html';

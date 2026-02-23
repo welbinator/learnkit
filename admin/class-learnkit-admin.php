@@ -260,15 +260,6 @@ class LearnKit_Admin {
 	}
 
 	/**
-	 * Render the Quiz Reports page.
-	 *
-	 * @since    0.4.0
-	 */
-	public function render_quiz_reports_page() {
-		require_once plugin_dir_path( __FILE__ ) . 'quiz-reports.php';
-	}
-
-	/**
 	 * Render the Email Settings page.
 	 *
 	 * @since    0.5.0

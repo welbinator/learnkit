@@ -374,7 +374,7 @@ class LearnKit_Course_Catalog {
 			array(
 				'user_id'     => $user_id,
 				'course_id'   => $course_id,
-				'enrolled_at' => current_time( 'mysql' ),
+				'enrolled_at' => gmdate( 'Y-m-d H:i:s' ),
 				'status'      => 'active',
 			),
 			array( '%d', '%d', '%s', '%s' )

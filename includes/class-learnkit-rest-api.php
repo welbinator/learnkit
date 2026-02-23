@@ -38,6 +38,7 @@ class LearnKit_REST_API {
 	 */
 	public function __construct() {
 		// Load controller classes.
+		require_once plugin_dir_path( __FILE__ ) . 'rest-controllers/class-learnkit-base-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'rest-controllers/class-learnkit-courses-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'rest-controllers/class-learnkit-modules-controller.php';
 		require_once plugin_dir_path( __FILE__ ) . 'rest-controllers/class-learnkit-lessons-controller.php';

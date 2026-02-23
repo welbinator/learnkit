@@ -57,25 +57,55 @@ class LearnKit_Quiz_Reports {
 			'passed'  => $passed,
 		);
 
-		// Build query.
-		$where = array( '1=1' );
+		// Build query with proper parameterized WHERE clause.
+		$table = $wpdb->prefix . 'learnkit_quiz_attempts';
 
-		if ( $quiz_id ) {
-			$where[] = $wpdb->prepare( 'quiz_id = %d', $quiz_id );
-		}
-		if ( $user_id ) {
-			$where[] = $wpdb->prepare( 'user_id = %d', $user_id );
-		}
-		if ( 'yes' === $passed ) {
-			$where[] = 'passed = 1';
+		if ( $quiz_id && $user_id ) {
+			if ( 'yes' === $passed ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE quiz_id = %d AND user_id = %d AND passed = 1 ORDER BY completed_at DESC LIMIT 500", $quiz_id, $user_id );
+			} elseif ( 'no' === $passed ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE quiz_id = %d AND user_id = %d AND passed = 0 ORDER BY completed_at DESC LIMIT 500", $quiz_id, $user_id );
+			} else {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE quiz_id = %d AND user_id = %d ORDER BY completed_at DESC LIMIT 500", $quiz_id, $user_id );
+			}
+		} elseif ( $quiz_id ) {
+			if ( 'yes' === $passed ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE quiz_id = %d AND passed = 1 ORDER BY completed_at DESC LIMIT 500", $quiz_id );
+			} elseif ( 'no' === $passed ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE quiz_id = %d AND passed = 0 ORDER BY completed_at DESC LIMIT 500", $quiz_id );
+			} else {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE quiz_id = %d ORDER BY completed_at DESC LIMIT 500", $quiz_id );
+			}
+		} elseif ( $user_id ) {
+			if ( 'yes' === $passed ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE user_id = %d AND passed = 1 ORDER BY completed_at DESC LIMIT 500", $user_id );
+			} elseif ( 'no' === $passed ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE user_id = %d AND passed = 0 ORDER BY completed_at DESC LIMIT 500", $user_id );
+			} else {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE user_id = %d ORDER BY completed_at DESC LIMIT 500", $user_id );
+			}
+		} elseif ( 'yes' === $passed ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = "SELECT * FROM {$table} WHERE passed = 1 ORDER BY completed_at DESC LIMIT 500";
 		} elseif ( 'no' === $passed ) {
-			$where[] = 'passed = 0';
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+			$sql = "SELECT * FROM {$table} WHERE passed = 0 ORDER BY completed_at DESC LIMIT 500";
+		} else {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+			$sql = "SELECT * FROM {$table} ORDER BY completed_at DESC LIMIT 500";
 		}
 
-		$where_clause = implode( ' AND ', $where );
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$attempts = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE $where_clause ORDER BY completed_at DESC LIMIT 500" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		$attempts = $wpdb->get_results( $sql );
 
 		// Export CSV.
 		if ( $export_csv ) {
