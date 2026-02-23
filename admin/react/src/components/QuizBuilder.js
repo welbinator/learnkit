@@ -9,7 +9,7 @@ import { CSS } from '@dnd-kit/utilities';
  * 
  * Allows instructors to create and manage quiz questions for a lesson, module, or course.
  */
-const QuizBuilder = ({ lessonId, moduleId, courseId, contextType }) => {
+const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => {
 	const [quiz, setQuiz] = useState(null);
 	const [questions, setQuestions] = useState([]);
 	const [settings, setSettings] = useState({
@@ -317,7 +317,7 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType }) => {
 				<button
 					type="button"
 					className="lk-btn lk-btn-secondary"
-					onClick={() => {}}
+					onClick={() => { if (onClose) onClose(); }}
 				>
 					Cancel
 				</button>

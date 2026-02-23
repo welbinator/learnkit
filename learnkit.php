@@ -44,6 +44,11 @@ define( 'LEARNKIT_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'LEARNKIT_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 /**
+ * REST API namespace.
+ */
+define( 'LEARNKIT_REST_NAMESPACE', 'learnkit/v1' );
+
+/**
  * Load Composer autoloader for dependencies (FPDF for certificates).
  */
 require_once LEARNKIT_PLUGIN_DIR . 'vendor/autoload.php';

@@ -19,16 +19,7 @@
  * @subpackage LearnKit/includes/rest-controllers
  * @author     James Welbes <james.welbes@gmail.com>
  */
-class LearnKit_Lessons_Controller {
-
-	/**
-	 * The namespace for our REST API.
-	 *
-	 * @since    0.2.13
-	 * @access   private
-	 * @var      string    $namespace    The namespace for REST API routes.
-	 */
-	private $namespace = 'learnkit/v1';
+class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Register lesson routes.
@@ -56,7 +47,17 @@ class LearnKit_Lessons_Controller {
 					'methods'             => WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_lesson' ),
 					'permission_callback' => array( $this, 'check_write_permission' ),
-					'args'                => $this->get_lesson_args(),
+					'args'                => array_merge(
+						$this->get_lesson_args(),
+						array(
+							'title' => array(
+								'required'          => true,
+								'type'              => 'string',
+								'description'       => __( 'Lesson title.', 'learnkit' ),
+								'sanitize_callback' => 'sanitize_text_field',
+							),
+						)
+					),
 				),
 			)
 		);
@@ -167,7 +168,8 @@ class LearnKit_Lessons_Controller {
 
 		$lesson_data = array(
 			'post_title'   => sanitize_text_field( $request['title'] ),
-			'post_content' => '',
+			'post_content' => isset( $request['content'] ) ? wp_kses_post( $request['content'] ) : '',
+			'post_excerpt' => isset( $request['excerpt'] ) ? sanitize_textarea_field( $request['excerpt'] ) : '',
 			'post_status'  => 'publish',
 			'post_type'    => 'lk_lesson',
 			'post_author'  => get_current_user_id(),
@@ -317,12 +319,25 @@ class LearnKit_Lessons_Controller {
 	 * @return   WP_REST_Response Response object.
 	 */
 	public function reorder_lessons( $request ) {
-		$order = $request['order'];
+		$order     = $request['order'];
+		$module_id = (int) $request['id'];
 
 		foreach ( $order as $index => $lesson_id ) {
+			$lesson_id = (int) $lesson_id;
+			$lesson    = get_post( $lesson_id );
+			if ( ! $lesson || 'lk_lesson' !== $lesson->post_type ) {
+				continue;
+			}
+			// Verify it belongs to the module in the URL.
+			if ( (int) get_post_meta( $lesson_id, '_lk_module_id', true ) !== $module_id ) {
+				continue;
+			}
+			if ( ! current_user_can( 'edit_post', $lesson_id ) ) {
+				continue;
+			}
 			wp_update_post(
 				array(
-					'ID'         => (int) $lesson_id,
+					'ID'         => $lesson_id,
 					'menu_order' => $index,
 				)
 			);
@@ -369,11 +384,13 @@ class LearnKit_Lessons_Controller {
 	private function get_lesson_args() {
 		return array(
 			'title'   => array(
-				'required'          => true,
 				'sanitize_callback' => 'sanitize_text_field',
 			),
 			'content' => array(
 				'sanitize_callback' => 'wp_kses_post',
+			),
+			'excerpt' => array(
+				'sanitize_callback' => 'sanitize_textarea_field',
 			),
 			'module_id' => array(
 				'validate_callback' => function ( $param ) {
@@ -385,26 +402,27 @@ class LearnKit_Lessons_Controller {
 					return is_numeric( $param );
 				},
 			),
+			'release_type' => array(
+				'type'              => 'string',
+				'enum'              => array( 'immediate', 'drip_days', 'drip_date' ),
+				'description'       => __( 'Lesson release type.', 'learnkit' ),
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'release_days' => array(
+				'type'              => 'integer',
+				'minimum'           => 0,
+				'description'       => __( 'Days after enrollment to release lesson.', 'learnkit' ),
+				'sanitize_callback' => 'absint',
+			),
+			'release_date' => array(
+				'type'              => 'string',
+				'format'            => 'date',
+				'description'       => __( 'Specific date to release lesson (YYYY-MM-DD).', 'learnkit' ),
+				'sanitize_callback' => 'sanitize_text_field',
+				'validate_callback' => function ( $value ) {
+					return false !== \DateTime::createFromFormat( 'Y-m-d', $value );
+				},
+			),
 		);
-	}
-
-	/**
-	 * Check read permission.
-	 *
-	 * @since    0.2.13
-	 * @return   bool True if user can read.
-	 */
-	public function check_read_permission() {
-		return current_user_can( 'edit_posts' );
-	}
-
-	/**
-	 * Check write permission.
-	 *
-	 * @since    0.2.13
-	 * @return   bool True if user can write.
-	 */
-	public function check_write_permission() {
-		return current_user_can( 'edit_posts' );
 	}
 }

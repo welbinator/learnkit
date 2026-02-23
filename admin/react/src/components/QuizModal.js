@@ -114,6 +114,7 @@ const QuizModal = ({ isOpen, onClose, lessonId, moduleId, courseId, lessonTitle,
 						moduleId={moduleId}
 						courseId={courseId}
 						contextType={contextType}
+						onClose={onClose}
 					/>
 				</div>
 			</div>

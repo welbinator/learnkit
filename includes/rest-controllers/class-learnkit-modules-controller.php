@@ -19,16 +19,7 @@
  * @subpackage LearnKit/includes/rest-controllers
  * @author     James Welbes <james.welbes@gmail.com>
  */
-class LearnKit_Modules_Controller {
-
-	/**
-	 * The namespace for our REST API.
-	 *
-	 * @since    0.2.13
-	 * @access   private
-	 * @var      string    $namespace    The namespace for REST API routes.
-	 */
-	private $namespace = 'learnkit/v1';
+class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Register module routes.
@@ -44,12 +35,29 @@ class LearnKit_Modules_Controller {
 					'methods'             => WP_REST_Server::READABLE,
 					'callback'            => array( $this, 'get_modules' ),
 					'permission_callback' => array( $this, 'check_read_permission' ),
+					'args'                => array(
+						'course_id' => array(
+							'type'              => 'integer',
+							'description'       => __( 'Filter modules by course ID.', 'learnkit' ),
+							'sanitize_callback' => 'absint',
+						),
+					),
 				),
 				array(
 					'methods'             => WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_module' ),
 					'permission_callback' => array( $this, 'check_write_permission' ),
-					'args'                => $this->get_module_args(),
+					'args'                => array_merge(
+						$this->get_module_args(),
+						array(
+							'title' => array(
+								'required'          => true,
+								'type'              => 'string',
+								'description'       => __( 'Module title.', 'learnkit' ),
+								'sanitize_callback' => 'sanitize_text_field',
+							),
+						)
+					),
 				),
 			)
 		);
@@ -295,12 +303,25 @@ class LearnKit_Modules_Controller {
 	 * @return   WP_REST_Response Response object.
 	 */
 	public function reorder_modules( $request ) {
-		$order = $request['order'];
+		$order     = $request['order'];
+		$course_id = (int) $request['id'];
 
 		foreach ( $order as $index => $module_id ) {
+			$module_id = (int) $module_id;
+			$module    = get_post( $module_id );
+			if ( ! $module || 'lk_module' !== $module->post_type ) {
+				continue;
+			}
+			// Verify it belongs to the course in the URL.
+			if ( (int) get_post_meta( $module_id, '_lk_course_id', true ) !== $course_id ) {
+				continue;
+			}
+			if ( ! current_user_can( 'edit_post', $module_id ) ) {
+				continue;
+			}
 			wp_update_post(
 				array(
-					'ID'         => (int) $module_id,
+					'ID'         => $module_id,
 					'menu_order' => $index,
 				)
 			);
@@ -345,7 +366,6 @@ class LearnKit_Modules_Controller {
 	private function get_module_args() {
 		return array(
 			'title'   => array(
-				'required'          => true,
 				'sanitize_callback' => 'sanitize_text_field',
 			),
 			'content' => array(
@@ -355,9 +375,9 @@ class LearnKit_Modules_Controller {
 				'sanitize_callback' => 'sanitize_textarea_field',
 			),
 			'course_id' => array(
-				'validate_callback' => function ( $param ) {
-					return is_numeric( $param );
-				},
+				'type'              => 'integer',
+				'description'       => __( 'Filter modules by course ID.', 'learnkit' ),
+				'sanitize_callback' => 'absint',
 			),
 			'menu_order' => array(
 				'validate_callback' => function ( $param ) {
@@ -365,25 +385,5 @@ class LearnKit_Modules_Controller {
 				},
 			),
 		);
-	}
-
-	/**
-	 * Check read permission.
-	 *
-	 * @since    0.2.13
-	 * @return   bool True if user can read.
-	 */
-	public function check_read_permission() {
-		return current_user_can( 'edit_posts' );
-	}
-
-	/**
-	 * Check write permission.
-	 *
-	 * @since    0.2.13
-	 * @return   bool True if user can write.
-	 */
-	public function check_write_permission() {
-		return current_user_can( 'edit_posts' );
 	}
 }

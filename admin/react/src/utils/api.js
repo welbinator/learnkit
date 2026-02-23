@@ -114,9 +114,9 @@ export async function getCourseStructure(courseId) {
  * Create a new module.
  */
 export async function createModule(courseId, moduleData) {
-	return await apiRequest(`/courses/${courseId}/modules`, {
+	return await apiRequest('/modules', {
 		method: 'POST',
-		body: moduleData,
+		body: { ...moduleData, course_id: courseId },
 	});
 }
 
@@ -159,6 +159,13 @@ export async function reorderModules(courseId, moduleIds) {
 			order: moduleIds,
 		},
 	});
+}
+
+/**
+ * Get a single lesson by ID.
+ */
+export async function getLesson(lessonId) {
+	return await apiRequest(`/lessons/${lessonId}`);
 }
 
 /**

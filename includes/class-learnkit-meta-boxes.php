@@ -73,6 +73,7 @@ class LearnKit_Meta_Boxes {
 				'orderby'        => 'title',
 				'order'          => 'ASC',
 				'post_status'    => array( 'publish', 'draft', 'future', 'private' ),
+				'no_found_rows'  => true,
 			)
 		);
 
@@ -117,6 +118,7 @@ class LearnKit_Meta_Boxes {
 				'orderby'        => 'title',
 				'order'          => 'ASC',
 				'post_status'    => array( 'publish', 'draft', 'future', 'private' ),
+				'no_found_rows'  => true,
 			)
 		);
 

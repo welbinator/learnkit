@@ -19,16 +19,7 @@
  * @subpackage LearnKit/includes/rest-controllers
  * @author     James Welbes <james.welbes@gmail.com>
  */
-class LearnKit_Courses_Controller {
-
-	/**
-	 * The namespace for our REST API.
-	 *
-	 * @since    0.2.13
-	 * @access   private
-	 * @var      string    $namespace    The namespace for REST API routes.
-	 */
-	private $namespace = 'learnkit/v1';
+class LearnKit_Courses_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Register course routes.
@@ -49,7 +40,17 @@ class LearnKit_Courses_Controller {
 					'methods'             => WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_course' ),
 					'permission_callback' => array( $this, 'check_write_permission' ),
-					'args'                => $this->get_course_args(),
+					'args'                => array_merge(
+						$this->get_course_args(),
+						array(
+							'title' => array(
+								'required'          => true,
+								'type'              => 'string',
+								'description'       => __( 'Course title.', 'learnkit' ),
+								'sanitize_callback' => 'sanitize_text_field',
+							),
+						)
+					),
 				),
 			)
 		);
@@ -100,6 +101,7 @@ class LearnKit_Courses_Controller {
 			'post_type'      => 'lk_course',
 			'posts_per_page' => -1,
 			'post_status'    => array( 'publish', 'draft' ),
+			'no_found_rows'  => true,
 		);
 
 		$courses = get_posts( $args );
@@ -142,9 +144,11 @@ class LearnKit_Courses_Controller {
 	 */
 	public function create_course( $request ) {
 		$course_data = array(
-			'post_type'   => 'lk_course',
-			'post_title'  => sanitize_text_field( $request['title'] ),
-			'post_status' => 'draft',
+			'post_type'    => 'lk_course',
+			'post_title'   => sanitize_text_field( $request['title'] ),
+			'post_content' => isset( $request['content'] ) ? wp_kses_post( $request['content'] ) : '',
+			'post_excerpt' => isset( $request['excerpt'] ) ? sanitize_textarea_field( $request['excerpt'] ) : '',
+			'post_status'  => 'draft',
 		);
 
 		$course_id = wp_insert_post( $course_data );
@@ -155,6 +159,8 @@ class LearnKit_Courses_Controller {
 				500
 			);
 		}
+
+		$this->update_course_meta( $course_id, $request );
 
 		return new WP_REST_Response(
 			array(
@@ -301,8 +307,9 @@ class LearnKit_Courses_Controller {
 				'post_type'      => 'lk_module',
 				'posts_per_page' => -1,
 				'post_status'    => 'any',
-				'meta_key'       => '_lk_course_id',
-				'meta_value'     => $course_id,
+				'no_found_rows'  => true,
+				'meta_key'       => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'orderby'        => 'menu_order',
 				'order'          => 'ASC',
 			)
@@ -317,8 +324,9 @@ class LearnKit_Courses_Controller {
 					'post_type'      => 'lk_lesson',
 					'posts_per_page' => -1,
 					'post_status'    => 'any',
-					'meta_key'       => '_lk_module_id',
-					'meta_value'     => $module->ID,
+					'no_found_rows'  => true,
+					'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'meta_value'     => $module->ID, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 					'orderby'        => 'menu_order',
 					'order'          => 'ASC',
 				)
@@ -359,20 +367,24 @@ class LearnKit_Courses_Controller {
 	 * @return   array Course data.
 	 */
 	private function prepare_course_response( $course ) {
-		$module_count = (int) ( new WP_Query(
+		$module_ids = get_posts(
 			array(
-				'post_type'      => 'lk_module',
-				'post_status'    => 'publish',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'post_type'              => 'lk_module',
+				'post_status'            => 'publish',
+				'posts_per_page'         => -1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+				'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					array(
 						'key'   => '_lk_course_id',
 						'value' => $course->ID,
 					),
 				),
 			)
-		) )->found_posts;
+		);
+		$module_count = count( $module_ids );
 
 		return array(
 			'id'             => $course->ID,
@@ -403,9 +415,8 @@ class LearnKit_Courses_Controller {
 		if ( ! empty( $access_type ) ) {
 			return $access_type;
 		}
-		// Backward compat: if old self-enrollment flag is set and true, treat as free.
-		$self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
-		return $self_enrollment ? 'free' : 'free';
+		// Backward compat: self-enrollment flag means free access.
+		return get_post_meta( $course_id, '_lk_self_enrollment', true ) ? 'free' : 'paid';
 	}
 
 	/**
@@ -417,7 +428,6 @@ class LearnKit_Courses_Controller {
 	private function get_course_args() {
 		return array(
 			'title'              => array(
-				'required'          => true,
 				'sanitize_callback' => 'sanitize_text_field',
 			),
 			'content'            => array(
@@ -429,26 +439,12 @@ class LearnKit_Courses_Controller {
 			'featured_image_url' => array(
 				'sanitize_callback' => 'esc_url_raw',
 			),
+			'access_type'        => array(
+				'type'              => 'string',
+				'enum'              => array( 'free', 'paid' ),
+				'description'       => __( 'Course access type.', 'learnkit' ),
+				'sanitize_callback' => 'sanitize_text_field',
+			),
 		);
-	}
-
-	/**
-	 * Check read permission.
-	 *
-	 * @since    0.2.13
-	 * @return   bool True if user can read.
-	 */
-	public function check_read_permission() {
-		return current_user_can( 'edit_posts' );
-	}
-
-	/**
-	 * Check write permission.
-	 *
-	 * @since    0.2.13
-	 * @return   bool True if user can write.
-	 */
-	public function check_write_permission() {
-		return current_user_can( 'edit_posts' );
 	}
 }

@@ -19,16 +19,7 @@
  * @subpackage LearnKit/includes/rest-controllers
  * @author     James Welbes <james.welbes@gmail.com>
  */
-class LearnKit_Enrollments_Controller {
-
-	/**
-	 * The namespace for our REST API.
-	 *
-	 * @since    0.2.14
-	 * @access   private
-	 * @var      string    $namespace    The namespace for REST API routes.
-	 */
-	private $namespace = 'learnkit/v1';
+class LearnKit_Enrollments_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Register enrollment routes.
@@ -132,7 +123,25 @@ class LearnKit_Enrollments_Controller {
 			);
 		}
 
-		// Verify course exists.
+		$course_error = $this->validate_course_for_enrollment( $course_id );
+		if ( $course_error instanceof WP_REST_Response ) {
+			return $course_error;
+		}
+
+		return $this->validate_user_for_enrollment( $user_id, $course_id );
+	}
+
+	/**
+	 * Validate that a course is eligible for enrollment.
+	 *
+	 * Checks that the post exists, is the correct post type, and — for
+	 * non-admin callers — that the course is published and free.
+	 *
+	 * @since    0.2.14
+	 * @param    int $course_id Course post ID.
+	 * @return   WP_REST_Response|true  Error response on failure, true on success.
+	 */
+	private function validate_course_for_enrollment( $course_id ) {
 		$course = get_post( $course_id );
 		if ( ! $course || 'lk_course' !== $course->post_type ) {
 			return new WP_REST_Response(
@@ -141,26 +150,49 @@ class LearnKit_Enrollments_Controller {
 			);
 		}
 
-		// Non-admins can only enroll themselves in free courses.
+		// Non-admins can only self-enroll in published courses.
+		if ( ! current_user_can( 'edit_posts' ) && 'publish' !== $course->post_status ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'Course not available.', 'learnkit' ) ),
+				403
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Validate that a user is permitted to enroll in a course.
+	 *
+	 * Non-admins may only enroll themselves, and only in free courses.
+	 *
+	 * @since    0.2.14
+	 * @param    int $user_id   User ID to enroll.
+	 * @param    int $course_id Course post ID.
+	 * @return   WP_REST_Response|true  Error response on failure, true on success.
+	 */
+	private function validate_user_for_enrollment( $user_id, $course_id ) {
+		if ( current_user_can( 'edit_posts' ) ) {
+			return true;
+		}
+
 		$current_user_id = get_current_user_id();
-		if ( ! current_user_can( 'edit_posts' ) ) {
-			if ( $current_user_id !== $user_id ) {
-				return new WP_REST_Response(
-					array( 'message' => __( 'You can only enroll yourself.', 'learnkit' ) ),
-					403
-				);
-			}
-			$access_type = get_post_meta( $course_id, '_lk_access_type', true );
-			if ( empty( $access_type ) ) {
-				$self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
-				$access_type     = $self_enrollment ? 'free' : 'free';
-			}
-			if ( 'free' !== $access_type ) {
-				return new WP_REST_Response(
-					array( 'message' => __( 'This course requires purchase to enroll.', 'learnkit' ) ),
-					403
-				);
-			}
+		if ( $current_user_id !== $user_id ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'You can only enroll yourself.', 'learnkit' ) ),
+				403
+			);
+		}
+
+		$access_type = get_post_meta( $course_id, '_lk_access_type', true );
+		if ( empty( $access_type ) ) {
+			$access_type = 'free';
+		}
+		if ( 'free' !== $access_type ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'This course requires purchase to enroll.', 'learnkit' ) ),
+				403
+			);
 		}
 
 		return true;
@@ -175,53 +207,11 @@ class LearnKit_Enrollments_Controller {
 	 * @return   WP_REST_Response Response object.
 	 */
 	private function insert_enrollment( $user_id, $course_id ) {
-		global $wpdb;
-
-		$table = $wpdb->prefix . 'learnkit_enrollments';
-
-		// Check if already enrolled.
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$existing = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT * FROM $table WHERE user_id = %d AND course_id = %d",
-				$user_id,
-				$course_id
-			)
-		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-
-		if ( $existing ) {
-			return new WP_REST_Response(
-				array( 'message' => __( 'User is already enrolled in this course', 'learnkit' ) ),
-				400
-			);
+		$result = learnkit_enroll_user( $user_id, $course_id, 'manual' );
+		if ( ! $result ) {
+			return new WP_REST_Response( array( 'message' => 'Enrollment failed.' ), 500 );
 		}
-
-		$inserted = $wpdb->insert(
-			$table,
-			array(
-				'user_id'     => $user_id,
-				'course_id'   => $course_id,
-				'enrolled_at' => current_time( 'mysql' ),
-				'status'      => 'active',
-			),
-			array( '%d', '%d', '%s', '%s' )
-		);
-
-		if ( false === $inserted ) {
-			return new WP_REST_Response(
-				array( 'message' => __( 'Failed to create enrollment', 'learnkit' ) ),
-				500
-			);
-		}
-
-		return new WP_REST_Response(
-			array(
-				'message'       => __( 'User enrolled successfully', 'learnkit' ),
-				'enrollment_id' => $wpdb->insert_id,
-			),
-			201
-		);
+		return new WP_REST_Response( array( 'message' => 'Enrolled successfully.' ), 201 );
 	}
 
 	/**
@@ -237,21 +227,28 @@ class LearnKit_Enrollments_Controller {
 		$enrollment_id = (int) $request['id'];
 		$table         = $wpdb->prefix . 'learnkit_enrollments';
 
-		$deleted = $wpdb->delete(
-			$table,
-			array( 'id' => $enrollment_id ),
-			array( '%d' )
+		// Get enrollment details before deleting.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$enrollment = $wpdb->get_row(
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				"SELECT user_id, course_id FROM {$table} WHERE id = %d",
+				$enrollment_id
+			)
 		);
 
-		if ( false === $deleted || 0 === $deleted ) {
+		if ( ! $enrollment ) {
 			return new WP_REST_Response(
-				array( 'message' => __( 'Failed to delete enrollment', 'learnkit' ) ),
-				500
+				array( 'message' => __( 'Enrollment not found.', 'learnkit' ) ),
+				404
 			);
 		}
 
+		// Use the API function so hooks fire.
+		learnkit_unenroll_user( (int) $enrollment->user_id, (int) $enrollment->course_id );
+
 		return new WP_REST_Response(
-			array( 'message' => __( 'Enrollment deleted successfully', 'learnkit' ) ),
+			array( 'message' => __( 'Enrollment removed.', 'learnkit' ) ),
 			200
 		);
 	}
@@ -283,8 +280,10 @@ class LearnKit_Enrollments_Controller {
 		foreach ( $enrollments as &$enrollment ) {
 			$user = get_user_by( 'id', $enrollment['user_id'] );
 			if ( $user ) {
-				$enrollment['user_name']  = $user->display_name;
-				$enrollment['user_email'] = $user->user_email;
+				$enrollment['user_name'] = $user->display_name;
+				if ( current_user_can( 'manage_options' ) ) {
+					$enrollment['user_email'] = $user->user_email;
+				}
 			}
 		}
 
@@ -337,16 +336,6 @@ class LearnKit_Enrollments_Controller {
 	}
 
 	/**
-	 * Check admin permission.
-	 *
-	 * @since    0.2.14
-	 * @return   bool True if user can edit posts.
-	 */
-	public function check_admin_permission() {
-		return current_user_can( 'edit_posts' );
-	}
-
-	/**
 	 * Check user permission (self or admin).
 	 *
 	 * @since    0.2.14
@@ -354,9 +343,10 @@ class LearnKit_Enrollments_Controller {
 	 * @return   bool True if user can access.
 	 */
 	public function check_user_permission( $request ) {
-		$user_id         = (int) $request['user_id'];
-		$current_user_id = get_current_user_id();
-
-		return $current_user_id === $user_id || current_user_can( 'edit_posts' );
+		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+		$requested_id = isset( $request['user_id'] ) ? (int) $request['user_id'] : 0;
+		return get_current_user_id() === $requested_id || current_user_can( 'manage_options' );
 	}
 }

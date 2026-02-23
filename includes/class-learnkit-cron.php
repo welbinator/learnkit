@@ -101,20 +101,32 @@ class LearnKit_Cron {
 		}
 
 		foreach ( $items as $item ) {
-			$success = LearnKit_Emails::send( $item );
+			try {
+				$success = LearnKit_Emails::send( $item );
 
-			if ( $success ) {
-				$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-					$table,
-					array(
-						'status'  => 'sent',
-						'sent_at' => current_time( 'mysql', true ),
-					),
-					array( 'id' => (int) $item->id ),
-					array( '%s', '%s' ),
-					array( '%d' )
-				);
-			} else {
+				if ( $success ) {
+					$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+						$table,
+						array(
+							'status'  => 'sent',
+							'sent_at' => current_time( 'mysql', true ),
+						),
+						array( 'id' => (int) $item->id ),
+						array( '%s', '%s' ),
+						array( '%d' )
+					);
+				} else {
+					$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+						$table,
+						array( 'status' => 'failed' ),
+						array( 'id' => (int) $item->id ),
+						array( '%s' ),
+						array( '%d' )
+					);
+				}
+			} catch ( Exception $e ) {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+				error_log( '[LearnKit] Email send failed for queue item ' . $item->id . ': ' . $e->getMessage() );
 				$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 					$table,
 					array( 'status' => 'failed' ),
@@ -129,7 +141,8 @@ class LearnKit_Cron {
 	/**
 	 * Find inactive students and queue reminder emails.
 	 *
-	 * "Inactive" = enrolled > 7 days ago with no progress in the last 7 days.
+	 * "Inactive" = enrolled longer than the configured reminder_delay (default 7 days)
+	 * with no progress in the same period.
 	 *
 	 * @since 0.5.0
 	 */
@@ -140,9 +153,11 @@ class LearnKit_Cron {
 		$progress_table    = $wpdb->prefix . 'learnkit_progress';
 		$queue_table       = $wpdb->prefix . 'learnkit_email_queue';
 
-		$seven_days_ago = gmdate( 'Y-m-d H:i:s', strtotime( '-7 days' ) );
+		$settings   = get_option( 'learnkit_email_settings', array() );
+		$delay_days = isset( $settings['reminder_delay'] ) ? max( 1, (int) $settings['reminder_delay'] ) : 7;
+		$cutoff     = gmdate( 'Y-m-d H:i:s', strtotime( "-{$delay_days} days" ) );
 
-		// Get enrollments older than 7 days where user has made no progress recently.
+		// Get enrollments older than $delay_days days where user has made no progress recently.
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$inactive = $wpdb->get_results(
 			$wpdb->prepare(
@@ -161,8 +176,8 @@ class LearnKit_Cron {
 					WHERE p.user_id = e.user_id
 					AND p.completed_at >= %s
 				)",
-				$seven_days_ago,
-				$seven_days_ago
+				$cutoff,
+				$cutoff
 			)
 		);
 		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -175,7 +190,7 @@ class LearnKit_Cron {
 			$user_id   = (int) $row->user_id;
 			$course_id = (int) $row->course_id;
 
-			// Skip if a reminder was already queued in the last 7 days.
+			// Skip if a reminder was already queued in the last $delay_days days.
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$recent_reminder = $wpdb->get_var(
 				$wpdb->prepare(
@@ -185,7 +200,7 @@ class LearnKit_Cron {
 					AND scheduled_at >= %s",
 					$user_id,
 					$course_id,
-					$seven_days_ago
+					$cutoff
 				)
 			);
 

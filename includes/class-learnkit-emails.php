@@ -24,6 +24,17 @@
 class LearnKit_Emails {
 
 	/**
+	 * Whether a LearnKit email is currently being sent.
+	 *
+	 * Used to scope wp_mail_from / wp_mail_from_name filters so they only
+	 * apply to outgoing LearnKit emails, not all site emails.
+	 *
+	 * @since 0.5.1
+	 * @var   bool
+	 */
+	private static $is_sending = false;
+
+	/**
 	 * Set up hooks for unsubscribe handling and from-name/email overrides.
 	 *
 	 * @since 0.5.0
@@ -42,6 +53,9 @@ class LearnKit_Emails {
 	 * @return string       Filtered from email.
 	 */
 	public static function filter_mail_from( $from ) {
+		if ( ! self::$is_sending ) {
+			return $from;
+		}
 		$settings = get_option( 'learnkit_email_settings', array() );
 		if ( ! empty( $settings['from_email'] ) ) {
 			return sanitize_email( $settings['from_email'] );
@@ -57,6 +71,9 @@ class LearnKit_Emails {
 	 * @return string       Filtered from name.
 	 */
 	public static function filter_mail_from_name( $name ) {
+		if ( ! self::$is_sending ) {
+			return $name;
+		}
 		$settings = get_option( 'learnkit_email_settings', array() );
 		if ( ! empty( $settings['from_name'] ) ) {
 			return sanitize_text_field( $settings['from_name'] );
@@ -80,7 +97,7 @@ class LearnKit_Emails {
 		if ( isset( $settings['welcome_enabled'] ) && ! $settings['welcome_enabled'] ) {
 			return;
 		}
-		self::queue_email( $user_id, $course_id, 'welcome', current_time( 'mysql' ), array() );
+		self::queue_email( $user_id, $course_id, 'welcome', gmdate( 'Y-m-d H:i:s' ), array() );
 	}
 
 	/**
@@ -91,7 +108,7 @@ class LearnKit_Emails {
 	 * @param  int $course_id Course post ID.
 	 */
 	public static function schedule_completion_email( $user_id, $course_id ) {
-		self::queue_email( $user_id, $course_id, 'completion', current_time( 'mysql' ), array() );
+		self::queue_email( $user_id, $course_id, 'completion', gmdate( 'Y-m-d H:i:s' ), array() );
 	}
 
 	/**
@@ -195,15 +212,6 @@ class LearnKit_Emails {
 		// Get first lesson.
 		$first_lesson_url = self::get_first_lesson_url( $course_id );
 
-		$body_text = sprintf(
-			/* translators: 1: user display name, 2: course name */
-			__( "Hi %1\$s,\n\nWelcome to %2\$s! We're so glad you're here.\n\nYou can start your journey by visiting the course page:\n%3\$s\n\n%4\$s", 'learnkit' ),
-			$user->display_name,
-			$course_name,
-			get_permalink( $course_id ),
-			self::get_plain_unsubscribe( $user->ID, 'welcome' )
-		);
-
 		$html_body = self::wrap_html(
 			$course_name,
 			sprintf(
@@ -223,7 +231,7 @@ class LearnKit_Emails {
 			'welcome'
 		);
 
-		return self::mail( $user->user_email, $subject, $html_body, $body_text );
+		return self::mail( $user->user_email, $subject, $html_body );
 	}
 
 	/**
@@ -247,15 +255,6 @@ class LearnKit_Emails {
 			$lesson_name
 		);
 
-		$body_text = sprintf(
-			/* translators: 1: user display name, 2: lesson name, 3: lesson URL, 4: unsubscribe text */
-			__( "Hi %1\$s,\n\nA new lesson is now available: %2\$s\n\nVisit it here:\n%3\$s\n\n%4\$s", 'learnkit' ),
-			$user->display_name,
-			$lesson_name,
-			$lesson_url,
-			self::get_plain_unsubscribe( $user->ID, 'lesson_unlock' )
-		);
-
 		$html_body = self::wrap_html(
 			$course_name,
 			'<p>' . sprintf(
@@ -271,7 +270,7 @@ class LearnKit_Emails {
 			'lesson_unlock'
 		);
 
-		return self::mail( $user->user_email, $subject, $html_body, $body_text );
+		return self::mail( $user->user_email, $subject, $html_body );
 	}
 
 	/**
@@ -287,15 +286,6 @@ class LearnKit_Emails {
 		$subject = __( 'Continue your learning journey', 'learnkit' );
 
 		$first_lesson_url = self::get_first_lesson_url( $course_id );
-
-		$body_text = sprintf(
-			/* translators: 1: user display name, 2: course name, 3: course URL, 4: unsubscribe text */
-			__( "Hi %1\$s,\n\nWe noticed you haven't been active in %2\$s lately. Pick up where you left off!\n\n%3\$s\n\n%4\$s", 'learnkit' ),
-			$user->display_name,
-			$course_name,
-			$first_lesson_url ? $first_lesson_url : get_permalink( $course_id ),
-			self::get_plain_unsubscribe( $user->ID, 'reminder' )
-		);
 
 		$html_body = self::wrap_html(
 			$course_name,
@@ -315,7 +305,7 @@ class LearnKit_Emails {
 			'reminder'
 		);
 
-		return self::mail( $user->user_email, $subject, $html_body, $body_text );
+		return self::mail( $user->user_email, $subject, $html_body );
 	}
 
 	/**
@@ -332,15 +322,6 @@ class LearnKit_Emails {
 			/* translators: %s: course name */
 			__( 'Congratulations! You completed %s', 'learnkit' ),
 			$course_name
-		);
-
-		$body_text = sprintf(
-			/* translators: 1: user display name, 2: course name, 3: course URL, 4: unsubscribe text */
-			__( "Hi %1\$s,\n\nCongratulations on completing %2\$s! 🎉\n\nA certificate of completion is available for download from your student dashboard.\n\nCourse page: %3\$s\n\n%4\$s", 'learnkit' ),
-			$user->display_name,
-			$course_name,
-			get_permalink( $course_id ),
-			self::get_plain_unsubscribe( $user->ID, 'completion' )
 		);
 
 		$html_body = self::wrap_html(
@@ -362,7 +343,7 @@ class LearnKit_Emails {
 			'completion'
 		);
 
-		return self::mail( $user->user_email, $subject, $html_body, $body_text );
+		return self::mail( $user->user_email, $subject, $html_body );
 	}
 
 	// -------------------------------------------------------------------------
@@ -471,22 +452,6 @@ class LearnKit_Emails {
 	}
 
 	/**
-	 * Plain-text unsubscribe line.
-	 *
-	 * @since  0.5.0
-	 * @param  int    $user_id    WordPress user ID.
-	 * @param  string $email_type Email type key.
-	 * @return string
-	 */
-	private static function get_plain_unsubscribe( $user_id, $email_type ) {
-		return sprintf(
-			/* translators: %s: unsubscribe URL */
-			__( 'To unsubscribe from this notification: %s', 'learnkit' ),
-			self::get_unsubscribe_url( $user_id, $email_type )
-		);
-	}
-
-	/**
 	 * Get URL to the first lesson of a course.
 	 *
 	 * @since  0.5.0
@@ -499,8 +464,9 @@ class LearnKit_Emails {
 				'post_type'      => 'lk_module',
 				'posts_per_page' => 1,
 				'post_status'    => 'publish',
-				'meta_key'       => '_lk_course_id',
-				'meta_value'     => (int) $course_id,
+				'no_found_rows'  => true,
+				'meta_key'       => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => (int) $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'orderby'        => 'menu_order',
 				'order'          => 'ASC',
 			)
@@ -515,8 +481,9 @@ class LearnKit_Emails {
 				'post_type'      => 'lk_lesson',
 				'posts_per_page' => 1,
 				'post_status'    => 'publish',
-				'meta_key'       => '_lk_module_id',
-				'meta_value'     => $modules[0]->ID,
+				'no_found_rows'  => true,
+				'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $modules[0]->ID, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'orderby'        => 'menu_order',
 				'order'          => 'ASC',
 			)
@@ -578,16 +545,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 	}
 
 	/**
-	 * Send an email with HTML + plain text parts.
+	 * Send an email with an HTML body.
 	 *
 	 * @since  0.5.0
-	 * @param  string $to         Recipient address.
-	 * @param  string $subject    Email subject.
-	 * @param  string $html_body  Full HTML email.
-	 * @param  string $plain_body Plain text fallback.
+	 * @param  string $to        Recipient address.
+	 * @param  string $subject   Email subject.
+	 * @param  string $html_body Full HTML email.
 	 * @return bool
 	 */
-	private static function mail( $to, $subject, $html_body, $plain_body ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- kept for API compatibility
+	private static function mail( $to, $subject, $html_body ) {
 		// Set content type to HTML for this message.
 		$content_type_filter = static function () {
 			return 'text/html';
@@ -595,7 +561,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 		add_filter( 'wp_mail_content_type', $content_type_filter );
 
 		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
-		$result  = wp_mail( $to, $subject, $html_body, $headers );
+
+		self::$is_sending = true;
+		try {
+			$result = wp_mail( $to, $subject, $html_body, $headers );
+		} finally {
+			self::$is_sending = false;
+		}
 
 		remove_filter( 'wp_mail_content_type', $content_type_filter );
 

@@ -111,8 +111,8 @@ class LearnKit_Activator {
 	 * @since    0.1.0
 	 */
 	private static function set_default_options() {
-		// Store activation timestamp.
-		add_option( 'learnkit_activated', current_time( 'timestamp' ) );
+		// Store activation timestamp (available for future diagnostics/upgrade checks).
+		add_option( 'learnkit_activated', time() );
 
 		// Default settings (can be modified via settings page later).
 		add_option(

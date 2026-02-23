@@ -19,14 +19,15 @@ $modules = get_posts(
 	array(
 		'post_type'      => 'lk_module',
 		'posts_per_page' => -1,
-		'meta_query'     => array(
+		'no_found_rows'  => true,
+		'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 			array(
 				'key'   => '_lk_course_id',
 				'value' => $course_id,
 			),
 		),
 		'orderby'        => 'meta_value_num',
-		'meta_key'       => '_lk_order',
+		'meta_key'       => '_lk_order', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 		'order'          => 'ASC',
 	)
 );
@@ -48,9 +49,13 @@ if ( $user_id ) {
 		foreach ( $modules as $module ) {
 			$module_lessons = get_posts(
 				array(
-					'post_type'      => 'lk_lesson',
-					'posts_per_page' => -1,
-					'meta_query'     => array(
+					'post_type'              => 'lk_lesson',
+					'posts_per_page'         => -1,
+					'no_found_rows'          => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+					'fields'                 => 'ids',
+					'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 						array(
 							'key'   => '_lk_module_id',
 							'value' => $module->ID,
@@ -58,7 +63,7 @@ if ( $user_id ) {
 					),
 				)
 			);
-			$all_lessons    = array_merge( $all_lessons, wp_list_pluck( $module_lessons, 'ID' ) );
+			$all_lessons    = array_merge( $all_lessons, $module_lessons );
 		}
 
 		$progress['total'] = count( $all_lessons );
@@ -85,244 +90,6 @@ if ( empty( $access_type ) ) {
 }
 $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for template compat.
 ?>
-
-<style>
-	.lk-course-hero {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		color: #fff;
-		padding: 60px 20px;
-		margin-bottom: 40px;
-	}
-
-	.lk-course-hero-content {
-		max-width: 1200px;
-		margin: 0 auto;
-		display: grid;
-		grid-template-columns: 2fr 1fr;
-		gap: 40px;
-		align-items: center;
-	}
-
-	.lk-course-title {
-		font-size: 48px;
-		font-weight: 700;
-		margin: 0 0 20px 0;
-		line-height: 1.2;
-	}
-
-	.lk-course-excerpt {
-		font-size: 20px;
-		line-height: 1.6;
-		opacity: 0.95;
-		margin-bottom: 30px;
-	}
-
-	.lk-course-featured-image {
-		border-radius: 12px;
-		overflow: hidden;
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-	}
-
-	.lk-course-featured-image img {
-		width: 100%;
-		height: auto;
-		display: block;
-	}
-
-	.lk-course-content {
-		max-width: 1200px;
-		margin: 0 auto;
-		padding: 0 20px 60px;
-	}
-
-	.lk-progress-section {
-		background: #f0f0f1;
-		padding: 30px;
-		border-radius: 12px;
-		margin-bottom: 40px;
-	}
-
-	.lk-progress-bar-container {
-		background: #fff;
-		height: 24px;
-		border-radius: 12px;
-		overflow: hidden;
-		margin: 15px 0;
-	}
-
-	.lk-progress-bar {
-		height: 100%;
-		background: linear-gradient(90deg, #2271b1 0%, #135e96 100%);
-		transition: width 0.3s ease;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: #fff;
-		font-size: 14px;
-		font-weight: 600;
-	}
-
-	.lk-modules-section {
-		margin-top: 40px;
-	}
-
-	.lk-section-title {
-		font-size: 32px;
-		font-weight: 700;
-		margin-bottom: 30px;
-		color: #1d2327;
-	}
-
-	.lk-module {
-		background: #fff;
-		border: 1px solid #dcdcde;
-		border-radius: 12px;
-		margin-bottom: 20px;
-		overflow: hidden;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-	}
-
-	.lk-module-header {
-		padding: 20px 24px;
-		background: #f6f7f7;
-		cursor: pointer;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		transition: background 0.2s;
-	}
-
-	.lk-module-header:hover {
-		background: #e8e8e9;
-	}
-
-	.lk-module-title {
-		font-size: 20px;
-		font-weight: 600;
-		margin: 0;
-		color: #1d2327;
-	}
-
-	.lk-module-meta {
-		font-size: 14px;
-		color: #757575;
-		margin-top: 5px;
-	}
-
-	.lk-module-toggle {
-		font-size: 24px;
-		color: #757575;
-		transition: transform 0.3s;
-	}
-
-	.lk-module.open .lk-module-toggle {
-		transform: rotate(180deg);
-	}
-
-	.lk-lessons-list {
-		max-height: 0;
-		overflow: hidden;
-		transition: max-height 0.3s ease;
-	}
-
-	.lk-module.open .lk-lessons-list {
-		max-height: 1000px;
-	}
-
-	.lk-lesson-item {
-		padding: 16px 24px;
-		border-top: 1px solid #dcdcde;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		transition: background 0.2s;
-	}
-
-	.lk-lesson-item:hover {
-		background: #f6f7f7;
-	}
-
-	.lk-lesson-title {
-		font-size: 16px;
-		color: #1d2327;
-		text-decoration: none;
-		display: flex;
-		align-items: center;
-		gap: 10px;
-	}
-
-	.lk-lesson-title:hover {
-		color: #2271b1;
-	}
-
-	.lk-lesson-locked {
-		color: #999;
-		cursor: default;
-		font-style: italic;
-	}
-
-	.lk-lesson-status {
-		font-size: 20px;
-	}
-
-	:where(.lk-enroll-button, .lk-start-button, .lk-buy-now-button) {
-		background: var(--btn-background, #2271b1);
-		color: var(--btn-text-color, #fff);
-		padding-block: var(--btn-padding-block, 0.75em);
-		padding-inline: var(--btn-padding-inline, 1.5em);
-		inline-size: var(--btn-width, auto);
-		min-inline-size: var(--btn-min-width);
-		line-height: var(--btn-line-height);
-		font-family: var(--btn-font-family);
-		font-size: var(--btn-font-size, var(--text-m));
-		font-weight: var(--btn-font-weight);
-		font-style: var(--btn-font-style);
-		text-transform: var(--btn-text-transform);
-		letter-spacing: var(--btn-letter-spacing);
-		border-width: var(--btn-border-width);
-		border-style: var(--btn-border-style);
-		border-radius: var(--btn-border-radius, 6px);
-		border-color: var(--btn-border-color);
-		transition: var(--btn-transition, var(--transition));
-		justify-content: var(--btn-justify-content, center);
-		align-items: var(--btn-align-items, center);
-		text-align: var(--btn-text-align, center);
-		display: var(--btn-display, inline-flex);
-		cursor: pointer;
-		text-decoration: none;
-	}
-
-	:where(.lk-enroll-button, .lk-start-button, .lk-buy-now-button):where(:hover) {
-		background: var(--btn-background-hover, #135e96);
-		color: var(--btn-text-color, #fff);
-	}
-
-	.lk-login-prompt {
-		background: #f0f0f1;
-		padding: 20px;
-		border-radius: 6px;
-		text-align: center;
-	}
-
-	.lk-login-prompt a {
-		color: #2271b1;
-		font-weight: 600;
-	}
-
-	@media (max-width: 768px) {
-		.lk-course-hero-content {
-			grid-template-columns: 1fr;
-		}
-
-		.lk-course-title {
-			font-size: 32px;
-		}
-
-		.lk-course-excerpt {
-			font-size: 16px;
-		}
-	}
-</style>
 
 <div class="lk-course-single">
 	<!-- Hero Section -->
@@ -419,19 +186,83 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 					);
 				}
 
+				// Batch-fetch all lesson IDs for all modules in one pass.
+				$all_lesson_ids = array();
+				foreach ( $modules as $module ) {
+					$lesson_ids_for_module = get_posts(
+						array(
+							'post_type'              => 'lk_lesson',
+							'posts_per_page'         => -1,
+							'meta_key'               => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+							'meta_value'             => $module->ID, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+							'fields'                 => 'ids',
+							'no_found_rows'          => true,
+							'update_post_meta_cache' => false,
+							'update_post_term_cache' => false,
+						)
+					);
+					$all_lesson_ids = array_merge( $all_lesson_ids, $lesson_ids_for_module );
+				}
+
+				// Batch-fetch quiz IDs for all lessons (one query).
+				$quiz_id_by_lesson = array();
+				if ( ! empty( $all_lesson_ids ) ) {
+					global $wpdb;
+					$placeholders = implode( ',', array_fill( 0, count( $all_lesson_ids ), '%d' ) );
+					// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					$quiz_rows = $wpdb->get_results(
+						$wpdb->prepare(
+							"SELECT p.ID as quiz_id, pm.meta_value as lesson_id
+							 FROM {$wpdb->posts} p
+							 INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_lk_lesson_id'
+							 WHERE p.post_type = 'lk_quiz' AND p.post_status = 'publish'
+							 AND pm.meta_value IN ({$placeholders})",
+							$all_lesson_ids
+						)
+					);
+					// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					foreach ( $quiz_rows as $row ) {
+						$quiz_id_by_lesson[ (int) $row->lesson_id ] = (int) $row->quiz_id;
+					}
+				}
+
+				// Batch-fetch quiz attempts for the current user (one query).
+				$attempt_by_quiz = array();
+				$batch_quiz_ids  = array_values( $quiz_id_by_lesson );
+				if ( ! empty( $batch_quiz_ids ) && is_user_logged_in() ) {
+					$placeholders2 = implode( ',', array_fill( 0, count( $batch_quiz_ids ), '%d' ) );
+					// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					$attempts = $wpdb->get_results(
+						$wpdb->prepare(
+							"SELECT quiz_id, score, passed
+							 FROM {$wpdb->prefix}learnkit_quiz_attempts
+							 WHERE user_id = %d AND quiz_id IN ({$placeholders2})
+							 ORDER BY completed_at DESC",
+							array_merge( array( get_current_user_id() ), $batch_quiz_ids )
+						)
+					);
+					// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					foreach ( $attempts as $attempt ) {
+						if ( ! isset( $attempt_by_quiz[ (int) $attempt->quiz_id ] ) ) {
+							$attempt_by_quiz[ (int) $attempt->quiz_id ] = $attempt;
+						}
+					}
+				}
+
 				foreach ( $modules as $index => $module ) :
 					$lessons = get_posts(
 						array(
 							'post_type'      => 'lk_lesson',
 							'posts_per_page' => -1,
-							'meta_query'     => array(
+							'no_found_rows'  => true,
+							'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 								array(
 									'key'   => '_lk_module_id',
 									'value' => $module->ID,
 								),
 							),
 							'orderby'        => 'meta_value_num',
-							'meta_key'       => '_lk_order',
+							'meta_key'       => '_lk_order', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 							'order'          => 'ASC',
 						)
 					);
@@ -465,34 +296,13 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 								</div>
 
 								<?php
-								// Check for lesson quiz.
-								// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-								$lesson_quiz = $wpdb->get_row(
-									$wpdb->prepare(
-										"SELECT p.ID, p.post_title FROM {$wpdb->posts} p 
-										INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
-										WHERE p.post_type = 'lk_quiz' 
-										AND pm.meta_key = '_lk_lesson_id' 
-										AND pm.meta_value = %d 
-										LIMIT 1",
-										$lesson->ID
-									)
-								);
+								// Use batch-fetched quiz/attempt data instead of per-lesson queries.
+								$lq_id       = isset( $quiz_id_by_lesson[ $lesson->ID ] ) ? $quiz_id_by_lesson[ $lesson->ID ] : 0;
+								$lesson_quiz = $lq_id ? get_post( $lq_id ) : null;
 								if ( $lesson_quiz ) :
-									// Check if user has taken this quiz.
-									$quiz_attempt = null;
-									if ( $is_enrolled && $user_id ) {
-										// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-										$quiz_attempt = $wpdb->get_row(
-											$wpdb->prepare(
-												"SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts 
-												WHERE user_id = %d AND quiz_id = %d 
-												ORDER BY score DESC, completed_at DESC 
-												LIMIT 1",
-												$user_id,
-												$lesson_quiz->ID
-											)
-										);
+									$quiz_attempt = $lq_id && isset( $attempt_by_quiz[ $lq_id ] ) ? $attempt_by_quiz[ $lq_id ] : null;
+									if ( ! $is_enrolled || ! $user_id ) {
+										$quiz_attempt = null;
 									}
 									?>
 									<div class="lk-lesson-item" style="padding-left: 48px; background: #f9f9f9;">

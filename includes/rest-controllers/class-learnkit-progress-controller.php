@@ -19,16 +19,7 @@
  * @subpackage LearnKit/includes/rest-controllers
  * @author     James Welbes <james.welbes@gmail.com>
  */
-class LearnKit_Progress_Controller {
-
-	/**
-	 * The namespace for our REST API.
-	 *
-	 * @since    0.2.14
-	 * @access   private
-	 * @var      string    $namespace    The namespace for REST API routes.
-	 */
-	private $namespace = 'learnkit/v1';
+class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Register progress routes.
@@ -96,6 +87,18 @@ class LearnKit_Progress_Controller {
 			);
 		}
 
+		// Resolve lesson → module → course chain.
+		$module_id = (int) get_post_meta( $lesson_id, '_lk_module_id', true );
+		$course_id = $module_id ? (int) get_post_meta( $module_id, '_lk_course_id', true ) : 0;
+
+		// Require enrollment.
+		if ( $course_id && ! learnkit_is_enrolled( $user_id, $course_id ) ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'You are not enrolled in this course.', 'learnkit' ) ),
+				403
+			);
+		}
+
 		// Backend gate: enforce required quiz passage.
 		$gate_error = $this->check_quiz_gate( $lesson_id, $user_id );
 		if ( $gate_error instanceof WP_REST_Response ) {
@@ -130,7 +133,7 @@ class LearnKit_Progress_Controller {
 			array(
 				'user_id'      => $user_id,
 				'lesson_id'    => $lesson_id,
-				'completed_at' => current_time( 'mysql' ),
+				'completed_at' => gmdate( 'Y-m-d H:i:s' ),
 			),
 			array( '%d', '%d', '%s' )
 		);
@@ -256,87 +259,68 @@ class LearnKit_Progress_Controller {
 	 * @return   WP_REST_Response Response object.
 	 */
 	public function get_course_progress( $request ) {
-		global $wpdb;
-
 		$user_id   = (int) $request['user_id'];
 		$course_id = (int) $request['course_id'];
 
-		// Get all lessons in this course.
-		$modules = get_posts(
+		$progress = learnkit_get_course_progress( $user_id, $course_id );
+
+		// Build the completed lesson IDs list for the REST response.
+		global $wpdb;
+
+		$module_ids = get_posts(
 			array(
-				'post_type'      => 'lk_module',
-				'posts_per_page' => -1,
-				'meta_key'       => 'learnkit_course_id',
-				'meta_value'     => $course_id,
+				'post_type'              => 'lk_module',
+				'posts_per_page'         => -1,
+				'meta_key'               => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'             => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
 			)
 		);
 
-		$module_ids = wp_list_pluck( $modules, 'ID' );
+		$completed_lesson_ids = array();
 
-		if ( empty( $module_ids ) ) {
-			return new WP_REST_Response(
+		if ( ! empty( $module_ids ) ) {
+			$lesson_ids = get_posts(
 				array(
-					'total_lessons'        => 0,
-					'completed_lessons'    => 0,
-					'progress_percent'     => 0,
-					'completed_lesson_ids' => array(),
-				),
-				200
+					'post_type'              => 'lk_lesson',
+					'posts_per_page'         => -1,
+					'meta_key'               => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'meta_value__in'         => $module_ids,
+					'fields'                 => 'ids',
+					'no_found_rows'          => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+				)
 			);
+
+			if ( ! empty( $lesson_ids ) ) {
+				$table        = $wpdb->prefix . 'learnkit_progress';
+				$placeholders = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
+				$args         = array_merge( array( $user_id ), $lesson_ids );
+
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$completed_lesson_ids = array_map(
+					'intval',
+					(array) $wpdb->get_col(
+						$wpdb->prepare(
+							// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+							"SELECT lesson_id FROM {$table} WHERE user_id = %d AND lesson_id IN ({$placeholders})",
+							$args
+						)
+					)
+				);
+			}
 		}
-
-		// Get all lessons in these modules.
-		$lessons = get_posts(
-			array(
-				'post_type'      => 'lk_lesson',
-				'posts_per_page' => -1,
-				'meta_query'     => array(
-					array(
-						'key'     => '_lk_module_id',
-						'value'   => $module_ids,
-						'compare' => 'IN',
-					),
-				),
-			)
-		);
-
-		$total_lessons = count( $lessons );
-		$lesson_ids    = wp_list_pluck( $lessons, 'ID' );
-
-		if ( empty( $lesson_ids ) ) {
-			return new WP_REST_Response(
-				array(
-					'total_lessons'        => 0,
-					'completed_lessons'    => 0,
-					'progress_percent'     => 0,
-					'completed_lesson_ids' => array(),
-				),
-				200
-			);
-		}
-
-		// Get completed lessons.
-		$table        = $wpdb->prefix . 'learnkit_progress';
-		$placeholders = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
-
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$completed = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT lesson_id FROM $table WHERE user_id = %d AND lesson_id IN ($placeholders)",
-				array_merge( array( $user_id ), $lesson_ids )
-			)
-		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-
-		$completed_count  = count( $completed );
-		$progress_percent = $total_lessons > 0 ? round( ( $completed_count / $total_lessons ) * 100 ) : 0;
 
 		return new WP_REST_Response(
 			array(
-				'total_lessons'        => $total_lessons,
-				'completed_lessons'    => $completed_count,
-				'progress_percent'     => $progress_percent,
-				'completed_lesson_ids' => array_map( 'intval', $completed ),
+				'total_lessons'        => $progress['total_lessons'],
+				'completed_lessons'    => $progress['completed_lessons'],
+				'progress_percent'     => $progress['progress_percent'],
+				'completed_lesson_ids' => $completed_lesson_ids,
 			),
 			200
 		);
@@ -360,11 +344,11 @@ class LearnKit_Progress_Controller {
 			array(
 				'post_type'      => 'lk_lesson',
 				'posts_per_page' => -1,
-				'meta_key'       => '_lk_module_id',
-				'meta_value'     => $module_id,
+				'no_found_rows'  => true,
+				'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $module_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);
-
 		$total_lessons = count( $lessons );
 		$lesson_ids    = wp_list_pluck( $lessons, 'ID' );
 
@@ -411,10 +395,19 @@ class LearnKit_Progress_Controller {
 	 * Check user permission.
 	 *
 	 * @since    0.2.14
-	 * @return   bool True if user is logged in.
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   bool True if user is logged in and authorised.
 	 */
-	public function check_user_permission() {
-		return is_user_logged_in();
+	public function check_user_permission( $request ) {
+		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+		$requested_id = isset( $request['user_id'] ) ? (int) $request['user_id'] : 0;
+		// For the mark-complete POST endpoint, no user_id in URL — only check login.
+		if ( 0 === $requested_id ) {
+			return true;
+		}
+		return get_current_user_id() === $requested_id || current_user_can( 'manage_options' );
 	}
 
 	/**
@@ -440,12 +433,15 @@ class LearnKit_Progress_Controller {
 		// Get all lessons in this course.
 		$module_ids = get_posts(
 			array(
-				'post_type'      => 'lk_module',
-				'posts_per_page' => -1,
-				'post_status'    => 'publish',
-				'fields'         => 'ids',
-				'meta_key'       => '_lk_course_id',
-				'meta_value'     => (int) $course_id,
+				'post_type'              => 'lk_module',
+				'posts_per_page'         => -1,
+				'post_status'            => 'publish',
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+				'meta_key'               => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'             => (int) $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);
 
@@ -455,11 +451,14 @@ class LearnKit_Progress_Controller {
 
 		$lessons = get_posts(
 			array(
-				'post_type'      => 'lk_lesson',
-				'posts_per_page' => -1,
-				'post_status'    => 'publish',
-				'fields'         => 'ids',
-				'meta_query'     => array(
+				'post_type'              => 'lk_lesson',
+				'posts_per_page'         => -1,
+				'post_status'            => 'publish',
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+				'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					array(
 						'key'     => '_lk_module_id',
 						'value'   => $module_ids,

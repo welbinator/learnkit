@@ -65,7 +65,7 @@ function learnkit_enroll_user( $user_id, $course_id, $source = 'manual', $expire
 			'status'      => 'active',
 			'source'      => sanitize_text_field( $source ),
 			'expires_at'  => ! empty( $expires_at ) ? $expires_at : null,
-			'enrolled_at' => current_time( 'mysql' ),
+			'enrolled_at' => gmdate( 'Y-m-d H:i:s' ),
 		);
 		$format = array( '%s', '%s', '%s', '%s' );
 
@@ -94,6 +94,8 @@ function learnkit_enroll_user( $user_id, $course_id, $source = 'manual', $expire
 		 */
 		do_action( 'learnkit_user_enrolled', $user_id, $course_id );
 
+		wp_cache_delete( 'learnkit_enrolled_' . $user_id . '_' . $course_id, 'learnkit' );
+
 		return (int) $existing->id;
 	}
 
@@ -101,7 +103,7 @@ function learnkit_enroll_user( $user_id, $course_id, $source = 'manual', $expire
 	$insert_data   = array(
 		'user_id'     => $user_id,
 		'course_id'   => $course_id,
-		'enrolled_at' => current_time( 'mysql' ),
+		'enrolled_at' => gmdate( 'Y-m-d H:i:s' ),
 		'status'      => 'active',
 		'source'      => sanitize_text_field( $source ),
 	);
@@ -123,6 +125,8 @@ function learnkit_enroll_user( $user_id, $course_id, $source = 'manual', $expire
 
 	/** This action is documented in includes/learnkit-enrollment-api.php */
 	do_action( 'learnkit_user_enrolled', $user_id, $course_id );
+
+	wp_cache_delete( 'learnkit_enrolled_' . $user_id . '_' . $course_id, 'learnkit' );
 
 	return $enrollment_id;
 }
@@ -177,6 +181,8 @@ function learnkit_unenroll_user( $user_id, $course_id ) {
 	 */
 	do_action( 'learnkit_user_unenrolled', $user_id, $course_id );
 
+	wp_cache_delete( 'learnkit_enrolled_' . $user_id . '_' . $course_id, 'learnkit' );
+
 	return true;
 }
 
@@ -202,6 +208,25 @@ function learnkit_is_enrolled( $user_id, $course_id ) {
 		return false;
 	}
 
+	$cache_key = 'learnkit_enrolled_' . $user_id . '_' . $course_id;
+	$cached    = wp_cache_get( $cache_key, 'learnkit' );
+
+	if ( false !== $cached ) {
+		/**
+		 * Filter whether a user can access a course.
+		 *
+		 * Membership plugins and other integrations can hook into this filter to
+		 * grant or restrict access independently of the enrollments table.
+		 *
+		 * @since 0.4.0
+		 *
+		 * @param bool $is_enrolled Whether the user has an active enrollment record.
+		 * @param int  $user_id     The user being checked.
+		 * @param int  $course_id   The course being checked.
+		 */
+		return (bool) apply_filters( 'learnkit_user_can_access_course', (bool) $cached, $user_id, $course_id );
+	}
+
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 	$is_enrolled = (bool) $wpdb->get_var(
 		$wpdb->prepare(
@@ -211,17 +236,89 @@ function learnkit_is_enrolled( $user_id, $course_id ) {
 		)
 	);
 
-	/**
-	 * Filter whether a user can access a course.
-	 *
-	 * Membership plugins and other integrations can hook into this filter to
-	 * grant or restrict access independently of the enrollments table.
-	 *
-	 * @since 0.4.0
-	 *
-	 * @param bool $is_enrolled Whether the user has an active enrollment record.
-	 * @param int  $user_id     The user being checked.
-	 * @param int  $course_id   The course being checked.
-	 */
+	wp_cache_set( $cache_key, $is_enrolled ? 1 : 0, 'learnkit', 300 );
+
+	/** This filter is documented in includes/learnkit-enrollment-api.php */
 	return (bool) apply_filters( 'learnkit_user_can_access_course', $is_enrolled, $user_id, $course_id );
+}
+
+/**
+ * Get the progress percentage for a user in a given course.
+ *
+ * @since 0.6.0
+ *
+ * @param int $user_id   The user ID.
+ * @param int $course_id The course (post) ID.
+ * @return array {
+ *     @type int $progress_percent  Completion percentage (0–100).
+ *     @type int $completed_lessons Number of completed lessons.
+ *     @type int $total_lessons     Total lessons in the course.
+ * }
+ */
+function learnkit_get_course_progress( $user_id, $course_id ) {
+	global $wpdb;
+
+	$module_ids = get_posts(
+		array(
+			'post_type'              => 'lk_module',
+			'posts_per_page'         => -1,
+			'meta_key'               => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value'             => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		)
+	);
+
+	if ( empty( $module_ids ) ) {
+		return array(
+			'progress_percent'  => 0,
+			'completed_lessons' => 0,
+			'total_lessons'     => 0,
+		);
+	}
+
+	$lesson_ids = get_posts(
+		array(
+			'post_type'              => 'lk_lesson',
+			'posts_per_page'         => -1,
+			'meta_key'               => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value__in'         => $module_ids,
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		)
+	);
+
+	if ( empty( $lesson_ids ) ) {
+		return array(
+			'progress_percent'  => 0,
+			'completed_lessons' => 0,
+			'total_lessons'     => 0,
+		);
+	}
+
+	$total          = count( $lesson_ids );
+	$placeholders   = implode( ',', array_fill( 0, $total, '%d' ) );
+	$progress_table = $wpdb->prefix . 'learnkit_progress';
+	$args           = array_merge( array( $user_id ), $lesson_ids );
+
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$completed = (int) $wpdb->get_var(
+		$wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed, placeholders are generated.
+			"SELECT COUNT(*) FROM {$progress_table} WHERE user_id = %d AND lesson_id IN ({$placeholders})",
+			$args
+		)
+	);
+
+	$percent = $total > 0 ? (int) round( ( $completed / $total ) * 100 ) : 0;
+
+	return array(
+		'progress_percent'  => $percent,
+		'completed_lessons' => $completed,
+		'total_lessons'     => $total,
+	);
 }

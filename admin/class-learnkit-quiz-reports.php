@@ -43,39 +43,18 @@ class LearnKit_Quiz_Reports {
 	 * @since    0.4.0
 	 */
 	public function render_page() {
-		global $wpdb;
-
 		// Get filter params.
 		$quiz_id    = isset( $_GET['quiz_id'] ) ? absint( $_GET['quiz_id'] ) : 0;
 		$user_id    = isset( $_GET['user_id'] ) ? absint( $_GET['user_id'] ) : 0;
 		$passed     = isset( $_GET['passed'] ) ? sanitize_text_field( wp_unslash( $_GET['passed'] ) ) : '';
 		$export_csv = isset( $_GET['export'] ) && 'csv' === $_GET['export'];
 
-		$filters = array(
+		$filters  = array(
 			'quiz_id' => $quiz_id,
 			'user_id' => $user_id,
 			'passed'  => $passed,
 		);
-
-		// Build query.
-		$where = array( '1=1' );
-
-		if ( $quiz_id ) {
-			$where[] = $wpdb->prepare( 'quiz_id = %d', $quiz_id );
-		}
-		if ( $user_id ) {
-			$where[] = $wpdb->prepare( 'user_id = %d', $user_id );
-		}
-		if ( 'yes' === $passed ) {
-			$where[] = 'passed = 1';
-		} elseif ( 'no' === $passed ) {
-			$where[] = 'passed = 0';
-		}
-
-		$where_clause = implode( ' AND ', $where );
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$attempts = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE $where_clause ORDER BY completed_at DESC LIMIT 500" );
+		$attempts = $this->get_quiz_attempts( $filters );
 
 		// Export CSV.
 		if ( $export_csv ) {
@@ -99,6 +78,80 @@ class LearnKit_Quiz_Reports {
 		$this->render_attempts_table( $attempts );
 
 		echo '</div>'; // Close .wrap.
+	}
+
+	/**
+	 * Fetch quiz attempts from the database using the given filters.
+	 *
+	 * Builds a parameterized query based on quiz_id, user_id, and passed
+	 * filter values, then returns up to 500 rows ordered by completed_at DESC.
+	 *
+	 * @since    0.4.0
+	 * @param    array $filters  Associative array with keys: quiz_id, user_id, passed.
+	 * @return   array           Array of attempt objects.
+	 */
+	private function get_quiz_attempts( $filters ) {
+		global $wpdb;
+
+		$quiz_id = (int) $filters['quiz_id'];
+		$user_id = (int) $filters['user_id'];
+		$passed  = $filters['passed'];
+		$table   = $wpdb->prefix . 'learnkit_quiz_attempts';
+
+		// Build query with proper parameterized WHERE clause.
+		if ( $quiz_id && $user_id ) {
+			if ( 'yes' === $passed ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE quiz_id = %d AND user_id = %d AND passed = 1 ORDER BY completed_at DESC LIMIT 500", $quiz_id, $user_id );
+			} elseif ( 'no' === $passed ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE quiz_id = %d AND user_id = %d AND passed = 0 ORDER BY completed_at DESC LIMIT 500", $quiz_id, $user_id );
+			} else {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				$sql = $wpdb->prepare( "SELECT * FROM {$table} WHERE quiz_id = %d AND user_id = %d ORDER BY completed_at DESC LIMIT 500", $quiz_id, $user_id );
+			}
+		} elseif ( $quiz_id ) {
+			$sql = $this->build_single_filter_query( $table, 'quiz_id', $quiz_id, $passed );
+		} elseif ( $user_id ) {
+			$sql = $this->build_single_filter_query( $table, 'user_id', $user_id, $passed );
+		} elseif ( 'yes' === $passed ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+			$sql = "SELECT * FROM {$table} WHERE passed = 1 ORDER BY completed_at DESC LIMIT 500";
+		} elseif ( 'no' === $passed ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+			$sql = "SELECT * FROM {$table} WHERE passed = 0 ORDER BY completed_at DESC LIMIT 500";
+		} else {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+			$sql = "SELECT * FROM {$table} ORDER BY completed_at DESC LIMIT 500";
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		return $wpdb->get_results( $sql );
+	}
+
+	/**
+	 * Build a prepared SQL query filtering on a single column plus optional passed flag.
+	 *
+	 * @since    0.4.0
+	 * @param    string $table   Prefixed table name.
+	 * @param    string $column  Column name: 'quiz_id' or 'user_id'.
+	 * @param    int    $value   Column value to filter by.
+	 * @param    string $passed  Passed filter: 'yes', 'no', or '' for all.
+	 * @return   string          Prepared SQL string.
+	 */
+	private function build_single_filter_query( $table, $column, $value, $passed ) {
+		global $wpdb;
+
+		if ( 'yes' === $passed ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name and column are safely set.
+			return $wpdb->prepare( "SELECT * FROM {$table} WHERE {$column} = %d AND passed = 1 ORDER BY completed_at DESC LIMIT 500", $value );
+		}
+		if ( 'no' === $passed ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name and column are safely set.
+			return $wpdb->prepare( "SELECT * FROM {$table} WHERE {$column} = %d AND passed = 0 ORDER BY completed_at DESC LIMIT 500", $value );
+		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name and column are safely set.
+		return $wpdb->prepare( "SELECT * FROM {$table} WHERE {$column} = %d ORDER BY completed_at DESC LIMIT 500", $value );
 	}
 
 	/**

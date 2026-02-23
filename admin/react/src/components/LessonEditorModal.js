@@ -8,18 +8,49 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { useState } from '@wordpress/element';
-import { Modal, Button, TextControl, TextareaControl, SelectControl } from '@wordpress/components';
-import { updateLesson } from '../utils/api';
+import { useState, useEffect } from '@wordpress/element';
+import { Modal, Button, TextControl, TextareaControl, SelectControl, Spinner } from '@wordpress/components';
+import { updateLesson, getLesson } from '../utils/api';
 
 function LessonEditorModal({ lesson, onSave, onClose }) {
-	const [title, setTitle] = useState(lesson?.title || '');
-	const [content, setContent] = useState(lesson?.content || '');
-	const [releaseType, setReleaseType] = useState(lesson?.release_type || 'immediate');
-	const [releaseDays, setReleaseDays] = useState(String(lesson?.release_days || ''));
-	const [releaseDate, setReleaseDate] = useState(lesson?.release_date || '');
+	const [title, setTitle] = useState('');
+	const [content, setContent] = useState('');
+	const [releaseType, setReleaseType] = useState('immediate');
+	const [releaseDays, setReleaseDays] = useState('');
+	const [releaseDate, setReleaseDate] = useState('');
 	const [saving, setSaving] = useState(false);
+	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
+
+	// Fetch full lesson data when modal opens to avoid saving over existing content.
+	useEffect(() => {
+		if ( ! lesson?.id ) {
+			return;
+		}
+
+		setLoading(true);
+		setError('');
+
+		getLesson(lesson.id)
+			.then((fullLesson) => {
+				setTitle(fullLesson?.title || lesson?.title || '');
+				setContent(fullLesson?.content || '');
+				setReleaseType(fullLesson?.release_type || 'immediate');
+				setReleaseDays(String(fullLesson?.release_days || ''));
+				setReleaseDate(fullLesson?.release_date || '');
+			})
+			.catch(() => {
+				// Fall back to shallow data from the course structure endpoint.
+				setTitle(lesson?.title || '');
+				setContent('');
+				setReleaseType('immediate');
+				setReleaseDays('');
+				setReleaseDate('');
+			})
+			.finally(() => {
+				setLoading(false);
+			});
+	}, [lesson?.id]);
 
 	const handleSave = async () => {
 		if (!title.trim()) {
@@ -64,62 +95,71 @@ function LessonEditorModal({ lesson, onSave, onClose }) {
 					</div>
 				)}
 
-				<TextControl
-					label={__('Lesson Title', 'learnkit')}
-					value={title}
-					onChange={setTitle}
-					placeholder={__('Enter lesson title...', 'learnkit')}
-				/>
+				{loading ? (
+					<div style={{ textAlign: 'center', padding: '32px' }}>
+						<Spinner />
+						<p>{__('Loading lesson…', 'learnkit')}</p>
+					</div>
+				) : (
+					<>
+						<TextControl
+							label={__('Lesson Title', 'learnkit')}
+							value={title}
+							onChange={setTitle}
+							placeholder={__('Enter lesson title...', 'learnkit')}
+						/>
 
-				<TextareaControl
-					label={__('Content', 'learnkit')}
-					value={content}
-					onChange={setContent}
-					placeholder={__('Lesson content...', 'learnkit')}
-					rows={6}
-				/>
+						<TextareaControl
+							label={__('Content', 'learnkit')}
+							value={content}
+							onChange={setContent}
+							placeholder={__('Lesson content...', 'learnkit')}
+							rows={6}
+						/>
 
-				{/* Drip content settings */}
-				<hr style={{ margin: '24px 0' }} />
-				<h3 style={{ marginBottom: '12px' }}>{__('Drip Content Settings', 'learnkit')}</h3>
+						{/* Drip content settings */}
+						<hr style={{ margin: '24px 0' }} />
+						<h3 style={{ marginBottom: '12px' }}>{__('Drip Content Settings', 'learnkit')}</h3>
 
-				<SelectControl
-					label={__('Release Type', 'learnkit')}
-					value={releaseType}
-					onChange={setReleaseType}
-					options={[
-						{ label: __('Immediate', 'learnkit'), value: 'immediate' },
-						{ label: __('Days after enrollment', 'learnkit'), value: 'days_after_enrollment' },
-						{ label: __('Specific date', 'learnkit'), value: 'specific_date' },
-					]}
-				/>
+						<SelectControl
+							label={__('Release Type', 'learnkit')}
+							value={releaseType}
+							onChange={setReleaseType}
+							options={[
+								{ label: __('Immediate', 'learnkit'), value: 'immediate' },
+								{ label: __('Days after enrollment', 'learnkit'), value: 'days_after_enrollment' },
+								{ label: __('Specific date', 'learnkit'), value: 'specific_date' },
+							]}
+						/>
 
-				{releaseType === 'days_after_enrollment' && (
-					<TextControl
-						label={__('Days after enrollment', 'learnkit')}
-						type="number"
-						value={releaseDays}
-						onChange={setReleaseDays}
-						min={1}
-						help={__('Number of days after the student enrolls before this lesson unlocks.', 'learnkit')}
-					/>
-				)}
+						{releaseType === 'days_after_enrollment' && (
+							<TextControl
+								label={__('Days after enrollment', 'learnkit')}
+								type="number"
+								value={releaseDays}
+								onChange={setReleaseDays}
+								min={1}
+								help={__('Number of days after the student enrolls before this lesson unlocks.', 'learnkit')}
+							/>
+						)}
 
-				{releaseType === 'specific_date' && (
-					<TextControl
-						label={__('Unlock date', 'learnkit')}
-						type="date"
-						value={releaseDate ? releaseDate.substring(0, 10) : ''}
-						onChange={(val) => setReleaseDate(val)}
-						help={__('The lesson becomes available on this date.', 'learnkit')}
-					/>
+						{releaseType === 'specific_date' && (
+							<TextControl
+								label={__('Unlock date', 'learnkit')}
+								type="date"
+								value={releaseDate ? releaseDate.substring(0, 10) : ''}
+								onChange={(val) => setReleaseDate(val)}
+								help={__('The lesson becomes available on this date.', 'learnkit')}
+							/>
+						)}
+					</>
 				)}
 
 				<div className="learnkit-modal-actions" style={{ marginTop: '24px' }}>
 					<Button
 						variant="primary"
 						onClick={handleSave}
-						disabled={saving}
+						disabled={saving || loading}
 					>
 						{saving ? __('Saving...', 'learnkit') : __('Save Lesson', 'learnkit')}
 					</Button>

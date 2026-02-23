@@ -105,6 +105,7 @@ class LearnKit_Course_Catalog {
 				'post_status'    => 'publish',
 				'orderby'        => $atts['orderby'],
 				'order'          => $atts['order'],
+				'no_found_rows'  => true,
 			)
 		);
 
@@ -161,6 +162,49 @@ class LearnKit_Course_Catalog {
 	}
 
 	/**
+	 * Get lesson count for a course in a single query.
+	 *
+	 * @since    0.3.0
+	 * @param    int $course_id The course ID.
+	 * @return   int
+	 */
+	private function get_course_lesson_count( $course_id ) {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(DISTINCT l.ID)
+				 FROM {$wpdb->posts} l
+				 INNER JOIN {$wpdb->postmeta} lm ON l.ID = lm.post_id AND lm.meta_key = '_lk_module_id'
+				 INNER JOIN {$wpdb->posts} m ON lm.meta_value = m.ID AND m.post_status = 'publish'
+				 INNER JOIN {$wpdb->postmeta} mm ON m.ID = mm.post_id AND mm.meta_key = '_lk_course_id' AND mm.meta_value = %d
+				 WHERE l.post_type = 'lk_lesson' AND l.post_status = 'publish'",
+				$course_id
+			)
+		);
+	}
+
+	/**
+	 * Get module count for a course in a single query.
+	 *
+	 * @since    0.3.0
+	 * @param    int $course_id The course ID.
+	 * @return   int
+	 */
+	private function get_course_module_count( $course_id ) {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->posts} p
+				 INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_lk_course_id' AND pm.meta_value = %d
+				 WHERE p.post_type = 'lk_module' AND p.post_status = 'publish'",
+				$course_id
+			)
+		);
+	}
+
+	/**
 	 * Render a single course card.
 	 *
 	 * @since    0.3.0
@@ -175,29 +219,9 @@ class LearnKit_Course_Catalog {
 			$thumbnail_url = LEARNKIT_PLUGIN_URL . 'assets/images/default-course.png';
 		}
 
-		// Get module and lesson counts.
-		$modules = get_posts(
-			array(
-				'post_type'      => 'lk_module',
-				'posts_per_page' => -1,
-				'meta_key'       => '_lk_course_id',
-				'meta_value'     => $course_id,
-			)
-		);
-
-		$lesson_count = 0;
-		foreach ( $modules as $module ) {
-			$lessons       = get_posts(
-				array(
-					'post_type'      => 'lk_lesson',
-					'posts_per_page' => -1,
-					'meta_key'       => '_lk_module_id',
-					'meta_value'     => $module->ID,
-				)
-			);
-			$lesson_count += count( $lessons );
-		}
-		$module_count = count( $modules );
+		// Get module and lesson counts via optimized single queries.
+		$module_count = $this->get_course_module_count( $course_id );
+		$lesson_count = $this->get_course_lesson_count( $course_id );
 
 		// Determine access type with backward compatibility.
 		$access_type = get_post_meta( $course_id, '_lk_access_type', true );
@@ -350,7 +374,7 @@ class LearnKit_Course_Catalog {
 			array(
 				'user_id'     => $user_id,
 				'course_id'   => $course_id,
-				'enrolled_at' => current_time( 'mysql' ),
+				'enrolled_at' => gmdate( 'Y-m-d H:i:s' ),
 				'status'      => 'active',
 			),
 			array( '%d', '%d', '%s', '%s' )
