@@ -56,6 +56,7 @@ jobs:
             --exclude='.github' \
             --exclude='.gitignore' \
             --exclude='.gitattributes' \
+            --exclude='.gitkeep' \
             --exclude='node_modules' \
             --exclude='admin/react/node_modules' \
             --exclude='admin/react/src' \
@@ -67,7 +68,6 @@ jobs:
             --exclude='bin' \
             --exclude='docs' \
             --exclude='vendor/bin' \
-            --exclude='composer.json' \
             --exclude='composer.lock' \
             --exclude='phpcs.xml.dist' \
             --exclude='phpmd.xml' \
