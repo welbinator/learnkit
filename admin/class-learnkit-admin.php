@@ -180,15 +180,6 @@ class LearnKit_Admin {
 			'edit.php?post_type=lk_course'
 		);
 
-		// All Modules submenu.
-		add_submenu_page(
-			'learnkit',
-			__( 'All Modules', 'learnkit' ),
-			__( 'All Modules', 'learnkit' ),
-			'edit_posts',
-			'edit.php?post_type=lk_module'
-		);
-
 		// All Lessons submenu.
 		add_submenu_page(
 			'learnkit',
