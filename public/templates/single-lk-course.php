@@ -209,7 +209,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 				if ( ! empty( $all_lesson_ids ) ) {
 					global $wpdb;
 					$placeholders = implode( ',', array_fill( 0, count( $all_lesson_ids ), '%d' ) );
-					// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 					$quiz_rows = $wpdb->get_results(
 						$wpdb->prepare(
 							"SELECT p.ID as quiz_id, pm.meta_value as lesson_id
