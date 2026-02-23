@@ -9,6 +9,8 @@
  * @subpackage LearnKit/public/templates
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template-scoped variables, not true PHP globals.
+
 get_header();
 
 // Get current lesson.
@@ -409,4 +411,5 @@ if ( ! $is_available ) {
 </div>
 
 <?php
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 get_footer();
