@@ -177,6 +177,9 @@ class LearnKit_Progress_Controller {
 			);
 		}
 
+		// Check if the entire course is now complete and fire action.
+		$this->maybe_fire_course_completed( $lesson_id, $user_id );
+
 		return new WP_REST_Response(
 			array(
 				'message'   => __( 'Lesson marked complete', 'learnkit' ),
@@ -393,5 +396,79 @@ class LearnKit_Progress_Controller {
 	 */
 	public function check_user_permission() {
 		return is_user_logged_in();
+	}
+
+	/**
+	 * Fire the learnkit_user_completed_course action if all lessons are done.
+	 *
+	 * @since    0.5.0
+	 * @param    int $lesson_id   The lesson just completed.
+	 * @param    int $user_id     The current user.
+	 */
+	private function maybe_fire_course_completed( $lesson_id, $user_id ) {
+		global $wpdb;
+
+		// Get course via lesson → module → course chain.
+		$module_id = get_post_meta( $lesson_id, '_lk_module_id', true );
+		if ( ! $module_id ) {
+			return;
+		}
+		$course_id = get_post_meta( (int) $module_id, '_lk_course_id', true );
+		if ( ! $course_id ) {
+			return;
+		}
+
+		// Get all lessons in this course.
+		$module_ids = get_posts(
+			array(
+				'post_type'      => 'lk_module',
+				'posts_per_page' => -1,
+				'post_status'    => 'publish',
+				'fields'         => 'ids',
+				'meta_key'       => '_lk_course_id',
+				'meta_value'     => (int) $course_id,
+			)
+		);
+
+		if ( empty( $module_ids ) ) {
+			return;
+		}
+
+		$lessons = get_posts(
+			array(
+				'post_type'      => 'lk_lesson',
+				'posts_per_page' => -1,
+				'post_status'    => 'publish',
+				'fields'         => 'ids',
+				'meta_query'     => array(
+					array(
+						'key'     => '_lk_module_id',
+						'value'   => $module_ids,
+						'compare' => 'IN',
+					),
+				),
+			)
+		);
+
+		if ( empty( $lessons ) ) {
+			return;
+		}
+
+		$total        = count( $lessons );
+		$progress_tbl = $wpdb->prefix . 'learnkit_progress';
+		$placeholders = implode( ',', array_fill( 0, $total, '%d' ) );
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$completed_count = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM $progress_tbl WHERE user_id = %d AND lesson_id IN ($placeholders)",
+				array_merge( array( $user_id ), $lessons )
+			)
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( $completed_count >= $total ) {
+			do_action( 'learnkit_user_completed_course', $user_id, (int) $course_id );
+		}
 	}
 }

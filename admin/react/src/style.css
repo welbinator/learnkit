@@ -517,3 +517,110 @@
 	color: #1d2327;
 	border-bottom-color: #2271b1;
 }
+
+/* ==========================================================================
+   Course Modal — Shared Form Field Styles (borrowed from quiz builder)
+   ========================================================================== */
+
+/* Labels */
+.learnkit-course-detail-modal .components-base-control__label,
+.learnkit-course-detail-modal .components-input-control__label,
+.learnkit-create-course-modal .components-base-control__label,
+.learnkit-create-course-modal .components-input-control__label {
+	font-size: 12px;
+	font-weight: 400;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #757575;
+	margin-bottom: 8px;
+}
+
+/* Text inputs and textareas */
+.learnkit-course-detail-modal .components-text-control__input,
+.learnkit-course-detail-modal .components-textarea-control__input,
+.learnkit-course-detail-modal .components-select-control__input,
+.learnkit-create-course-modal .components-text-control__input,
+.learnkit-create-course-modal .components-textarea-control__input,
+.learnkit-create-course-modal .components-select-control__input {
+	padding: 10px 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	font-size: 14px;
+	font-family: inherit;
+	transition: border-color 0.2s;
+	box-shadow: none;
+}
+
+.learnkit-course-detail-modal .components-text-control__input:focus,
+.learnkit-course-detail-modal .components-textarea-control__input:focus,
+.learnkit-course-detail-modal .components-select-control__input:focus,
+.learnkit-create-course-modal .components-text-control__input:focus,
+.learnkit-create-course-modal .components-textarea-control__input:focus,
+.learnkit-create-course-modal .components-select-control__input:focus {
+	outline: none;
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* Help text */
+.learnkit-course-detail-modal .components-base-control__help,
+.learnkit-create-course-modal .components-base-control__help {
+	font-size: 12px;
+	color: #8c8f94;
+	margin-top: 6px;
+}
+
+/* Section headings inside modal */
+.learnkit-course-detail-modal .modules-section h3,
+.learnkit-course-detail-modal .quizzes-section h3,
+.learnkit-course-detail-modal .learnkit-enrollment-header h3 {
+	font-size: 16px;
+	font-weight: 600;
+	color: #1d2327;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	margin: 0 0 16px 0;
+}
+
+/* Tab panel */
+.learnkit-course-detail-modal .learnkit-course-tabs .components-tab-panel__tabs {
+	border-bottom: 2px solid #dcdcde;
+	margin-bottom: 24px;
+}
+
+.learnkit-course-detail-modal .learnkit-course-tabs .components-tab-panel__tabs-item {
+	font-size: 13px;
+	font-weight: 500;
+	color: #757575;
+	padding: 10px 16px;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -2px;
+	transition: color 0.2s;
+}
+
+.learnkit-course-detail-modal .learnkit-course-tabs .components-tab-panel__tabs-item.is-active {
+	color: #1d2327;
+	border-bottom-color: #1d2327;
+}
+
+/* Modal action buttons */
+.learnkit-course-detail-modal .modal-actions button,
+.learnkit-create-course-modal .modal-actions button {
+	padding: 10px 24px;
+	font-size: 14px;
+	font-weight: 500;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+/* Lesson Items */
+li.lesson-item {
+	border: 1px solid #dcdcde;
+	padding: 10px;
+	border-radius: 5px;
+}
+
+li.lesson-item:hover {
+	box-shadow: 0px 0px 2px #0000002b;
+}

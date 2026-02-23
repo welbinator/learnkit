@@ -250,6 +250,19 @@ class LearnKit_Lessons_Controller {
 			update_post_meta( $lesson_id, '_lk_module_id', (int) $request['module_id'] );
 		}
 
+		// Drip content meta.
+		if ( isset( $request['release_type'] ) ) {
+			$allowed_types = array( 'immediate', 'days_after_enrollment', 'specific_date' );
+			$release_type  = in_array( $request['release_type'], $allowed_types, true ) ? $request['release_type'] : 'immediate';
+			update_post_meta( $lesson_id, '_lk_release_type', $release_type );
+		}
+		if ( isset( $request['release_days'] ) ) {
+			update_post_meta( $lesson_id, '_lk_release_days', max( 0, (int) $request['release_days'] ) );
+		}
+		if ( isset( $request['release_date'] ) ) {
+			update_post_meta( $lesson_id, '_lk_release_date', sanitize_text_field( $request['release_date'] ) );
+		}
+
 		return new WP_REST_Response(
 			array( 'message' => __( 'Lesson updated successfully', 'learnkit' ) ),
 			200
@@ -334,6 +347,9 @@ class LearnKit_Lessons_Controller {
 			'module_id'      => get_post_meta( $lesson->ID, '_lk_module_id', true ),
 			'permalink'      => get_permalink( $lesson->ID ),
 			'edit_link'      => get_edit_post_link( $lesson->ID, 'raw' ),
+			'release_type'   => get_post_meta( $lesson->ID, '_lk_release_type', true ) ? get_post_meta( $lesson->ID, '_lk_release_type', true ) : 'immediate',
+			'release_days'   => (int) get_post_meta( $lesson->ID, '_lk_release_days', true ),
+			'release_date'   => get_post_meta( $lesson->ID, '_lk_release_date', true ),
 		);
 	}
 

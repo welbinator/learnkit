@@ -3,7 +3,7 @@
  * Plugin Name: LearnKit
  * Plugin URI: https://github.com/welbinator/learnkit
  * Description: Modern WordPress LMS plugin for course creators who value simplicity, performance, and fair pricing. Create, deliver, and monetize online courses with a beautiful, intuitive interface.
- * Version: 0.4.0
+ * Version: 0.5.0
  * Author: James Welbes
  * Author URI: https://jameswelbes.com
  * License: GPL v2 or later
@@ -26,7 +26,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 0.1.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'LEARNKIT_VERSION', '0.4.0' );
+define( 'LEARNKIT_VERSION', '0.5.0' );
 
 /**
  * Plugin directory path.
@@ -55,12 +55,37 @@ require_once LEARNKIT_PLUGIN_DIR . 'vendor/autoload.php';
 require_once LEARNKIT_PLUGIN_DIR . 'includes/learnkit-enrollment-api.php';
 
 /**
+ * Email notifications system.
+ */
+require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-emails.php';
+LearnKit_Emails::init();
+
+/**
+ * Drip content system.
+ */
+require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-drip.php';
+
+/**
+ * Cron jobs for email processing.
+ */
+require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-cron.php';
+LearnKit_Cron::init();
+
+// Hook enrollment → welcome email.
+add_action( 'learnkit_user_enrolled', array( 'LearnKit_Emails', 'schedule_welcome_email' ), 10, 2 );
+
+// Hook course completion → completion email.
+add_action( 'learnkit_user_completed_course', array( 'LearnKit_Emails', 'schedule_completion_email' ), 10, 2 );
+
+/**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-learnkit-activator.php
  */
 function activate_learnkit() {
 	require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-activator.php';
+	require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-cron.php';
 	LearnKit_Activator::activate();
+	LearnKit_Cron::activate();
 }
 
 /**
@@ -69,7 +94,9 @@ function activate_learnkit() {
  */
 function deactivate_learnkit() {
 	require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-deactivator.php';
+	require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-cron.php';
 	LearnKit_Deactivator::deactivate();
+	LearnKit_Cron::deactivate();
 }
 
 register_activation_hook( __FILE__, 'activate_learnkit' );

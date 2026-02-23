@@ -78,13 +78,43 @@ class LearnKit_Database {
 			KEY passed (passed)
 		) $charset_collate;";
 
+		// Email queue table.
+		$email_queue_table = $wpdb->prefix . 'learnkit_email_queue';
+		$email_queue_sql   = "CREATE TABLE $email_queue_table (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			user_id bigint(20) unsigned NOT NULL,
+			course_id bigint(20) unsigned NOT NULL,
+			email_type varchar(50) NOT NULL,
+			scheduled_at datetime NOT NULL,
+			sent_at datetime DEFAULT NULL,
+			status varchar(20) NOT NULL DEFAULT 'pending',
+			payload longtext DEFAULT NULL,
+			PRIMARY KEY  (id),
+			KEY user_id (user_id),
+			KEY status (status),
+			KEY scheduled_at (scheduled_at)
+		) $charset_collate;";
+
+		// Email preferences table.
+		$email_prefs_table = $wpdb->prefix . 'learnkit_email_preferences';
+		$email_prefs_sql   = "CREATE TABLE $email_prefs_table (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			user_id bigint(20) unsigned NOT NULL,
+			email_type varchar(50) NOT NULL,
+			enabled tinyint(1) NOT NULL DEFAULT 1,
+			PRIMARY KEY  (id),
+			UNIQUE KEY user_email_type (user_id, email_type)
+		) $charset_collate;";
+
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta( $enrollments_sql );
 		dbDelta( $progress_sql );
 		dbDelta( $quiz_attempts_sql );
+		dbDelta( $email_queue_sql );
+		dbDelta( $email_prefs_sql );
 
 		// Store database version.
-		update_option( 'learnkit_db_version', '1.2' );
+		update_option( 'learnkit_db_version', '1.3' );
 	}
 
 	/**
@@ -98,8 +128,12 @@ class LearnKit_Database {
 		$enrollments_table   = $wpdb->prefix . 'learnkit_enrollments';
 		$progress_table      = $wpdb->prefix . 'learnkit_progress';
 		$quiz_attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
+		$email_queue_table   = $wpdb->prefix . 'learnkit_email_queue';
+		$email_prefs_table   = $wpdb->prefix . 'learnkit_email_preferences';
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$wpdb->query( "DROP TABLE IF EXISTS $email_prefs_table" );
+		$wpdb->query( "DROP TABLE IF EXISTS $email_queue_table" );
 		$wpdb->query( "DROP TABLE IF EXISTS $quiz_attempts_table" );
 		$wpdb->query( "DROP TABLE IF EXISTS $progress_table" );
 		$wpdb->query( "DROP TABLE IF EXISTS $enrollments_table" );
