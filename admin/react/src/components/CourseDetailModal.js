@@ -15,7 +15,6 @@ import { createPortal } from 'react-dom';
 import CourseStructure from './CourseStructure';
 import EnrollmentManager from './EnrollmentManager';
 import QuizModal from './QuizModal';
-import LessonEditorModal from './LessonEditorModal';
 import { getAllModules, assignModuleToCourse, getCourseStructure } from '../utils/api';
 
 const CourseDetailModal = ({
