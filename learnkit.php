@@ -3,7 +3,7 @@
  * Plugin Name: LearnKit
  * Plugin URI: https://github.com/welbinator/learnkit
  * Description: Modern WordPress LMS plugin for course creators who value simplicity, performance, and fair pricing. Create, deliver, and monetize online courses with a beautiful, intuitive interface.
- * Version: 0.5.2
+ * Version: 0.5.3
  * Author: James Welbes
  * Author URI: https://jameswelbes.com
  * License: GPL v2 or later
