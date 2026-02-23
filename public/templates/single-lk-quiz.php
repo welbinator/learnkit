@@ -6,6 +6,8 @@
  * @since   0.4.0
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template-scoped variables, not true PHP globals.
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -508,4 +510,5 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 </div>
 
 <?php
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 get_footer();
