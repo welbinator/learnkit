@@ -89,8 +89,8 @@ class LearnKit_Cron {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$items = $wpdb->get_results(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-				"SELECT * FROM $table WHERE status = 'pending' AND scheduled_at <= %s ORDER BY scheduled_at ASC LIMIT %d",
+				'SELECT * FROM %i WHERE status = \'pending\' AND scheduled_at <= %s ORDER BY scheduled_at ASC LIMIT %d',
+				$table,
 				current_time( 'mysql', true ),
 				self::MAX_PER_RUN
 			)
@@ -149,9 +149,9 @@ class LearnKit_Cron {
 	public static function check_inactive_students() {
 		global $wpdb;
 
-		$enrollments_table = $wpdb->prefix . 'learnkit_enrollments';
-		$progress_table    = $wpdb->prefix . 'learnkit_progress';
-		$queue_table       = $wpdb->prefix . 'learnkit_email_queue';
+		$enrollments_table = esc_sql( $wpdb->prefix . 'learnkit_enrollments' );
+		$progress_table    = esc_sql( $wpdb->prefix . 'learnkit_progress' );
+		$queue_table       = esc_sql( $wpdb->prefix . 'learnkit_email_queue' );
 
 		$settings   = get_option( 'learnkit_email_settings', array() );
 		$delay_days = isset( $settings['reminder_delay'] ) ? max( 1, (int) $settings['reminder_delay'] ) : 7;
@@ -194,10 +194,8 @@ class LearnKit_Cron {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$recent_reminder = $wpdb->get_var(
 				$wpdb->prepare(
-					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-					"SELECT COUNT(*) FROM $queue_table
-					WHERE user_id = %d AND course_id = %d AND email_type = 'reminder'
-					AND scheduled_at >= %s",
+					'SELECT COUNT(*) FROM %i WHERE user_id = %d AND course_id = %d AND email_type = \'reminder\' AND scheduled_at >= %s',
+					$queue_table,
 					$user_id,
 					$course_id,
 					$cutoff
