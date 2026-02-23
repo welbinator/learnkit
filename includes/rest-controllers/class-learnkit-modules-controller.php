@@ -230,14 +230,41 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 			}
 		}
 
+		// Place at end of each assigned course's module list.
 		if ( isset( $request['menu_order'] ) ) {
-			wp_update_post(
-				array(
-					'ID'         => $module_id,
-					'menu_order' => (int) $request['menu_order'],
-				)
-			);
+			$new_order = (int) $request['menu_order'];
+		} elseif ( ! empty( $course_ids ) ) {
+			$course_id        = $course_ids[0];
+			$existing_modules = get_posts( array(
+				'post_type'      => 'lk_module',
+				'posts_per_page' => -1,
+				'orderby'        => 'menu_order',
+				'order'          => 'DESC',
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+					array(
+						'key'     => '_lk_course_id',
+						'value'   => $course_id,
+						'compare' => '=',
+						'type'    => 'NUMERIC',
+					),
+				),
+				'fields'         => 'ids',
+			) );
+			$max_order = 0;
+			foreach ( $existing_modules as $mid ) {
+				if ( (int) $mid === $module_id ) {
+					continue;
+				}
+				$order = (int) get_post_field( 'menu_order', $mid );
+				if ( $order > $max_order ) {
+					$max_order = $order;
+				}
+			}
+			$new_order = $max_order + 1;
+		} else {
+			$new_order = 0;
 		}
+		wp_update_post( array( 'ID' => $module_id, 'menu_order' => $new_order ) );
 
 		return new WP_REST_Response(
 			array(
