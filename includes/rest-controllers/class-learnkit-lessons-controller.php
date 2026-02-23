@@ -221,14 +221,38 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 		delete_post_meta( $lesson_id, '_lk_module_id' );
 		add_post_meta( $lesson_id, '_lk_module_id', $module_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
 
+		// Place at end of module's lesson list.
 		if ( isset( $request['menu_order'] ) ) {
-			wp_update_post(
-				array(
-					'ID'         => $lesson_id,
-					'menu_order' => (int) $request['menu_order'],
-				)
-			);
+			$new_order = (int) $request['menu_order'];
+		} else {
+			$existing_lessons = get_posts( array(
+				'post_type'      => 'lk_lesson',
+				'posts_per_page' => -1,
+				'orderby'        => 'menu_order',
+				'order'          => 'DESC',
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+					array(
+						'key'     => '_lk_module_id',
+						'value'   => $module_id,
+						'compare' => '=',
+						'type'    => 'NUMERIC',
+					),
+				),
+				'fields'         => 'ids',
+			) );
+			$max_order = 0;
+			foreach ( $existing_lessons as $lid ) {
+				if ( (int) $lid === $lesson_id ) {
+					continue;
+				}
+				$order = (int) get_post_field( 'menu_order', $lid );
+				if ( $order > $max_order ) {
+					$max_order = $order;
+				}
+			}
+			$new_order = $max_order + 1;
 		}
+		wp_update_post( array( 'ID' => $lesson_id, 'menu_order' => $new_order ) );
 
 		return new WP_REST_Response(
 			array(
@@ -355,6 +379,31 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 		}
 
 		add_post_meta( $lesson_id, '_lk_module_id', $module_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
+
+		// Place at end of module's lesson list.
+		$existing_lessons = get_posts( array(
+			'post_type'      => 'lk_lesson',
+			'posts_per_page' => -1,
+			'orderby'        => 'menu_order',
+			'order'          => 'DESC',
+			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				array(
+					'key'     => '_lk_module_id',
+					'value'   => $module_id,
+					'compare' => '=',
+					'type'    => 'NUMERIC',
+				),
+			),
+			'fields'         => 'ids',
+		) );
+		$max_order = 0;
+		foreach ( $existing_lessons as $lid ) {
+			$order = (int) get_post_field( 'menu_order', $lid );
+			if ( $order > $max_order ) {
+				$max_order = $order;
+			}
+		}
+		wp_update_post( array( 'ID' => $lesson_id, 'menu_order' => $max_order + 1 ) );
 
 		return new WP_REST_Response(
 			array(

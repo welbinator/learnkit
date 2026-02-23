@@ -382,6 +382,31 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 
 		add_post_meta( $module_id, '_lk_course_id', $course_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
 
+		// Place at end of course's module list.
+		$existing_modules = get_posts( array(
+			'post_type'      => 'lk_module',
+			'posts_per_page' => -1,
+			'orderby'        => 'menu_order',
+			'order'          => 'DESC',
+			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				array(
+					'key'     => '_lk_course_id',
+					'value'   => $course_id,
+					'compare' => '=',
+					'type'    => 'NUMERIC',
+				),
+			),
+			'fields'         => 'ids',
+		) );
+		$max_order = 0;
+		foreach ( $existing_modules as $mid ) {
+			$order = (int) get_post_field( 'menu_order', $mid );
+			if ( $order > $max_order ) {
+				$max_order = $order;
+			}
+		}
+		wp_update_post( array( 'ID' => $module_id, 'menu_order' => $max_order + 1 ) );
+
 		return new WP_REST_Response(
 			array(
 				'message' => __( 'Course assigned successfully', 'learnkit' ),
