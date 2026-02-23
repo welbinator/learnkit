@@ -9,6 +9,10 @@
  * @subpackage LearnKit/includes
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * LearnKit Cron class.
  *

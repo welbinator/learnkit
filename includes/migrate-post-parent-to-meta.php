@@ -15,6 +15,10 @@
  * @subpackage LearnKit/includes
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- lk_ prefix is the plugin prefix; learnkit_ is not required.
 
 /**
