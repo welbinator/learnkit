@@ -15,7 +15,7 @@ import { createPortal } from 'react-dom';
 import CourseStructure from './CourseStructure';
 import EnrollmentManager from './EnrollmentManager';
 import QuizModal from './QuizModal';
-import { getAllModules, assignModuleToCourse, getCourseStructure } from '../utils/api';
+import { getAllModules, assignModuleToCourse, getCourseStructure, createModule } from '../utils/api';
 
 const CourseDetailModal = ({
 	course,
@@ -44,6 +44,11 @@ const CourseDetailModal = ({
 	const [modulesPickerLoading, setModulesPickerLoading] = useState(false);
 	const [selectedExistingModule, setSelectedExistingModule] = useState('');
 	const [addExistingError, setAddExistingError] = useState('');
+
+	// Inline new module creation state.
+	const [showNewModuleInput, setShowNewModuleInput] = useState(false);
+	const [newModuleTitle, setNewModuleTitle] = useState('');
+	const [newModuleBusy, setNewModuleBusy] = useState(false);
 
 	// Update form fields when course changes
 	useEffect(() => {
@@ -106,6 +111,23 @@ const CourseDetailModal = ({
 
 	const handleLessonSaved = () => {
 		// no-op: lesson editing happens in the WP block editor
+	};
+
+	const handleCreateModuleInline = async () => {
+		if (!newModuleTitle.trim()) return;
+		setNewModuleBusy(true);
+		try {
+			await createModule(course.id, { title: newModuleTitle.trim() });
+			setNewModuleTitle('');
+			setShowNewModuleInput(false);
+			if (onReloadStructure) {
+				onReloadStructure(course.id);
+			}
+		} catch (err) {
+			console.error('Failed to create module:', err);
+		} finally {
+			setNewModuleBusy(false);
+		}
 	};
 
 	const handleShowExistingModulePicker = () => {
@@ -238,7 +260,7 @@ const CourseDetailModal = ({
 									<div className="section-header">
 										<h3>{__('Modules', 'learnkit')} ({structure?.modules?.length || 0})</h3>
 										<div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-											<Button variant="secondary" onClick={() => onCreateModule(course?.id)}>
+											<Button variant="secondary" onClick={() => { setShowNewModuleInput(true); setShowExistingModulePicker(false); }}>
 												{__('Add Module', 'learnkit')}
 											</Button>
 											<Button
@@ -249,6 +271,39 @@ const CourseDetailModal = ({
 											</Button>
 										</div>
 									</div>
+
+									{/* Inline new module input */}
+									{showNewModuleInput && (
+										<div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginBottom: '12px', background: '#f6f7f7', border: '1px solid #ddd', borderRadius: '4px', padding: '12px' }}>
+											<div style={{ flex: 1 }}>
+												<TextControl
+													label={__('Module title', 'learnkit')}
+													value={newModuleTitle}
+													onChange={setNewModuleTitle}
+													placeholder={__('e.g. Getting Started', 'learnkit')}
+													onKeyPress={(e) => e.key === 'Enter' && handleCreateModuleInline()}
+													disabled={newModuleBusy}
+												/>
+											</div>
+											<Button
+												variant="primary"
+												isSmall
+												onClick={handleCreateModuleInline}
+												disabled={!newModuleTitle.trim() || newModuleBusy}
+												style={{ marginBottom: '8px' }}
+											>
+												{__('Add', 'learnkit')}
+											</Button>
+											<Button
+												isSmall
+												onClick={() => { setShowNewModuleInput(false); setNewModuleTitle(''); }}
+												disabled={newModuleBusy}
+												style={{ marginBottom: '8px' }}
+											>
+												{__('Cancel', 'learnkit')}
+											</Button>
+										</div>
+									)}
 
 									{/* Existing-module picker */}
 									{showExistingModulePicker && (
