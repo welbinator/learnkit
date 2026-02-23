@@ -212,15 +212,6 @@ class LearnKit_Emails {
 		// Get first lesson.
 		$first_lesson_url = self::get_first_lesson_url( $course_id );
 
-		$body_text = sprintf(
-			/* translators: 1: user display name, 2: course name */
-			__( "Hi %1\$s,\n\nWelcome to %2\$s! We're so glad you're here.\n\nYou can start your journey by visiting the course page:\n%3\$s\n\n%4\$s", 'learnkit' ),
-			$user->display_name,
-			$course_name,
-			get_permalink( $course_id ),
-			self::get_plain_unsubscribe( $user->ID, 'welcome' )
-		);
-
 		$html_body = self::wrap_html(
 			$course_name,
 			sprintf(
@@ -264,15 +255,6 @@ class LearnKit_Emails {
 			$lesson_name
 		);
 
-		$body_text = sprintf(
-			/* translators: 1: user display name, 2: lesson name, 3: lesson URL, 4: unsubscribe text */
-			__( "Hi %1\$s,\n\nA new lesson is now available: %2\$s\n\nVisit it here:\n%3\$s\n\n%4\$s", 'learnkit' ),
-			$user->display_name,
-			$lesson_name,
-			$lesson_url,
-			self::get_plain_unsubscribe( $user->ID, 'lesson_unlock' )
-		);
-
 		$html_body = self::wrap_html(
 			$course_name,
 			'<p>' . sprintf(
@@ -304,15 +286,6 @@ class LearnKit_Emails {
 		$subject = __( 'Continue your learning journey', 'learnkit' );
 
 		$first_lesson_url = self::get_first_lesson_url( $course_id );
-
-		$body_text = sprintf(
-			/* translators: 1: user display name, 2: course name, 3: course URL, 4: unsubscribe text */
-			__( "Hi %1\$s,\n\nWe noticed you haven't been active in %2\$s lately. Pick up where you left off!\n\n%3\$s\n\n%4\$s", 'learnkit' ),
-			$user->display_name,
-			$course_name,
-			$first_lesson_url ? $first_lesson_url : get_permalink( $course_id ),
-			self::get_plain_unsubscribe( $user->ID, 'reminder' )
-		);
 
 		$html_body = self::wrap_html(
 			$course_name,
@@ -349,15 +322,6 @@ class LearnKit_Emails {
 			/* translators: %s: course name */
 			__( 'Congratulations! You completed %s', 'learnkit' ),
 			$course_name
-		);
-
-		$body_text = sprintf(
-			/* translators: 1: user display name, 2: course name, 3: course URL, 4: unsubscribe text */
-			__( "Hi %1\$s,\n\nCongratulations on completing %2\$s! 🎉\n\nA certificate of completion is available for download from your student dashboard.\n\nCourse page: %3\$s\n\n%4\$s", 'learnkit' ),
-			$user->display_name,
-			$course_name,
-			get_permalink( $course_id ),
-			self::get_plain_unsubscribe( $user->ID, 'completion' )
 		);
 
 		$html_body = self::wrap_html(
@@ -484,22 +448,6 @@ class LearnKit_Emails {
 				'token'                => rawurlencode( wp_hash( $user_id . $email_type ) ),
 			),
 			home_url( '/' )
-		);
-	}
-
-	/**
-	 * Plain-text unsubscribe line.
-	 *
-	 * @since  0.5.0
-	 * @param  int    $user_id    WordPress user ID.
-	 * @param  string $email_type Email type key.
-	 * @return string
-	 */
-	private static function get_plain_unsubscribe( $user_id, $email_type ) {
-		return sprintf(
-			/* translators: %s: unsubscribe URL */
-			__( 'To unsubscribe from this notification: %s', 'learnkit' ),
-			self::get_unsubscribe_url( $user_id, $email_type )
 		);
 	}
 

@@ -159,31 +159,87 @@ class LearnKit_Quiz_Controller extends LearnKit_Base_Controller {
 		$user_id = get_current_user_id();
 
 		// Enforce attempt limits server-side.
-		global $wpdb;
-		$attempts_allowed = (int) get_post_meta( $quiz_id, '_lk_attempts_allowed', true );
-		if ( $attempts_allowed > 0 ) {
-			$attempt_count = (int) $wpdb->get_var(
-				$wpdb->prepare(
-					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-					"SELECT COUNT(*) FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE user_id = %d AND quiz_id = %d",
-					$user_id,
-					$quiz_id
-				)
-			);
-			if ( $attempt_count >= $attempts_allowed ) {
-				return new WP_REST_Response(
-					array( 'message' => __( 'You have reached the maximum number of attempts for this quiz.', 'learnkit' ) ),
-					403
-				);
-			}
+		$limit_error = $this->check_attempt_limit( $quiz_id, $user_id );
+		if ( $limit_error instanceof WP_REST_Response ) {
+			return $limit_error;
 		}
 
-		// Get quiz data.
+		// Grade and save.
+		$grade_data = $this->grade_quiz( $quiz_id, $answers );
+		$this->save_quiz_attempt( $quiz_id, $user_id, $grade_data, $answers );
+
+		return rest_ensure_response(
+			array(
+				'score'           => $grade_data['score'],
+				'max_score'       => $grade_data['max_score'],
+				'percentage'      => $grade_data['percentage'],
+				'passed'          => $grade_data['passed'],
+				'correct_count'   => $grade_data['correct_count'],
+				'total_questions' => $grade_data['total_questions'],
+				'questions'       => $grade_data['questions'],
+			)
+		);
+	}
+
+	/**
+	 * Check whether the current user has exceeded the attempt limit for a quiz.
+	 *
+	 * @since    0.4.0
+	 * @param    int $quiz_id  Quiz post ID.
+	 * @param    int $user_id  WordPress user ID.
+	 * @return   WP_REST_Response|null  Error response if limit reached, null otherwise.
+	 */
+	private function check_attempt_limit( $quiz_id, $user_id ) {
+		global $wpdb;
+
+		$attempts_allowed = (int) get_post_meta( $quiz_id, '_lk_attempts_allowed', true );
+		if ( $attempts_allowed <= 0 ) {
+			return null;
+		}
+
+		$attempt_count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				"SELECT COUNT(*) FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE user_id = %d AND quiz_id = %d",
+				$user_id,
+				$quiz_id
+			)
+		);
+
+		if ( $attempt_count >= $attempts_allowed ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'You have reached the maximum number of attempts for this quiz.', 'learnkit' ) ),
+				403
+			);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Grade a quiz submission and return score data.
+	 *
+	 * @since    0.4.0
+	 * @param    int   $quiz_id  Quiz post ID.
+	 * @param    array $answers  Map of question index (string) to selected option index (int).
+	 * @return   array {
+	 *     @type int   $score           Raw score earned.
+	 *     @type int   $max_score       Maximum possible score.
+	 *     @type int   $percentage      Score as a rounded percentage.
+	 *     @type bool  $passed          Whether the passing threshold was met.
+	 *     @type int   $correct_count   Number of correctly answered questions.
+	 *     @type int   $total_questions Total number of questions.
+	 *     @type array $questions       Per-question result objects.
+	 * }
+	 */
+	private function grade_quiz( $quiz_id, $answers ) {
 		$questions_json = get_post_meta( $quiz_id, '_lk_questions', true );
 		$questions      = json_decode( $questions_json, true );
-		$passing_score  = get_post_meta( $quiz_id, '_lk_passing_score', true ) ? get_post_meta( $quiz_id, '_lk_passing_score', true ) : 70;
+		$passing_score  = get_post_meta( $quiz_id, '_lk_passing_score', true );
+		if ( ! $passing_score ) {
+			$passing_score = 70;
+		}
 
-		// Grade the quiz.
 		$score            = 0;
 		$max_score        = 0;
 		$correct_count    = 0;
@@ -210,9 +266,30 @@ class LearnKit_Quiz_Controller extends LearnKit_Base_Controller {
 		}
 
 		$percentage = $max_score > 0 ? round( ( $score / $max_score ) * 100 ) : 0;
-		$passed     = $percentage >= $passing_score;
 
-		// Save attempt.
+		return array(
+			'score'           => $score,
+			'max_score'       => $max_score,
+			'percentage'      => $percentage,
+			'passed'          => $percentage >= $passing_score,
+			'correct_count'   => $correct_count,
+			'total_questions' => count( $questions ),
+			'questions'       => $question_results,
+		);
+	}
+
+	/**
+	 * Persist a quiz attempt row to the database.
+	 *
+	 * @since    0.4.0
+	 * @param    int   $quiz_id    Quiz post ID.
+	 * @param    int   $user_id    WordPress user ID.
+	 * @param    array $grade_data Grade data array as returned by grade_quiz().
+	 * @param    array $answers    Raw answers map submitted by the user.
+	 */
+	private function save_quiz_attempt( $quiz_id, $user_id, $grade_data, $answers = array() ) {
+		global $wpdb;
+
 		$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -221,25 +298,13 @@ class LearnKit_Quiz_Controller extends LearnKit_Base_Controller {
 			array(
 				'user_id'      => $user_id,
 				'quiz_id'      => $quiz_id,
-				'score'        => $score,
-				'max_score'    => $max_score,
-				'passed'       => $passed ? 1 : 0,
+				'score'        => $grade_data['score'],
+				'max_score'    => $grade_data['max_score'],
+				'passed'       => $grade_data['passed'] ? 1 : 0,
 				'answers'      => wp_json_encode( $answers ),
 				'completed_at' => gmdate( 'Y-m-d H:i:s' ),
 			),
 			array( '%d', '%d', '%d', '%d', '%d', '%s', '%s' )
-		);
-
-		return rest_ensure_response(
-			array(
-				'score'           => $score,
-				'max_score'       => $max_score,
-				'percentage'      => $percentage,
-				'passed'          => $passed,
-				'correct_count'   => $correct_count,
-				'total_questions' => count( $questions ),
-				'questions'       => $question_results,
-			)
 		);
 	}
 

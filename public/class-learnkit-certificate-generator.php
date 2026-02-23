@@ -110,7 +110,23 @@ class LearnKit_Certificate_Generator {
 			return;
 		}
 
-		// Get completion date (most recent lesson completion for this course).
+		$completion_date = $this->get_course_completion_date( $user_id, $course_id );
+		$this->render_certificate_pdf( $user, $course, $completion_date );
+	}
+
+	/**
+	 * Get the formatted completion date for a user's course.
+	 *
+	 * Looks up the most recent lesson completion timestamp for lessons
+	 * belonging to the given course. Falls back to the user's most recent
+	 * completion, then to today if no record is found.
+	 *
+	 * @since    0.3.0
+	 * @param    int $user_id   WordPress user ID.
+	 * @param    int $course_id Course post ID.
+	 * @return   string         Human-readable date string, e.g. "January 1, 2025".
+	 */
+	private function get_course_completion_date( $user_id, $course_id ) {
 		global $wpdb;
 		$progress_table = $wpdb->prefix . 'learnkit_progress';
 
@@ -151,6 +167,8 @@ class LearnKit_Certificate_Generator {
 			$lesson_ids = $course_lessons;
 		}
 
+		$completion_date = null;
+
 		if ( ! empty( $lesson_ids ) ) {
 			$placeholders_date = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
 
@@ -178,8 +196,21 @@ class LearnKit_Certificate_Generator {
 			$completion_date = gmdate( 'Y-m-d H:i:s' );
 		}
 
-		$completion_date_formatted = gmdate( 'F j, Y', strtotime( $completion_date ) );
+		return gmdate( 'F j, Y', strtotime( $completion_date ) );
+	}
 
+	/**
+	 * Build and output a PDF certificate for a user and course.
+	 *
+	 * Outputs binary PDF content directly to the browser with a
+	 * Content-Disposition: attachment header, then returns.
+	 *
+	 * @since    0.3.0
+	 * @param    WP_User $user             WordPress user object.
+	 * @param    WP_Post $course           Course post object.
+	 * @param    string  $completion_date  Formatted completion date string.
+	 */
+	private function render_certificate_pdf( $user, $course, $completion_date ) {
 		// Create PDF.
 		$pdf = new FPDF( 'L', 'mm', 'A4' );
 		$pdf->AddPage();
@@ -226,7 +257,7 @@ class LearnKit_Certificate_Generator {
 		$pdf->SetFont( 'Arial', '', 12 );
 		$pdf->SetTextColor( 100, 100, 100 );
 		$pdf->SetXY( 10, 165 );
-		$pdf->Cell( 277, 8, 'Completed on ' . $completion_date_formatted, 0, 1, 'C' );
+		$pdf->Cell( 277, 8, 'Completed on ' . $completion_date, 0, 1, 'C' );
 
 		// Site name footer.
 		$pdf->SetFont( 'Arial', 'I', 10 );
