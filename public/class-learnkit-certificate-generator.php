@@ -60,7 +60,7 @@ class LearnKit_Certificate_Generator {
 		}
 
 		// Verify course is complete.
-		$progress_data = $this->get_course_progress( $user_id, $course_id );
+		$progress_data = learnkit_get_course_progress( $user_id, $course_id );
 		if ( 100 !== $progress_data['progress_percent'] ) {
 			wp_die( esc_html__( 'You must complete all lessons to download a certificate.', 'learnkit' ) );
 		}
@@ -93,86 +93,6 @@ class LearnKit_Certificate_Generator {
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
 		return ! empty( $enrollment );
-	}
-
-	/**
-	 * Get course progress for a user.
-	 *
-	 * @since    0.3.0
-	 * @param    int $user_id User ID.
-	 * @param    int $course_id Course ID.
-	 * @return   array Progress data.
-	 */
-	private function get_course_progress( $user_id, $course_id ) {
-		global $wpdb;
-
-		// Get all modules in course.
-		$modules = get_posts(
-			array(
-				'post_type'      => 'lk_module',
-				'posts_per_page' => -1,
-				'meta_key'       => '_lk_course_id',
-				'meta_value'     => $course_id,
-			)
-		);
-
-		if ( empty( $modules ) ) {
-			return array(
-				'progress_percent'   => 0,
-				'completed_lessons'  => 0,
-				'total_lessons'      => 0,
-			);
-		}
-
-		$module_ids = wp_list_pluck( $modules, 'ID' );
-
-		// Get all lessons in these modules.
-		$lessons = get_posts(
-			array(
-				'post_type'      => 'lk_lesson',
-				'posts_per_page' => -1,
-				'meta_query'     => array(
-					array(
-						'key'     => '_lk_module_id',
-						'value'   => $module_ids,
-						'compare' => 'IN',
-					),
-				),
-			)
-		);
-
-		$total_lessons = count( $lessons );
-		$lesson_ids    = wp_list_pluck( $lessons, 'ID' );
-
-		if ( empty( $lesson_ids ) ) {
-			return array(
-				'progress_percent'   => 0,
-				'completed_lessons'  => 0,
-				'total_lessons'      => 0,
-			);
-		}
-
-		// Get completed lessons.
-		$progress_table = $wpdb->prefix . 'learnkit_progress';
-		$placeholders   = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
-
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$completed = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT lesson_id FROM $progress_table WHERE user_id = %d AND lesson_id IN ($placeholders)",
-				array_merge( array( $user_id ), $lesson_ids )
-			)
-		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-
-		$completed_count  = count( $completed );
-		$progress_percent = $total_lessons > 0 ? round( ( $completed_count / $total_lessons ) * 100 ) : 0;
-
-		return array(
-			'progress_percent'   => $progress_percent,
-			'completed_lessons'  => $completed_count,
-			'total_lessons'      => $total_lessons,
-		);
 	}
 
 	/**

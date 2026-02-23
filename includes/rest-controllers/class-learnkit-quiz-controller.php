@@ -48,6 +48,13 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'submit_quiz' ),
 				'permission_callback' => array( $this, 'check_user_permission' ),
+				'args'                => array(
+					'answers' => array(
+						'required'    => true,
+						'type'        => 'object',
+						'description' => __( 'Map of question IDs to answer values.', 'learnkit' ),
+					),
+				),
 			)
 		);
 
@@ -59,6 +66,13 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_attempts' ),
 				'permission_callback' => array( $this, 'check_permission' ),
+				'args'                => array(
+					'user_id' => array(
+						'type'              => 'integer',
+						'description'       => __( 'Filter attempts by user ID.', 'learnkit' ),
+						'sanitize_callback' => 'absint',
+					),
+				),
 			)
 		);
 	}

@@ -56,7 +56,17 @@ class LearnKit_Lessons_Controller {
 					'methods'             => WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_lesson' ),
 					'permission_callback' => array( $this, 'check_write_permission' ),
-					'args'                => $this->get_lesson_args(),
+					'args'                => array_merge(
+						$this->get_lesson_args(),
+						array(
+							'title' => array(
+								'required'          => true,
+								'type'              => 'string',
+								'description'       => __( 'Lesson title.', 'learnkit' ),
+								'sanitize_callback' => 'sanitize_text_field',
+							),
+						)
+					),
 				),
 			)
 		);
@@ -167,7 +177,8 @@ class LearnKit_Lessons_Controller {
 
 		$lesson_data = array(
 			'post_title'   => sanitize_text_field( $request['title'] ),
-			'post_content' => '',
+			'post_content' => isset( $request['content'] ) ? wp_kses_post( $request['content'] ) : '',
+			'post_excerpt' => isset( $request['excerpt'] ) ? sanitize_textarea_field( $request['excerpt'] ) : '',
 			'post_status'  => 'publish',
 			'post_type'    => 'lk_lesson',
 			'post_author'  => get_current_user_id(),
@@ -382,11 +393,13 @@ class LearnKit_Lessons_Controller {
 	private function get_lesson_args() {
 		return array(
 			'title'   => array(
-				'required'          => true,
 				'sanitize_callback' => 'sanitize_text_field',
 			),
 			'content' => array(
 				'sanitize_callback' => 'wp_kses_post',
+			),
+			'excerpt' => array(
+				'sanitize_callback' => 'sanitize_textarea_field',
 			),
 			'module_id' => array(
 				'validate_callback' => function ( $param ) {
@@ -396,6 +409,27 @@ class LearnKit_Lessons_Controller {
 			'menu_order' => array(
 				'validate_callback' => function ( $param ) {
 					return is_numeric( $param );
+				},
+			),
+			'release_type' => array(
+				'type'              => 'string',
+				'enum'              => array( 'immediate', 'drip_days', 'drip_date' ),
+				'description'       => __( 'Lesson release type.', 'learnkit' ),
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'release_days' => array(
+				'type'              => 'integer',
+				'minimum'           => 0,
+				'description'       => __( 'Days after enrollment to release lesson.', 'learnkit' ),
+				'sanitize_callback' => 'absint',
+			),
+			'release_date' => array(
+				'type'              => 'string',
+				'format'            => 'date',
+				'description'       => __( 'Specific date to release lesson (YYYY-MM-DD).', 'learnkit' ),
+				'sanitize_callback' => 'sanitize_text_field',
+				'validate_callback' => function ( $value ) {
+					return false !== \DateTime::createFromFormat( 'Y-m-d', $value );
 				},
 			),
 		);

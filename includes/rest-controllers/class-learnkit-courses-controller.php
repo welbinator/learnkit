@@ -49,7 +49,17 @@ class LearnKit_Courses_Controller {
 					'methods'             => WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_course' ),
 					'permission_callback' => array( $this, 'check_write_permission' ),
-					'args'                => $this->get_course_args(),
+					'args'                => array_merge(
+						$this->get_course_args(),
+						array(
+							'title' => array(
+								'required'          => true,
+								'type'              => 'string',
+								'description'       => __( 'Course title.', 'learnkit' ),
+								'sanitize_callback' => 'sanitize_text_field',
+							),
+						)
+					),
 				),
 			)
 		);
@@ -142,9 +152,11 @@ class LearnKit_Courses_Controller {
 	 */
 	public function create_course( $request ) {
 		$course_data = array(
-			'post_type'   => 'lk_course',
-			'post_title'  => sanitize_text_field( $request['title'] ),
-			'post_status' => 'draft',
+			'post_type'    => 'lk_course',
+			'post_title'   => sanitize_text_field( $request['title'] ),
+			'post_content' => isset( $request['content'] ) ? wp_kses_post( $request['content'] ) : '',
+			'post_excerpt' => isset( $request['excerpt'] ) ? sanitize_textarea_field( $request['excerpt'] ) : '',
+			'post_status'  => 'draft',
 		);
 
 		$course_id = wp_insert_post( $course_data );
@@ -155,6 +167,8 @@ class LearnKit_Courses_Controller {
 				500
 			);
 		}
+
+		$this->update_course_meta( $course_id, $request );
 
 		return new WP_REST_Response(
 			array(
@@ -417,7 +431,6 @@ class LearnKit_Courses_Controller {
 	private function get_course_args() {
 		return array(
 			'title'              => array(
-				'required'          => true,
 				'sanitize_callback' => 'sanitize_text_field',
 			),
 			'content'            => array(
@@ -428,6 +441,12 @@ class LearnKit_Courses_Controller {
 			),
 			'featured_image_url' => array(
 				'sanitize_callback' => 'esc_url_raw',
+			),
+			'access_type'        => array(
+				'type'              => 'string',
+				'enum'              => array( 'free', 'paid' ),
+				'description'       => __( 'Course access type.', 'learnkit' ),
+				'sanitize_callback' => 'sanitize_text_field',
 			),
 		);
 	}

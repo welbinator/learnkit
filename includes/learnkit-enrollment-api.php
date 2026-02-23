@@ -225,3 +225,80 @@ function learnkit_is_enrolled( $user_id, $course_id ) {
 	 */
 	return (bool) apply_filters( 'learnkit_user_can_access_course', $is_enrolled, $user_id, $course_id );
 }
+
+/**
+ * Get the progress percentage for a user in a given course.
+ *
+ * @since 0.6.0
+ *
+ * @param int $user_id   The user ID.
+ * @param int $course_id The course (post) ID.
+ * @return array {
+ *     @type int $progress_percent  Completion percentage (0–100).
+ *     @type int $completed_lessons Number of completed lessons.
+ *     @type int $total_lessons     Total lessons in the course.
+ * }
+ */
+function learnkit_get_course_progress( $user_id, $course_id ) {
+	global $wpdb;
+
+	$module_ids = get_posts(
+		array(
+			'post_type'      => 'lk_module',
+			'posts_per_page' => -1,
+			'meta_key'       => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value'     => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		)
+	);
+
+	if ( empty( $module_ids ) ) {
+		return array(
+			'progress_percent'  => 0,
+			'completed_lessons' => 0,
+			'total_lessons'     => 0,
+		);
+	}
+
+	$lesson_ids = get_posts(
+		array(
+			'post_type'      => 'lk_lesson',
+			'posts_per_page' => -1,
+			'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value__in' => $module_ids,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		)
+	);
+
+	if ( empty( $lesson_ids ) ) {
+		return array(
+			'progress_percent'  => 0,
+			'completed_lessons' => 0,
+			'total_lessons'     => 0,
+		);
+	}
+
+	$total          = count( $lesson_ids );
+	$placeholders   = implode( ',', array_fill( 0, $total, '%d' ) );
+	$progress_table = $wpdb->prefix . 'learnkit_progress';
+	$args           = array_merge( array( $user_id ), $lesson_ids );
+
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$completed = (int) $wpdb->get_var(
+		$wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed, placeholders are generated.
+			"SELECT COUNT(*) FROM {$progress_table} WHERE user_id = %d AND lesson_id IN ({$placeholders})",
+			$args
+		)
+	);
+
+	$percent = $total > 0 ? (int) round( ( $completed / $total ) * 100 ) : 0;
+
+	return array(
+		'progress_percent'  => $percent,
+		'completed_lessons' => $completed,
+		'total_lessons'     => $total,
+	);
+}

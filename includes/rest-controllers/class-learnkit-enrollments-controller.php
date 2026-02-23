@@ -200,21 +200,28 @@ class LearnKit_Enrollments_Controller {
 		$enrollment_id = (int) $request['id'];
 		$table         = $wpdb->prefix . 'learnkit_enrollments';
 
-		$deleted = $wpdb->delete(
-			$table,
-			array( 'id' => $enrollment_id ),
-			array( '%d' )
+		// Get enrollment details before deleting.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$enrollment = $wpdb->get_row(
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				"SELECT user_id, course_id FROM {$table} WHERE id = %d",
+				$enrollment_id
+			)
 		);
 
-		if ( false === $deleted || 0 === $deleted ) {
+		if ( ! $enrollment ) {
 			return new WP_REST_Response(
-				array( 'message' => __( 'Failed to delete enrollment', 'learnkit' ) ),
-				500
+				array( 'message' => __( 'Enrollment not found.', 'learnkit' ) ),
+				404
 			);
 		}
 
+		// Use the API function so hooks fire.
+		learnkit_unenroll_user( (int) $enrollment->user_id, (int) $enrollment->course_id );
+
 		return new WP_REST_Response(
-			array( 'message' => __( 'Enrollment deleted successfully', 'learnkit' ) ),
+			array( 'message' => __( 'Enrollment removed.', 'learnkit' ) ),
 			200
 		);
 	}

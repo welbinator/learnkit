@@ -268,87 +268,64 @@ class LearnKit_Progress_Controller {
 	 * @return   WP_REST_Response Response object.
 	 */
 	public function get_course_progress( $request ) {
-		global $wpdb;
-
 		$user_id   = (int) $request['user_id'];
 		$course_id = (int) $request['course_id'];
 
-		// Get all lessons in this course.
-		$modules = get_posts(
+		$progress = learnkit_get_course_progress( $user_id, $course_id );
+
+		// Build the completed lesson IDs list for the REST response.
+		global $wpdb;
+
+		$module_ids = get_posts(
 			array(
 				'post_type'      => 'lk_module',
 				'posts_per_page' => -1,
-				'meta_key'       => '_lk_course_id',
-				'meta_value'     => $course_id,
+				'meta_key'       => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
 			)
 		);
 
-		$module_ids = wp_list_pluck( $modules, 'ID' );
+		$completed_lesson_ids = array();
 
-		if ( empty( $module_ids ) ) {
-			return new WP_REST_Response(
+		if ( ! empty( $module_ids ) ) {
+			$lesson_ids = get_posts(
 				array(
-					'total_lessons'        => 0,
-					'completed_lessons'    => 0,
-					'progress_percent'     => 0,
-					'completed_lesson_ids' => array(),
-				),
-				200
+					'post_type'      => 'lk_lesson',
+					'posts_per_page' => -1,
+					'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'meta_value__in' => $module_ids,
+					'fields'         => 'ids',
+					'no_found_rows'  => true,
+				)
 			);
+
+			if ( ! empty( $lesson_ids ) ) {
+				$table        = $wpdb->prefix . 'learnkit_progress';
+				$placeholders = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
+				$args         = array_merge( array( $user_id ), $lesson_ids );
+
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$completed_lesson_ids = array_map(
+					'intval',
+					(array) $wpdb->get_col(
+						$wpdb->prepare(
+							// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+							"SELECT lesson_id FROM {$table} WHERE user_id = %d AND lesson_id IN ({$placeholders})",
+							$args
+						)
+					)
+				);
+			}
 		}
-
-		// Get all lessons in these modules.
-		$lessons = get_posts(
-			array(
-				'post_type'      => 'lk_lesson',
-				'posts_per_page' => -1,
-				'meta_query'     => array(
-					array(
-						'key'     => '_lk_module_id',
-						'value'   => $module_ids,
-						'compare' => 'IN',
-					),
-				),
-			)
-		);
-
-		$total_lessons = count( $lessons );
-		$lesson_ids    = wp_list_pluck( $lessons, 'ID' );
-
-		if ( empty( $lesson_ids ) ) {
-			return new WP_REST_Response(
-				array(
-					'total_lessons'        => 0,
-					'completed_lessons'    => 0,
-					'progress_percent'     => 0,
-					'completed_lesson_ids' => array(),
-				),
-				200
-			);
-		}
-
-		// Get completed lessons.
-		$table        = $wpdb->prefix . 'learnkit_progress';
-		$placeholders = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
-
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$completed = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT lesson_id FROM $table WHERE user_id = %d AND lesson_id IN ($placeholders)",
-				array_merge( array( $user_id ), $lesson_ids )
-			)
-		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-
-		$completed_count  = count( $completed );
-		$progress_percent = $total_lessons > 0 ? round( ( $completed_count / $total_lessons ) * 100 ) : 0;
 
 		return new WP_REST_Response(
 			array(
-				'total_lessons'        => $total_lessons,
-				'completed_lessons'    => $completed_count,
-				'progress_percent'     => $progress_percent,
-				'completed_lesson_ids' => array_map( 'intval', $completed ),
+				'total_lessons'        => $progress['total_lessons'],
+				'completed_lessons'    => $progress['completed_lessons'],
+				'progress_percent'     => $progress['progress_percent'],
+				'completed_lesson_ids' => $completed_lesson_ids,
 			),
 			200
 		);

@@ -44,12 +44,29 @@ class LearnKit_Modules_Controller {
 					'methods'             => WP_REST_Server::READABLE,
 					'callback'            => array( $this, 'get_modules' ),
 					'permission_callback' => array( $this, 'check_read_permission' ),
+					'args'                => array(
+						'course_id' => array(
+							'type'              => 'integer',
+							'description'       => __( 'Filter modules by course ID.', 'learnkit' ),
+							'sanitize_callback' => 'absint',
+						),
+					),
 				),
 				array(
 					'methods'             => WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_module' ),
 					'permission_callback' => array( $this, 'check_write_permission' ),
-					'args'                => $this->get_module_args(),
+					'args'                => array_merge(
+						$this->get_module_args(),
+						array(
+							'title' => array(
+								'required'          => true,
+								'type'              => 'string',
+								'description'       => __( 'Module title.', 'learnkit' ),
+								'sanitize_callback' => 'sanitize_text_field',
+							),
+						)
+					),
 				),
 			)
 		);
@@ -358,7 +375,6 @@ class LearnKit_Modules_Controller {
 	private function get_module_args() {
 		return array(
 			'title'   => array(
-				'required'          => true,
 				'sanitize_callback' => 'sanitize_text_field',
 			),
 			'content' => array(
@@ -368,9 +384,9 @@ class LearnKit_Modules_Controller {
 				'sanitize_callback' => 'sanitize_textarea_field',
 			),
 			'course_id' => array(
-				'validate_callback' => function ( $param ) {
-					return is_numeric( $param );
-				},
+				'type'              => 'integer',
+				'description'       => __( 'Filter modules by course ID.', 'learnkit' ),
+				'sanitize_callback' => 'absint',
 			),
 			'menu_order' => array(
 				'validate_callback' => function ( $param ) {
