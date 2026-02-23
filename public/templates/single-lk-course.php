@@ -9,6 +9,8 @@
  * @subpackage LearnKit/public/templates
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template-scoped variables, not true PHP globals.
+
 get_header();
 
 $course_id = get_the_ID();
@@ -516,4 +518,5 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 </script>
 
 <?php
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 get_footer();
