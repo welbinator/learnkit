@@ -266,7 +266,7 @@ class LearnKit_Progress_Controller {
 			array(
 				'post_type'      => 'lk_module',
 				'posts_per_page' => -1,
-				'meta_key'       => 'learnkit_course_id',
+				'meta_key'       => '_lk_course_id',
 				'meta_value'     => $course_id,
 			)
 		);

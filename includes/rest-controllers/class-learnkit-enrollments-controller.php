@@ -175,53 +175,11 @@ class LearnKit_Enrollments_Controller {
 	 * @return   WP_REST_Response Response object.
 	 */
 	private function insert_enrollment( $user_id, $course_id ) {
-		global $wpdb;
-
-		$table = $wpdb->prefix . 'learnkit_enrollments';
-
-		// Check if already enrolled.
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$existing = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT * FROM $table WHERE user_id = %d AND course_id = %d",
-				$user_id,
-				$course_id
-			)
-		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-
-		if ( $existing ) {
-			return new WP_REST_Response(
-				array( 'message' => __( 'User is already enrolled in this course', 'learnkit' ) ),
-				400
-			);
+		$result = learnkit_enroll_user( $user_id, $course_id, 'manual' );
+		if ( ! $result ) {
+			return new WP_REST_Response( array( 'message' => 'Enrollment failed.' ), 500 );
 		}
-
-		$inserted = $wpdb->insert(
-			$table,
-			array(
-				'user_id'     => $user_id,
-				'course_id'   => $course_id,
-				'enrolled_at' => current_time( 'mysql' ),
-				'status'      => 'active',
-			),
-			array( '%d', '%d', '%s', '%s' )
-		);
-
-		if ( false === $inserted ) {
-			return new WP_REST_Response(
-				array( 'message' => __( 'Failed to create enrollment', 'learnkit' ) ),
-				500
-			);
-		}
-
-		return new WP_REST_Response(
-			array(
-				'message'       => __( 'User enrolled successfully', 'learnkit' ),
-				'enrollment_id' => $wpdb->insert_id,
-			),
-			201
-		);
+		return new WP_REST_Response( array( 'message' => 'Enrolled successfully.' ), 201 );
 	}
 
 	/**

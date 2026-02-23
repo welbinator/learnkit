@@ -24,6 +24,17 @@
 class LearnKit_Emails {
 
 	/**
+	 * Whether a LearnKit email is currently being sent.
+	 *
+	 * Used to scope wp_mail_from / wp_mail_from_name filters so they only
+	 * apply to outgoing LearnKit emails, not all site emails.
+	 *
+	 * @since 0.5.1
+	 * @var   bool
+	 */
+	private static $is_sending = false;
+
+	/**
 	 * Set up hooks for unsubscribe handling and from-name/email overrides.
 	 *
 	 * @since 0.5.0
@@ -42,6 +53,9 @@ class LearnKit_Emails {
 	 * @return string       Filtered from email.
 	 */
 	public static function filter_mail_from( $from ) {
+		if ( ! self::$is_sending ) {
+			return $from;
+		}
 		$settings = get_option( 'learnkit_email_settings', array() );
 		if ( ! empty( $settings['from_email'] ) ) {
 			return sanitize_email( $settings['from_email'] );
@@ -57,6 +71,9 @@ class LearnKit_Emails {
 	 * @return string       Filtered from name.
 	 */
 	public static function filter_mail_from_name( $name ) {
+		if ( ! self::$is_sending ) {
+			return $name;
+		}
 		$settings = get_option( 'learnkit_email_settings', array() );
 		if ( ! empty( $settings['from_name'] ) ) {
 			return sanitize_text_field( $settings['from_name'] );
@@ -595,7 +612,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 		add_filter( 'wp_mail_content_type', $content_type_filter );
 
 		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
-		$result  = wp_mail( $to, $subject, $html_body, $headers );
+
+		self::$is_sending = true;
+		try {
+			$result = wp_mail( $to, $subject, $html_body, $headers );
+		} finally {
+			self::$is_sending = false;
+		}
 
 		remove_filter( 'wp_mail_content_type', $content_type_filter );
 

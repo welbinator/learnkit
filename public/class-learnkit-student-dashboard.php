@@ -275,7 +275,7 @@ class LearnKit_Student_Dashboard {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$completed = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT lesson_id FROM $progress_table WHERE user_id = %d AND lesson_id IN ($placeholders) AND completed = 1",
+				"SELECT lesson_id FROM $progress_table WHERE user_id = %d AND lesson_id IN ($placeholders)",
 				array_merge( array( $user_id ), $lesson_ids )
 			)
 		);

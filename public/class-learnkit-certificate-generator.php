@@ -148,7 +148,7 @@ class LearnKit_Certificate_Generator {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$completed = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT lesson_id FROM $progress_table WHERE user_id = %d AND lesson_id IN ($placeholders) AND completed = 1",
+				"SELECT lesson_id FROM $progress_table WHERE user_id = %d AND lesson_id IN ($placeholders)",
 				array_merge( array( $user_id ), $lesson_ids )
 			)
 		);
@@ -179,18 +179,65 @@ class LearnKit_Certificate_Generator {
 			return;
 		}
 
-		// Get completion date (most recent lesson completion).
+		// Get completion date (most recent lesson completion for this course).
 		global $wpdb;
 		$progress_table = $wpdb->prefix . 'learnkit_progress';
 
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$completion_date = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT MAX(completed_at) FROM $progress_table WHERE user_id = %d",
-				$user_id
+		// Get module IDs for this course.
+		$module_ids = get_posts(
+			array(
+				'post_type'      => 'lk_module',
+				'posts_per_page' => -1,
+				'meta_key'       => '_lk_course_id',
+				'meta_value'     => $course_id,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
 			)
 		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+
+		// Get lesson IDs for those modules.
+		$lesson_ids = array();
+		if ( ! empty( $module_ids ) ) {
+			$course_lessons = get_posts(
+				array(
+					'post_type'      => 'lk_lesson',
+					'posts_per_page' => -1,
+					'fields'         => 'ids',
+					'no_found_rows'  => true,
+					'meta_query'     => array(
+						array(
+							'key'     => '_lk_module_id',
+							'value'   => $module_ids,
+							'compare' => 'IN',
+						),
+					),
+				)
+			);
+			$lesson_ids = $course_lessons;
+		}
+
+		if ( ! empty( $lesson_ids ) ) {
+			$placeholders_date = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
+
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$completion_date = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT MAX(completed_at) FROM $progress_table WHERE user_id = %d AND lesson_id IN ($placeholders_date)",
+					array_merge( array( $user_id ), $lesson_ids )
+				)
+			);
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		} else {
+			// Graceful degradation: no lessons found, fall back to user's most recent completion.
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$completion_date = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT MAX(completed_at) FROM $progress_table WHERE user_id = %d",
+					$user_id
+				)
+			);
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		}
 
 		if ( ! $completion_date ) {
 			$completion_date = current_time( 'mysql' );
