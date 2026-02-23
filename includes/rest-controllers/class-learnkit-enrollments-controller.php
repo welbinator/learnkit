@@ -228,11 +228,11 @@ class LearnKit_Enrollments_Controller extends LearnKit_Base_Controller {
 		$table         = $wpdb->prefix . 'learnkit_enrollments';
 
 		// Get enrollment details before deleting.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$enrollment = $wpdb->get_row(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-				"SELECT user_id, course_id FROM {$table} WHERE id = %d",
+				'SELECT user_id, course_id FROM %i WHERE id = %d',
+				$table,
 				$enrollment_id
 			)
 		);
@@ -269,7 +269,8 @@ class LearnKit_Enrollments_Controller extends LearnKit_Base_Controller {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$enrollments = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM $table WHERE course_id = %d ORDER BY enrolled_at DESC",
+				'SELECT * FROM %i WHERE course_id = %d ORDER BY enrolled_at DESC',
+				$table,
 				$course_id
 			),
 			ARRAY_A
@@ -306,7 +307,8 @@ class LearnKit_Enrollments_Controller extends LearnKit_Base_Controller {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$enrollments = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM $table WHERE user_id = %d ORDER BY enrolled_at DESC",
+				'SELECT * FROM %i WHERE user_id = %d ORDER BY enrolled_at DESC',
+				$table,
 				$user_id
 			),
 			ARRAY_A
