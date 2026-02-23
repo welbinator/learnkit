@@ -302,12 +302,12 @@ class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 				$placeholders = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
 				$args         = array_merge( array( $user_id ), $lesson_ids );
 
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 				$completed_lesson_ids = array_map(
 					'intval',
 					(array) $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 						$wpdb->prepare(
-							// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+							// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is esc_sql()'d; placeholders are generated %d tokens.
 							"SELECT lesson_id FROM {$table} WHERE user_id = %d AND lesson_id IN ({$placeholders})",
 							$args
 						)

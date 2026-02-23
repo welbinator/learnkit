@@ -97,7 +97,7 @@ class LearnKit_Quiz_Reports {
 
 		$quiz_id = (int) $filters['quiz_id'];
 		$user_id = (int) $filters['user_id'];
-		$passed  = $filters['passed'];
+		$passed  = sanitize_text_field( $filters['passed'] );
 		$table   = esc_sql( $wpdb->prefix . 'learnkit_quiz_attempts' );
 
 		// Build query with proper parameterized WHERE clause.
@@ -175,7 +175,7 @@ class LearnKit_Quiz_Reports {
 	 */
 	private function render_filters_form( $filters, $quizzes ) {
 		$quiz_id = $filters['quiz_id'];
-		$passed  = $filters['passed'];
+		$passed  = sanitize_text_field( $filters['passed'] );
 		?>
 		<!-- Filters -->
 		<form method="get" class="lk-reports-filters" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px;">

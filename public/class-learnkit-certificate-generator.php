@@ -133,7 +133,7 @@ class LearnKit_Certificate_Generator {
 	 */
 	private function get_course_completion_date( $user_id, $course_id ) {
 		global $wpdb;
-		$progress_table = $wpdb->prefix . 'learnkit_progress';
+		$progress_table = esc_sql( $wpdb->prefix . 'learnkit_progress' );
 
 		// Get module IDs for this course.
 		$module_ids = get_posts(
@@ -180,8 +180,8 @@ class LearnKit_Certificate_Generator {
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$completion_date = $wpdb->get_var(
 				$wpdb->prepare(
-					'SELECT MAX(completed_at) FROM %i WHERE user_id = %d AND lesson_id IN (' . $placeholders_date . ')',
-					array_merge( array( $progress_table, $user_id ), $lesson_ids )
+					"SELECT MAX(completed_at) FROM $progress_table WHERE user_id = %d AND lesson_id IN ($placeholders_date)", // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $placeholders_date expands to multiple %d tokens.
+					array_merge( array( $user_id ), $lesson_ids )
 				)
 			);
 			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
