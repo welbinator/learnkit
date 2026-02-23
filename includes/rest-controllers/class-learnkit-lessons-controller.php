@@ -221,18 +221,14 @@ class LearnKit_Lessons_Controller {
 			);
 		}
 
-		$lesson_data = array(
-			'ID' => $lesson_id,
-		);
+		$lesson_data = array( 'ID' => $lesson_id );
 
 		if ( isset( $request['title'] ) ) {
 			$lesson_data['post_title'] = sanitize_text_field( $request['title'] );
 		}
-
 		if ( isset( $request['content'] ) ) {
 			$lesson_data['post_content'] = wp_kses_post( $request['content'] );
 		}
-
 		if ( isset( $request['menu_order'] ) ) {
 			$lesson_data['menu_order'] = (int) $request['menu_order'];
 		}
@@ -246,6 +242,22 @@ class LearnKit_Lessons_Controller {
 			);
 		}
 
+		$this->update_lesson_meta( $lesson_id, $request );
+
+		return new WP_REST_Response(
+			array( 'message' => __( 'Lesson updated successfully', 'learnkit' ) ),
+			200
+		);
+	}
+
+	/**
+	 * Update lesson meta fields from request data.
+	 *
+	 * @since    0.2.13
+	 * @param    int             $lesson_id Lesson post ID.
+	 * @param    WP_REST_Request $request   Full request data.
+	 */
+	private function update_lesson_meta( $lesson_id, $request ) {
 		if ( ! empty( $request['module_id'] ) ) {
 			update_post_meta( $lesson_id, '_lk_module_id', (int) $request['module_id'] );
 		}
@@ -262,11 +274,6 @@ class LearnKit_Lessons_Controller {
 		if ( isset( $request['release_date'] ) ) {
 			update_post_meta( $lesson_id, '_lk_release_date', sanitize_text_field( $request['release_date'] ) );
 		}
-
-		return new WP_REST_Response(
-			array( 'message' => __( 'Lesson updated successfully', 'learnkit' ) ),
-			200
-		);
 	}
 
 	/**

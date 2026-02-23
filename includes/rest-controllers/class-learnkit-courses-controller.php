@@ -184,18 +184,14 @@ class LearnKit_Courses_Controller {
 			);
 		}
 
-		$course_data = array(
-			'ID' => $course_id,
-		);
+		$course_data = array( 'ID' => $course_id );
 
 		if ( isset( $request['title'] ) ) {
 			$course_data['post_title'] = sanitize_text_field( $request['title'] );
 		}
-
 		if ( isset( $request['content'] ) ) {
 			$course_data['post_content'] = wp_kses_post( $request['content'] );
 		}
-
 		if ( isset( $request['excerpt'] ) ) {
 			$course_data['post_excerpt'] = sanitize_textarea_field( $request['excerpt'] );
 		}
@@ -209,15 +205,28 @@ class LearnKit_Courses_Controller {
 			);
 		}
 
+		$this->update_course_meta( $course_id, $request );
+
+		return new WP_REST_Response(
+			array( 'message' => __( 'Course updated successfully', 'learnkit' ) ),
+			200
+		);
+	}
+
+	/**
+	 * Update course meta fields from request data.
+	 *
+	 * @since    0.2.13
+	 * @param    int             $course_id Course post ID.
+	 * @param    WP_REST_Request $request   Full request data.
+	 */
+	private function update_course_meta( $course_id, $request ) {
 		// Handle featured image if provided.
 		if ( isset( $request['featured_image_url'] ) ) {
 			$image_url = $request['featured_image_url'];
-
 			if ( empty( $image_url ) ) {
-				// Remove featured image.
 				delete_post_thumbnail( $course_id );
 			} else {
-				// Get attachment ID from URL.
 				$attachment_id = attachment_url_to_postid( $image_url );
 				if ( $attachment_id ) {
 					set_post_thumbnail( $course_id, $attachment_id );
@@ -233,11 +242,6 @@ class LearnKit_Courses_Controller {
 			}
 			update_post_meta( $course_id, '_lk_access_type', $access_type );
 		}
-
-		return new WP_REST_Response(
-			array( 'message' => __( 'Course updated successfully', 'learnkit' ) ),
-			200
-		);
 	}
 
 	/**

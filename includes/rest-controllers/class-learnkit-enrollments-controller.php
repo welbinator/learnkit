@@ -103,11 +103,26 @@ class LearnKit_Enrollments_Controller {
 	 * @return   WP_REST_Response Response object.
 	 */
 	public function create_enrollment( $request ) {
-		global $wpdb;
-
 		$user_id   = (int) $request['user_id'];
 		$course_id = (int) $request['course_id'];
 
+		$validation_error = $this->validate_enrollment_request( $user_id, $course_id );
+		if ( $validation_error instanceof WP_REST_Response ) {
+			return $validation_error;
+		}
+
+		return $this->insert_enrollment( $user_id, $course_id );
+	}
+
+	/**
+	 * Validate an enrollment request — checks user, course, and access permissions.
+	 *
+	 * @since    0.2.14
+	 * @param    int $user_id   User ID to enroll.
+	 * @param    int $course_id Course ID to enroll into.
+	 * @return   WP_REST_Response|true  Error response on failure, true on success.
+	 */
+	private function validate_enrollment_request( $user_id, $course_id ) {
 		// Verify user exists.
 		$user = get_user_by( 'id', $user_id );
 		if ( ! $user ) {
@@ -126,7 +141,7 @@ class LearnKit_Enrollments_Controller {
 			);
 		}
 
-		// Non-admins can only enroll themselves, and only in free-access courses.
+		// Non-admins can only enroll themselves in free courses.
 		$current_user_id = get_current_user_id();
 		if ( ! current_user_can( 'edit_posts' ) ) {
 			if ( $current_user_id !== $user_id ) {
@@ -137,7 +152,6 @@ class LearnKit_Enrollments_Controller {
 			}
 			$access_type = get_post_meta( $course_id, '_lk_access_type', true );
 			if ( empty( $access_type ) ) {
-				// Backward compat: old _lk_self_enrollment flag.
 				$self_enrollment = get_post_meta( $course_id, '_lk_self_enrollment', true );
 				$access_type     = $self_enrollment ? 'free' : 'free';
 			}
@@ -148,6 +162,20 @@ class LearnKit_Enrollments_Controller {
 				);
 			}
 		}
+
+		return true;
+	}
+
+	/**
+	 * Insert a new enrollment record, checking for duplicates first.
+	 *
+	 * @since    0.2.14
+	 * @param    int $user_id   User ID.
+	 * @param    int $course_id Course ID.
+	 * @return   WP_REST_Response Response object.
+	 */
+	private function insert_enrollment( $user_id, $course_id ) {
+		global $wpdb;
 
 		$table = $wpdb->prefix . 'learnkit_enrollments';
 
@@ -169,7 +197,6 @@ class LearnKit_Enrollments_Controller {
 			);
 		}
 
-		// Insert enrollment.
 		$inserted = $wpdb->insert(
 			$table,
 			array(

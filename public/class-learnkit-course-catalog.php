@@ -135,118 +135,165 @@ class LearnKit_Course_Catalog {
 		?>
 		<div class="learnkit-catalog" data-columns="<?php echo esc_attr( $atts['columns'] ); ?>">
 			<div class="learnkit-catalog-grid">
-				<?php foreach ( $courses as $course ) : ?>
-					<?php
-					$course_id     = (int) $course->ID;
-					$is_enrolled   = in_array( $course_id, array_map( 'intval', $enrolled_course_ids ), true );
-					$thumbnail_url = get_the_post_thumbnail_url( $course_id, 'medium' );
-					if ( ! $thumbnail_url ) {
-						$thumbnail_url = LEARNKIT_PLUGIN_URL . 'assets/images/default-course.png';
-					}
-
-					// Get module and lesson counts.
-					$modules = get_posts(
-						array(
-							'post_type'      => 'lk_module',
-							'posts_per_page' => -1,
-							'meta_key'       => '_lk_course_id',
-							'meta_value'     => $course_id,
-						)
-					);
-
-					$lesson_count = 0;
-					foreach ( $modules as $module ) {
-						$lessons       = get_posts(
-							array(
-								'post_type'      => 'lk_lesson',
-								'posts_per_page' => -1,
-								'meta_key'       => '_lk_module_id',
-								'meta_value'     => $module->ID,
-							)
-						);
-						$lesson_count += count( $lessons );
-					}
-
-					$module_count = count( $modules );
-
-					// Determine access type with backward compatibility.
-					$access_type = get_post_meta( $course_id, '_lk_access_type', true );
-					if ( empty( $access_type ) ) {
-						$access_type = get_post_meta( $course_id, '_lk_self_enrollment', true ) ? 'free' : 'free';
-					}
-					$self_enroll_enabled = ( 'free' === $access_type );
-					?>
-					<div class="learnkit-catalog-course <?php echo $is_enrolled ? 'enrolled' : ''; ?>">
-						<div class="course-thumbnail">
-							<?php if ( $thumbnail_url ) : ?>
-								<img src="<?php echo esc_url( $thumbnail_url ); ?>" alt="<?php echo esc_attr( $course->post_title ); ?>">
-							<?php endif; ?>
-							<?php if ( $is_enrolled ) : ?>
-								<span class="enrollment-badge"><?php esc_html_e( 'Enrolled', 'learnkit' ); ?></span>
-							<?php endif; ?>
-						</div>
-						<div class="course-info">
-							<h3>
-								<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>">
-									<?php echo esc_html( $course->post_title ); ?>
-								</a>
-							</h3>
-							<?php if ( $course->post_excerpt ) : ?>
-								<p class="course-excerpt"><?php echo esc_html( wp_trim_words( $course->post_excerpt, 20 ) ); ?></p>
-							<?php endif; ?>
-							<div class="course-meta">
-								<span class="meta-item">
-									<span class="dashicons dashicons-book"></span>
-									<?php
-									/* translators: %d: number of modules */
-									echo esc_html( sprintf( __( '%d Modules', 'learnkit' ), $module_count ) );
-									?>
-								</span>
-								<span class="meta-item">
-									<span class="dashicons dashicons-welcome-learn-more"></span>
-									<?php
-									/* translators: %d: number of lessons */
-									echo esc_html( sprintf( __( '%d Lessons', 'learnkit' ), $lesson_count ) );
-									?>
-								</span>
-							</div>
-							<div class="course-actions">
-								<?php if ( $is_enrolled ) : ?>
-									<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>" class="button button-enrolled">
-										<?php esc_html_e( 'Continue Learning', 'learnkit' ); ?>
-									</a>
-								<?php elseif ( is_user_logged_in() && $self_enroll_enabled ) : ?>
-									<button class="button button-enroll" data-course-id="<?php echo esc_attr( $course_id ); ?>">
-										<?php esc_html_e( 'Enroll Now', 'learnkit' ); ?>
-									</button>
-								<?php elseif ( is_user_logged_in() ) : ?>
-									<?php
-									/**
-									 * Action: learnkit_course_enrollment_cta
-									 *
-									 * Fires in the catalog card CTA area for courses that are not free self-enroll.
-									 * WooCommerce and other integrations hook here to show Buy Now buttons.
-									 *
-									 * @since 0.5.0
-									 *
-									 * @param int  $course_id   The course post ID.
-									 * @param int  $user_id     The current user ID (0 if not logged in).
-									 * @param bool $is_enrolled Whether the current user is enrolled.
-									 */
-									do_action( 'learnkit_course_enrollment_cta', $course_id, get_current_user_id(), $is_enrolled );
-									?>
-								<?php else : ?>
-									<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="button button-login">
-										<?php esc_html_e( 'Login to Enroll', 'learnkit' ); ?>
-									</a>
-								<?php endif; ?>
-							</div>
-						</div>
-					</div>
-				<?php endforeach; ?>
+				<?php echo $this->render_course_grid( $courses, $enrolled_course_ids ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			</div>
 		</div>
 		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Render the full grid of course cards.
+	 *
+	 * @since    0.3.0
+	 * @param    array $courses             Array of course WP_Post objects.
+	 * @param    array $enrolled_course_ids Array of course IDs the user is enrolled in.
+	 * @return   string HTML output.
+	 */
+	private function render_course_grid( $courses, $enrolled_course_ids ) {
+		$output = '';
+		foreach ( $courses as $course ) {
+			$course_id   = (int) $course->ID;
+			$is_enrolled = in_array( $course_id, array_map( 'intval', $enrolled_course_ids ), true );
+			$output     .= $this->render_single_course_card( $course, $is_enrolled );
+		}
+		return $output;
+	}
+
+	/**
+	 * Render a single course card.
+	 *
+	 * @since    0.3.0
+	 * @param    WP_Post $course      Course post object.
+	 * @param    bool    $is_enrolled Whether the current user is enrolled.
+	 * @return   string HTML output.
+	 */
+	private function render_single_course_card( $course, $is_enrolled ) {
+		$course_id     = (int) $course->ID;
+		$thumbnail_url = get_the_post_thumbnail_url( $course_id, 'medium' );
+		if ( ! $thumbnail_url ) {
+			$thumbnail_url = LEARNKIT_PLUGIN_URL . 'assets/images/default-course.png';
+		}
+
+		// Get module and lesson counts.
+		$modules = get_posts(
+			array(
+				'post_type'      => 'lk_module',
+				'posts_per_page' => -1,
+				'meta_key'       => '_lk_course_id',
+				'meta_value'     => $course_id,
+			)
+		);
+
+		$lesson_count = 0;
+		foreach ( $modules as $module ) {
+			$lessons       = get_posts(
+				array(
+					'post_type'      => 'lk_lesson',
+					'posts_per_page' => -1,
+					'meta_key'       => '_lk_module_id',
+					'meta_value'     => $module->ID,
+				)
+			);
+			$lesson_count += count( $lessons );
+		}
+		$module_count = count( $modules );
+
+		// Determine access type with backward compatibility.
+		$access_type = get_post_meta( $course_id, '_lk_access_type', true );
+		if ( empty( $access_type ) ) {
+			$access_type = get_post_meta( $course_id, '_lk_self_enrollment', true ) ? 'free' : 'free';
+		}
+		$self_enroll_enabled = ( 'free' === $access_type );
+
+		ob_start();
+		?>
+		<div class="learnkit-catalog-course <?php echo $is_enrolled ? 'enrolled' : ''; ?>">
+			<div class="course-thumbnail">
+				<?php if ( $thumbnail_url ) : ?>
+					<img src="<?php echo esc_url( $thumbnail_url ); ?>" alt="<?php echo esc_attr( $course->post_title ); ?>">
+				<?php endif; ?>
+				<?php if ( $is_enrolled ) : ?>
+					<span class="enrollment-badge"><?php esc_html_e( 'Enrolled', 'learnkit' ); ?></span>
+				<?php endif; ?>
+			</div>
+			<div class="course-info">
+				<h3>
+					<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>">
+						<?php echo esc_html( $course->post_title ); ?>
+					</a>
+				</h3>
+				<?php if ( $course->post_excerpt ) : ?>
+					<p class="course-excerpt"><?php echo esc_html( wp_trim_words( $course->post_excerpt, 20 ) ); ?></p>
+				<?php endif; ?>
+				<div class="course-meta">
+					<span class="meta-item">
+						<span class="dashicons dashicons-book"></span>
+						<?php
+						/* translators: %d: number of modules */
+						echo esc_html( sprintf( __( '%d Modules', 'learnkit' ), $module_count ) );
+						?>
+					</span>
+					<span class="meta-item">
+						<span class="dashicons dashicons-welcome-learn-more"></span>
+						<?php
+						/* translators: %d: number of lessons */
+						echo esc_html( sprintf( __( '%d Lessons', 'learnkit' ), $lesson_count ) );
+						?>
+					</span>
+				</div>
+				<div class="course-actions">
+					<?php echo $this->render_course_card_actions( $course_id, $is_enrolled, $self_enroll_enabled ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</div>
+			</div>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Render the action buttons for a catalog course card.
+	 *
+	 * @since    0.3.0
+	 * @param    int  $course_id           Course post ID.
+	 * @param    bool $is_enrolled         Whether the current user is enrolled.
+	 * @param    bool $self_enroll_enabled Whether free self-enrollment is allowed.
+	 * @return   string HTML output.
+	 */
+	private function render_course_card_actions( $course_id, $is_enrolled, $self_enroll_enabled ) {
+		ob_start();
+		if ( $is_enrolled ) :
+			?>
+			<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>" class="button button-enrolled">
+				<?php esc_html_e( 'Continue Learning', 'learnkit' ); ?>
+			</a>
+			<?php
+		elseif ( is_user_logged_in() && $self_enroll_enabled ) :
+			?>
+			<button class="button button-enroll" data-course-id="<?php echo esc_attr( $course_id ); ?>">
+				<?php esc_html_e( 'Enroll Now', 'learnkit' ); ?>
+			</button>
+			<?php
+		elseif ( is_user_logged_in() ) :
+			/**
+			 * Action: learnkit_course_enrollment_cta
+			 *
+			 * Fires in the catalog card CTA area for courses that are not free self-enroll.
+			 *
+			 * @since 0.5.0
+			 *
+			 * @param int  $course_id   The course post ID.
+			 * @param int  $user_id     The current user ID.
+			 * @param bool $is_enrolled Whether the current user is enrolled.
+			 */
+			do_action( 'learnkit_course_enrollment_cta', $course_id, get_current_user_id(), $is_enrolled );
+		else :
+			?>
+			<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="button button-login">
+				<?php esc_html_e( 'Login to Enroll', 'learnkit' ); ?>
+			</a>
+			<?php
+		endif;
 		return ob_get_clean();
 	}
 

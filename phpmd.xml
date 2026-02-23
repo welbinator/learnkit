@@ -30,6 +30,8 @@
         <exclude name="CamelCaseVariableName"/>
         <exclude name="CamelCasePropertyName"/>
         <exclude name="CamelCaseClassName"/>
+        <!-- WordPress plugins legitimately access superglobals directly -->
+        <exclude name="Superglobals"/>
     </rule>
 
     <rule ref="rulesets/design.xml">

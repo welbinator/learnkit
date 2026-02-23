@@ -188,27 +188,79 @@ class LearnKit_Public {
 			wp_die( esc_html__( 'You must be logged in to submit a quiz', 'learnkit' ) );
 		}
 
-		// Get quiz data.
+		$quiz_data     = $this->get_quiz_questions_and_settings( $quiz_id );
+		$questions     = $quiz_data['questions'];
+		$passing_score = $quiz_data['passing_score'];
+
+		$answers    = $this->collect_answers( $questions );
+		$score_data = $this->grade_quiz( $questions, $answers, $passing_score );
+
+		$this->save_quiz_attempt( $user_id, $quiz_id, $score_data, $answers );
+
+		$redirect_url = add_query_arg(
+			array(
+				'quiz_result' => 'submitted',
+				'score'       => $score_data['score_percentage'],
+				'passed'      => $score_data['passed'] ? '1' : '0',
+			),
+			get_permalink( $quiz_id )
+		);
+
+		wp_safe_redirect( $redirect_url );
+		exit;
+	}
+
+	/**
+	 * Fetch quiz questions and passing score from post meta.
+	 *
+	 * @since    0.4.0
+	 * @param    int $quiz_id Quiz post ID.
+	 * @return   array { questions: array, passing_score: int }
+	 */
+	private function get_quiz_questions_and_settings( $quiz_id ) {
 		$questions_json = get_post_meta( $quiz_id, '_lk_questions', true );
 		$questions      = json_decode( $questions_json, true );
 		$passing_score  = (int) get_post_meta( $quiz_id, '_lk_passing_score', true );
 		$passing_score  = $passing_score > 0 ? $passing_score : 70;
-		$start_time     = isset( $_POST['start_time'] ) ? (int) $_POST['start_time'] : time();
-		$time_taken     = time() - $start_time;
 
-		// Collect answers.
+		return array(
+			'questions'     => $questions,
+			'passing_score' => $passing_score,
+		);
+	}
+
+	/**
+	 * Collect user's answers from $_POST.
+	 *
+	 * @since    0.4.0
+	 * @param    array $questions Array of question data.
+	 * @return   array Map of question_id => selected answer index.
+	 */
+	private function collect_answers( $questions ) {
 		$answers = array();
 		foreach ( $questions as $question ) {
 			$field_name = 'question_' . $question['id'];
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified in handle_quiz_submission() before this method is called.
 			if ( isset( $_POST[ $field_name ] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified in handle_quiz_submission() before this method is called.
 				$answers[ $question['id'] ] = (int) $_POST[ $field_name ];
 			}
 		}
+		return $answers;
+	}
 
-		// Grade the quiz.
-		$score         = 0;
-		$max_score     = 0;
-		$correct_count = 0;
+	/**
+	 * Grade the quiz and return score data.
+	 *
+	 * @since    0.4.0
+	 * @param    array $questions     Array of question data.
+	 * @param    array $answers       Map of question_id => selected answer index.
+	 * @param    int   $passing_score Passing score percentage threshold.
+	 * @return   array { score_percentage: int, max_score: int, passed: bool }
+	 */
+	private function grade_quiz( $questions, $answers, $passing_score ) {
+		$score     = 0;
+		$max_score = 0;
 
 		foreach ( $questions as $question ) {
 			$max_score += (int) $question['points'];
@@ -218,14 +270,28 @@ class LearnKit_Public {
 
 			if ( $user_answer === $correct_answer ) {
 				$score += (int) $question['points'];
-				++$correct_count;
 			}
 		}
 
 		$score_percentage = $max_score > 0 ? round( ( $score / $max_score ) * 100 ) : 0;
-		$passed           = $score_percentage >= $passing_score;
 
-		// Save attempt to database.
+		return array(
+			'score_percentage' => $score_percentage,
+			'max_score'        => $max_score,
+			'passed'           => $score_percentage >= $passing_score,
+		);
+	}
+
+	/**
+	 * Save a quiz attempt to the database.
+	 *
+	 * @since    0.4.0
+	 * @param    int   $user_id    User ID.
+	 * @param    int   $quiz_id    Quiz post ID.
+	 * @param    array $score_data Score data from grade_quiz().
+	 * @param    array $answers    Collected answers from collect_answers().
+	 */
+	private function save_quiz_attempt( $user_id, $quiz_id, $score_data, $answers ) {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'learnkit_quiz_attempts';
 
@@ -234,26 +300,13 @@ class LearnKit_Public {
 			array(
 				'user_id'      => $user_id,
 				'quiz_id'      => $quiz_id,
-				'score'        => $score_percentage,
-				'max_score'    => $max_score,
-				'passed'       => $passed ? 1 : 0,
+				'score'        => $score_data['score_percentage'],
+				'max_score'    => $score_data['max_score'],
+				'passed'       => $score_data['passed'] ? 1 : 0,
 				'answers'      => wp_json_encode( $answers ),
 				'completed_at' => current_time( 'mysql' ),
 			),
 			array( '%d', '%d', '%d', '%d', '%d', '%s', '%s' )
 		);
-
-		// Redirect to results page with query params.
-		$redirect_url = add_query_arg(
-			array(
-				'quiz_result' => 'submitted',
-				'score'       => $score_percentage,
-				'passed'      => $passed ? '1' : '0',
-			),
-			get_permalink( $quiz_id )
-		);
-
-		wp_safe_redirect( $redirect_url );
-		exit;
 	}
 }
