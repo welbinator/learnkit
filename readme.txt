@@ -4,7 +4,7 @@ Tags: lms, courses, elearning, quizzes, learning management
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.5.1
+Stable tag: 0.5.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,9 @@ Yes. Lessons are gated behind enrollment by default.
 Basic certificate infrastructure is included. A full certificate builder is planned for a future release.
 
 == Changelog ==
+
+= 0.5.2 =
+* Additional plugin checker fixes: languages directory, tested-up-to 6.9, sanitize filter inputs, fix multi-line phpcs ignore blocks
 
 = 0.5.1 =
 * Code quality: resolved all WordPress Plugin Checker issues
