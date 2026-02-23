@@ -127,7 +127,7 @@ class LearnKit_Quiz_Reports {
 			$sql = "SELECT * FROM {$table} ORDER BY completed_at DESC LIMIT 500";
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.CodeAnalysis.DirectDB.UnescapedDBParameter -- $sql is built from esc_sql()'d table name and wpdb->prepare() calls only; $passed is never interpolated into SQL.
 		return $wpdb->get_results( $sql );
 	}
 
