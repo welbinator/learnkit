@@ -19,14 +19,15 @@ $modules = get_posts(
 	array(
 		'post_type'      => 'lk_module',
 		'posts_per_page' => -1,
-		'meta_query'     => array(
+		'no_found_rows'  => true,
+		'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 			array(
 				'key'   => '_lk_course_id',
 				'value' => $course_id,
 			),
 		),
 		'orderby'        => 'meta_value_num',
-		'meta_key'       => '_lk_order',
+		'meta_key'       => '_lk_order', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 		'order'          => 'ASC',
 	)
 );
@@ -48,9 +49,13 @@ if ( $user_id ) {
 		foreach ( $modules as $module ) {
 			$module_lessons = get_posts(
 				array(
-					'post_type'      => 'lk_lesson',
-					'posts_per_page' => -1,
-					'meta_query'     => array(
+					'post_type'              => 'lk_lesson',
+					'posts_per_page'         => -1,
+					'no_found_rows'          => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+					'fields'                 => 'ids',
+					'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 						array(
 							'key'   => '_lk_module_id',
 							'value' => $module->ID,
@@ -58,7 +63,7 @@ if ( $user_id ) {
 					),
 				)
 			);
-			$all_lessons    = array_merge( $all_lessons, wp_list_pluck( $module_lessons, 'ID' ) );
+			$all_lessons    = array_merge( $all_lessons, $module_lessons );
 		}
 
 		$progress['total'] = count( $all_lessons );
@@ -419,19 +424,83 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 					);
 				}
 
+				// Batch-fetch all lesson IDs for all modules in one pass.
+				$all_lesson_ids = array();
+				foreach ( $modules as $module ) {
+					$lesson_ids_for_module = get_posts(
+						array(
+							'post_type'              => 'lk_lesson',
+							'posts_per_page'         => -1,
+							'meta_key'               => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+							'meta_value'             => $module->ID, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+							'fields'                 => 'ids',
+							'no_found_rows'          => true,
+							'update_post_meta_cache' => false,
+							'update_post_term_cache' => false,
+						)
+					);
+					$all_lesson_ids = array_merge( $all_lesson_ids, $lesson_ids_for_module );
+				}
+
+				// Batch-fetch quiz IDs for all lessons (one query).
+				$quiz_id_by_lesson = array();
+				if ( ! empty( $all_lesson_ids ) ) {
+					global $wpdb;
+					$placeholders = implode( ',', array_fill( 0, count( $all_lesson_ids ), '%d' ) );
+					// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					$quiz_rows = $wpdb->get_results(
+						$wpdb->prepare(
+							"SELECT p.ID as quiz_id, pm.meta_value as lesson_id
+							 FROM {$wpdb->posts} p
+							 INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_lk_lesson_id'
+							 WHERE p.post_type = 'lk_quiz' AND p.post_status = 'publish'
+							 AND pm.meta_value IN ({$placeholders})",
+							$all_lesson_ids
+						)
+					);
+					// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					foreach ( $quiz_rows as $row ) {
+						$quiz_id_by_lesson[ (int) $row->lesson_id ] = (int) $row->quiz_id;
+					}
+				}
+
+				// Batch-fetch quiz attempts for the current user (one query).
+				$attempt_by_quiz = array();
+				$batch_quiz_ids  = array_values( $quiz_id_by_lesson );
+				if ( ! empty( $batch_quiz_ids ) && is_user_logged_in() ) {
+					$placeholders2 = implode( ',', array_fill( 0, count( $batch_quiz_ids ), '%d' ) );
+					// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					$attempts = $wpdb->get_results(
+						$wpdb->prepare(
+							"SELECT quiz_id, score, passed
+							 FROM {$wpdb->prefix}learnkit_quiz_attempts
+							 WHERE user_id = %d AND quiz_id IN ({$placeholders2})
+							 ORDER BY completed_at DESC",
+							array_merge( array( get_current_user_id() ), $batch_quiz_ids )
+						)
+					);
+					// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					foreach ( $attempts as $attempt ) {
+						if ( ! isset( $attempt_by_quiz[ (int) $attempt->quiz_id ] ) ) {
+							$attempt_by_quiz[ (int) $attempt->quiz_id ] = $attempt;
+						}
+					}
+				}
+
 				foreach ( $modules as $index => $module ) :
 					$lessons = get_posts(
 						array(
 							'post_type'      => 'lk_lesson',
 							'posts_per_page' => -1,
-							'meta_query'     => array(
+							'no_found_rows'  => true,
+							'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 								array(
 									'key'   => '_lk_module_id',
 									'value' => $module->ID,
 								),
 							),
 							'orderby'        => 'meta_value_num',
-							'meta_key'       => '_lk_order',
+							'meta_key'       => '_lk_order', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 							'order'          => 'ASC',
 						)
 					);
@@ -465,34 +534,13 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 								</div>
 
 								<?php
-								// Check for lesson quiz.
-								// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-								$lesson_quiz = $wpdb->get_row(
-									$wpdb->prepare(
-										"SELECT p.ID, p.post_title FROM {$wpdb->posts} p 
-										INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
-										WHERE p.post_type = 'lk_quiz' 
-										AND pm.meta_key = '_lk_lesson_id' 
-										AND pm.meta_value = %d 
-										LIMIT 1",
-										$lesson->ID
-									)
-								);
+								// Use batch-fetched quiz/attempt data instead of per-lesson queries.
+								$lq_id       = isset( $quiz_id_by_lesson[ $lesson->ID ] ) ? $quiz_id_by_lesson[ $lesson->ID ] : 0;
+								$lesson_quiz = $lq_id ? get_post( $lq_id ) : null;
 								if ( $lesson_quiz ) :
-									// Check if user has taken this quiz.
-									$quiz_attempt = null;
-									if ( $is_enrolled && $user_id ) {
-										// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-										$quiz_attempt = $wpdb->get_row(
-											$wpdb->prepare(
-												"SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts 
-												WHERE user_id = %d AND quiz_id = %d 
-												ORDER BY score DESC, completed_at DESC 
-												LIMIT 1",
-												$user_id,
-												$lesson_quiz->ID
-											)
-										);
+									$quiz_attempt = $lq_id && isset( $attempt_by_quiz[ $lq_id ] ) ? $attempt_by_quiz[ $lq_id ] : null;
+									if ( ! $is_enrolled || ! $user_id ) {
+										$quiz_attempt = null;
 									}
 									?>
 									<div class="lk-lesson-item" style="padding-left: 48px; background: #f9f9f9;">

@@ -110,6 +110,7 @@ class LearnKit_Courses_Controller {
 			'post_type'      => 'lk_course',
 			'posts_per_page' => -1,
 			'post_status'    => array( 'publish', 'draft' ),
+			'no_found_rows'  => true,
 		);
 
 		$courses = get_posts( $args );
@@ -315,8 +316,9 @@ class LearnKit_Courses_Controller {
 				'post_type'      => 'lk_module',
 				'posts_per_page' => -1,
 				'post_status'    => 'any',
-				'meta_key'       => '_lk_course_id',
-				'meta_value'     => $course_id,
+				'no_found_rows'  => true,
+				'meta_key'       => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'orderby'        => 'menu_order',
 				'order'          => 'ASC',
 			)
@@ -331,8 +333,9 @@ class LearnKit_Courses_Controller {
 					'post_type'      => 'lk_lesson',
 					'posts_per_page' => -1,
 					'post_status'    => 'any',
-					'meta_key'       => '_lk_module_id',
-					'meta_value'     => $module->ID,
+					'no_found_rows'  => true,
+					'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'meta_value'     => $module->ID, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 					'orderby'        => 'menu_order',
 					'order'          => 'ASC',
 				)
@@ -373,20 +376,24 @@ class LearnKit_Courses_Controller {
 	 * @return   array Course data.
 	 */
 	private function prepare_course_response( $course ) {
-		$module_count = (int) ( new WP_Query(
+		$module_ids = get_posts(
 			array(
-				'post_type'      => 'lk_module',
-				'post_status'    => 'publish',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'post_type'              => 'lk_module',
+				'post_status'            => 'publish',
+				'posts_per_page'         => -1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+				'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					array(
 						'key'   => '_lk_course_id',
 						'value' => $course->ID,
 					),
 				),
 			)
-		) )->found_posts;
+		);
+		$module_count = count( $module_ids );
 
 		return array(
 			'id'             => $course->ID,

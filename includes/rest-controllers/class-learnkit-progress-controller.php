@@ -278,12 +278,14 @@ class LearnKit_Progress_Controller {
 
 		$module_ids = get_posts(
 			array(
-				'post_type'      => 'lk_module',
-				'posts_per_page' => -1,
-				'meta_key'       => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'meta_value'     => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
+				'post_type'              => 'lk_module',
+				'posts_per_page'         => -1,
+				'meta_key'               => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'             => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
 			)
 		);
 
@@ -292,12 +294,14 @@ class LearnKit_Progress_Controller {
 		if ( ! empty( $module_ids ) ) {
 			$lesson_ids = get_posts(
 				array(
-					'post_type'      => 'lk_lesson',
-					'posts_per_page' => -1,
-					'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-					'meta_value__in' => $module_ids,
-					'fields'         => 'ids',
-					'no_found_rows'  => true,
+					'post_type'              => 'lk_lesson',
+					'posts_per_page'         => -1,
+					'meta_key'               => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'meta_value__in'         => $module_ids,
+					'fields'                 => 'ids',
+					'no_found_rows'          => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
 				)
 			);
 
@@ -349,11 +353,11 @@ class LearnKit_Progress_Controller {
 			array(
 				'post_type'      => 'lk_lesson',
 				'posts_per_page' => -1,
-				'meta_key'       => '_lk_module_id',
-				'meta_value'     => $module_id,
+				'no_found_rows'  => true,
+				'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $module_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);
-
 		$total_lessons = count( $lessons );
 		$lesson_ids    = wp_list_pluck( $lessons, 'ID' );
 
@@ -438,12 +442,15 @@ class LearnKit_Progress_Controller {
 		// Get all lessons in this course.
 		$module_ids = get_posts(
 			array(
-				'post_type'      => 'lk_module',
-				'posts_per_page' => -1,
-				'post_status'    => 'publish',
-				'fields'         => 'ids',
-				'meta_key'       => '_lk_course_id',
-				'meta_value'     => (int) $course_id,
+				'post_type'              => 'lk_module',
+				'posts_per_page'         => -1,
+				'post_status'            => 'publish',
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+				'meta_key'               => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'             => (int) $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);
 
@@ -453,11 +460,14 @@ class LearnKit_Progress_Controller {
 
 		$lessons = get_posts(
 			array(
-				'post_type'      => 'lk_lesson',
-				'posts_per_page' => -1,
-				'post_status'    => 'publish',
-				'fields'         => 'ids',
-				'meta_query'     => array(
+				'post_type'              => 'lk_lesson',
+				'posts_per_page'         => -1,
+				'post_status'            => 'publish',
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+				'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					array(
 						'key'     => '_lk_module_id',
 						'value'   => $module_ids,

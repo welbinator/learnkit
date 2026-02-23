@@ -27,8 +27,9 @@ $lessons_query = new WP_Query(
 		'post_type'      => 'lk_lesson',
 		'posts_per_page' => -1,
 		'post_status'    => 'publish',
-		'meta_key'       => '_lk_module_id',
-		'meta_value'     => $module_id,
+		'no_found_rows'  => true,
+		'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+		'meta_value'     => $module_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 		'orderby'        => 'menu_order',
 		'order'          => 'ASC',
 	)
@@ -63,8 +64,9 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 			'post_type'      => 'lk_module',
 			'posts_per_page' => -1,
 			'post_status'    => 'publish',
-			'meta_key'       => '_lk_course_id',
-			'meta_value'     => $course_id,
+			'no_found_rows'  => true,
+			'meta_key'       => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value'     => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			'orderby'        => 'menu_order',
 			'order'          => 'ASC',
 		)
@@ -89,8 +91,9 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 				'post_type'      => 'lk_lesson',
 				'posts_per_page' => 1,
 				'post_status'    => 'publish',
-				'meta_key'       => '_lk_module_id',
-				'meta_value'     => $next_module->ID,
+				'no_found_rows'  => true,
+				'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $next_module->ID, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'orderby'        => 'menu_order',
 				'order'          => 'ASC',
 			)

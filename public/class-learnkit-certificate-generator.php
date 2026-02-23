@@ -117,12 +117,14 @@ class LearnKit_Certificate_Generator {
 		// Get module IDs for this course.
 		$module_ids = get_posts(
 			array(
-				'post_type'      => 'lk_module',
-				'posts_per_page' => -1,
-				'meta_key'       => '_lk_course_id',
-				'meta_value'     => $course_id,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
+				'post_type'              => 'lk_module',
+				'posts_per_page'         => -1,
+				'meta_key'               => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'             => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
 			)
 		);
 
@@ -131,11 +133,13 @@ class LearnKit_Certificate_Generator {
 		if ( ! empty( $module_ids ) ) {
 			$course_lessons = get_posts(
 				array(
-					'post_type'      => 'lk_lesson',
-					'posts_per_page' => -1,
-					'fields'         => 'ids',
-					'no_found_rows'  => true,
-					'meta_query'     => array(
+					'post_type'              => 'lk_lesson',
+					'posts_per_page'         => -1,
+					'fields'                 => 'ids',
+					'no_found_rows'          => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+					'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 						array(
 							'key'     => '_lk_module_id',
 							'value'   => $module_ids,

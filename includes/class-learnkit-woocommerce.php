@@ -126,6 +126,7 @@ class LearnKit_WooCommerce {
 				'posts_per_page' => -1,
 				'orderby'        => 'title',
 				'order'          => 'ASC',
+				'no_found_rows'  => true,
 			)
 		);
 
@@ -302,12 +303,15 @@ class LearnKit_WooCommerce {
 
 		$posts = get_posts(
 			array(
-				'post_type'      => 'product',
-				'post_status'    => 'publish',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
+				'post_type'              => 'product',
+				'post_status'            => 'publish',
+				'posts_per_page'         => -1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
 				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				'meta_query'     => array(
+				'meta_query'             => array(
 					array(
 						'key'     => '_learnkit_course_ids',
 						'value'   => 'i:' . $course_id . ';',

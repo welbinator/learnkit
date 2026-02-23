@@ -94,6 +94,8 @@ function learnkit_enroll_user( $user_id, $course_id, $source = 'manual', $expire
 		 */
 		do_action( 'learnkit_user_enrolled', $user_id, $course_id );
 
+		wp_cache_delete( 'learnkit_enrolled_' . $user_id . '_' . $course_id, 'learnkit' );
+
 		return (int) $existing->id;
 	}
 
@@ -123,6 +125,8 @@ function learnkit_enroll_user( $user_id, $course_id, $source = 'manual', $expire
 
 	/** This action is documented in includes/learnkit-enrollment-api.php */
 	do_action( 'learnkit_user_enrolled', $user_id, $course_id );
+
+	wp_cache_delete( 'learnkit_enrolled_' . $user_id . '_' . $course_id, 'learnkit' );
 
 	return $enrollment_id;
 }
@@ -177,6 +181,8 @@ function learnkit_unenroll_user( $user_id, $course_id ) {
 	 */
 	do_action( 'learnkit_user_unenrolled', $user_id, $course_id );
 
+	wp_cache_delete( 'learnkit_enrolled_' . $user_id . '_' . $course_id, 'learnkit' );
+
 	return true;
 }
 
@@ -202,6 +208,25 @@ function learnkit_is_enrolled( $user_id, $course_id ) {
 		return false;
 	}
 
+	$cache_key = 'learnkit_enrolled_' . $user_id . '_' . $course_id;
+	$cached    = wp_cache_get( $cache_key, 'learnkit' );
+
+	if ( false !== $cached ) {
+		/**
+		 * Filter whether a user can access a course.
+		 *
+		 * Membership plugins and other integrations can hook into this filter to
+		 * grant or restrict access independently of the enrollments table.
+		 *
+		 * @since 0.4.0
+		 *
+		 * @param bool $is_enrolled Whether the user has an active enrollment record.
+		 * @param int  $user_id     The user being checked.
+		 * @param int  $course_id   The course being checked.
+		 */
+		return (bool) apply_filters( 'learnkit_user_can_access_course', (bool) $cached, $user_id, $course_id );
+	}
+
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 	$is_enrolled = (bool) $wpdb->get_var(
 		$wpdb->prepare(
@@ -211,18 +236,9 @@ function learnkit_is_enrolled( $user_id, $course_id ) {
 		)
 	);
 
-	/**
-	 * Filter whether a user can access a course.
-	 *
-	 * Membership plugins and other integrations can hook into this filter to
-	 * grant or restrict access independently of the enrollments table.
-	 *
-	 * @since 0.4.0
-	 *
-	 * @param bool $is_enrolled Whether the user has an active enrollment record.
-	 * @param int  $user_id     The user being checked.
-	 * @param int  $course_id   The course being checked.
-	 */
+	wp_cache_set( $cache_key, $is_enrolled ? 1 : 0, 'learnkit', 300 );
+
+	/** This filter is documented in includes/learnkit-enrollment-api.php */
 	return (bool) apply_filters( 'learnkit_user_can_access_course', $is_enrolled, $user_id, $course_id );
 }
 
@@ -244,12 +260,14 @@ function learnkit_get_course_progress( $user_id, $course_id ) {
 
 	$module_ids = get_posts(
 		array(
-			'post_type'      => 'lk_module',
-			'posts_per_page' => -1,
-			'meta_key'       => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-			'meta_value'     => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
-			'fields'         => 'ids',
-			'no_found_rows'  => true,
+			'post_type'              => 'lk_module',
+			'posts_per_page'         => -1,
+			'meta_key'               => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value'             => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
 		)
 	);
 
@@ -263,12 +281,14 @@ function learnkit_get_course_progress( $user_id, $course_id ) {
 
 	$lesson_ids = get_posts(
 		array(
-			'post_type'      => 'lk_lesson',
-			'posts_per_page' => -1,
-			'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-			'meta_value__in' => $module_ids,
-			'fields'         => 'ids',
-			'no_found_rows'  => true,
+			'post_type'              => 'lk_lesson',
+			'posts_per_page'         => -1,
+			'meta_key'               => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value__in'         => $module_ids,
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
 		)
 	);
 
