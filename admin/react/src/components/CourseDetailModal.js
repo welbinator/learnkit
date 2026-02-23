@@ -324,7 +324,7 @@ const CourseDetailModal = ({
 										structure={structure}
 										onEditModule={onEditModule}
 										onDeleteModule={onDeleteModule}
-										onCreateLesson={onCreateLesson}
+										onCreateLesson={(moduleId, lessonTitle) => onCreateLesson(moduleId, lessonTitle, course?.id)}
 										onEditLesson={handleEditLesson}
 										onReorderModules={onReorderModules}
 										onEditQuiz={handleEditQuiz}

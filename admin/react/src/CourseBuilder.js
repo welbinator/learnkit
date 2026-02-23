@@ -160,14 +160,14 @@ const CourseBuilder = () => {
 		}
 	};
 
-	const handleCreateLesson = async (moduleId, lessonTitle) => {
+	const handleCreateLesson = async (moduleId, lessonTitle, courseId) => {
 		try {
 			await createLesson(moduleId, {
 				title: lessonTitle || __('New Lesson', 'learnkit'),
 			});
-			const courseId = selectedCourseId || selectedCourse?.id;
-			if (courseId) {
-				await loadCourseStructure(courseId);
+			const resolvedCourseId = courseId || selectedCourseId || selectedCourse?.id;
+			if (resolvedCourseId) {
+				await loadCourseStructure(resolvedCourseId);
 			}
 		} catch (error) {
 			console.error('Failed to create lesson:', error);
