@@ -194,7 +194,7 @@ const CourseDetailModal = ({
 								<div className="modules-section">
 									<div className="section-header">
 										<h3>{__('Modules', 'learnkit')} ({structure?.modules?.length || 0})</h3>
-										<Button variant="secondary" onClick={onCreateModule}>
+										<Button variant="secondary" onClick={() => onCreateModule(course?.id)}>
 											{__('Add Module', 'learnkit')}
 										</Button>
 									</div>

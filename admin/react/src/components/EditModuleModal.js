@@ -34,6 +34,7 @@ const EditModuleModal = ({ module, isOpen, onClose, onSave }) => {
 		onSave({
 			title: title.trim(),
 			description: description.trim(),
+			courseId: module?._courseId || null,
 		});
 
 		// Reset form
@@ -51,7 +52,7 @@ const EditModuleModal = ({ module, isOpen, onClose, onSave }) => {
 		return null;
 	}
 
-	const isEditing = !!module;
+	const isEditing = !!(module && !module._courseId);
 
 	return (
 		<Modal
