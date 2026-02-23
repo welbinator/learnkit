@@ -227,6 +227,29 @@ export async function reorderModules(courseId, moduleIds) {
 	});
 }
 
+export async function assignModuleToCourse(moduleId, courseId) {
+	return await apiRequest(`/modules/${moduleId}/assign-course`, {
+		method: 'POST',
+		body: { course_id: courseId },
+	});
+}
+
+export async function removeModuleFromCourse(moduleId, courseId) {
+	return await apiRequest(`/modules/${moduleId}/assign-course`, {
+		method: 'DELETE',
+		body: { course_id: courseId },
+	});
+}
+
+export async function reorderLessons(moduleId, lessonIds) {
+	return await apiRequest(`/modules/${moduleId}/reorder-lessons`, {
+		method: 'POST',
+		body: {
+			order: lessonIds,
+		},
+	});
+}
+
 /**
  * Get a single lesson by ID.
  */
