@@ -337,7 +337,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 
 							<?php
 							// Check for module quiz.
-							// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+							// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 							$module_quiz = $wpdb->get_row(
 								$wpdb->prepare(
 									"SELECT p.ID, p.post_title FROM {$wpdb->posts} p 
@@ -358,7 +358,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 								// Check if user has taken this quiz.
 								$module_quiz_attempt = null;
 								if ( $is_enrolled && $user_id ) {
-									// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+									// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 									$module_quiz_attempt = $wpdb->get_row(
 										$wpdb->prepare(
 											"SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts 
@@ -369,6 +369,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 											$module_quiz->ID
 										)
 									);
+									// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 								}
 								?>
 								<div class="lk-lesson-item" style="background: #fff3cd; border-top: 2px solid #ffc107;">
@@ -399,7 +400,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 
 				<?php
 				// Check for course-level quizzes.
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 				$course_quizzes = $wpdb->get_results(
 					$wpdb->prepare(
 						"SELECT p.ID, p.post_title FROM {$wpdb->posts} p 
@@ -416,6 +417,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 						$course_id
 					)
 				);
+				// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
 				if ( ! empty( $course_quizzes ) ) :
 					?>
@@ -435,7 +437,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 								// Check if user has taken this quiz.
 								$course_quiz_attempt = null;
 								if ( $is_enrolled && $user_id ) {
-									// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+									// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 									$course_quiz_attempt = $wpdb->get_row(
 										$wpdb->prepare(
 											"SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts 
@@ -447,6 +449,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 										)
 									);
 								}
+								// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 								?>
 								<div class="lk-lesson-item" style="background: #fff;">
 									<?php if ( $is_enrolled ) : ?>
