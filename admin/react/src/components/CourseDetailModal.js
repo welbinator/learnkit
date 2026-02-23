@@ -436,11 +436,10 @@ const CourseDetailModal = ({
 							setQuizModalOpen(false);
 							setSelectedLesson(null);
 						}}
-						lessonId={selectedLesson?.type === 'module' || selectedLesson?.type === 'course' ? null : selectedLesson?.id}
-						moduleId={selectedLesson?.type === 'module' ? selectedLesson.id : null}
+						lessonId={selectedLesson?.type === 'course' ? null : selectedLesson?.id}
 						courseId={selectedLesson?.type === 'course' || !selectedLesson?.id ? course.id : null}
 						lessonTitle={selectedLesson?.title || 'Quiz'}
-						contextType={selectedLesson?.type || 'lesson'}
+						contextType={selectedLesson?.type === 'course' ? 'course' : 'lesson'}
 					/>,
 					document.body
 				);

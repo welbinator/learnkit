@@ -333,65 +333,6 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 								<?php endif; ?>
 							<?php endforeach; ?>
 
-							<?php
-							// Check for module quiz.
-							// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-							$module_quiz = $wpdb->get_row(
-								$wpdb->prepare(
-									"SELECT p.ID, p.post_title FROM {$wpdb->posts} p 
-									INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
-									WHERE p.post_type = 'lk_quiz' 
-									AND pm.meta_key = '_lk_module_id' 
-									AND pm.meta_value = %d 
-									AND NOT EXISTS (
-										SELECT 1 FROM {$wpdb->postmeta} pm2 
-										WHERE pm2.post_id = p.ID 
-										AND pm2.meta_key = '_lk_lesson_id'
-									)
-									LIMIT 1",
-									$module->ID
-								)
-							);
-							if ( $module_quiz ) :
-								// Check if user has taken this quiz.
-								$module_quiz_attempt = null;
-								if ( $is_enrolled && $user_id ) {
-									// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-									$module_quiz_attempt = $wpdb->get_row(
-										$wpdb->prepare(
-											"SELECT * FROM {$wpdb->prefix}learnkit_quiz_attempts 
-											WHERE user_id = %d AND quiz_id = %d 
-											ORDER BY score DESC, completed_at DESC 
-											LIMIT 1",
-											$user_id,
-											$module_quiz->ID
-										)
-									);
-									// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-								}
-								?>
-								<div class="lk-lesson-item" style="background: #fff3cd; border-top: 2px solid #ffc107;">
-									<?php if ( $is_enrolled ) : ?>
-										<a href="<?php echo esc_url( get_permalink( $module_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #856404; font-weight: 600;">
-											🎯 Module Quiz: <?php echo esc_html( $module_quiz->post_title ); ?>
-											<?php if ( $module_quiz_attempt ) : ?>
-												<span style="font-size: 13px; margin-left: 8px; color: <?php echo $module_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
-													(<?php echo esc_html( $module_quiz_attempt->score ); ?>% - <?php echo $module_quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
-												</span>
-											<?php endif; ?>
-										</a>
-										<?php if ( $module_quiz_attempt ) : ?>
-											<span class="lk-lesson-status" style="color: <?php echo $module_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
-												<?php echo $module_quiz_attempt->passed ? '✓' : '✗'; ?>
-											</span>
-										<?php endif; ?>
-									<?php else : ?>
-										<span class="lk-lesson-title lk-lesson-locked" style="color: #999;">
-											🔒 Module Quiz: <?php echo esc_html( $module_quiz->post_title ); ?>
-										</span>
-									<?php endif; ?>
-								</div>
-							<?php endif; ?>
 						</div>
 					</div>
 				<?php endforeach; ?>

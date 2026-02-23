@@ -9,7 +9,7 @@ import { CSS } from '@dnd-kit/utilities';
  * 
  * Allows instructors to create and manage quiz questions for a lesson, module, or course.
  */
-const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => {
+const QuizBuilder = ({ lessonId, courseId, contextType, onClose }) => {
 	const [quiz, setQuiz] = useState(null);
 	const [questions, setQuestions] = useState([]);
 	const [settings, setSettings] = useState({
@@ -29,10 +29,8 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 		})
 	);
 
-	// Determine the context ID
-	const contextId = lessonId || moduleId || courseId;
+	const contextId = lessonId || courseId;
 
-	// Load quiz data
 	useEffect(() => {
 		if (contextId) {
 			loadQuiz();
@@ -42,12 +40,9 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 	const loadQuiz = async () => {
 		setLoading(true);
 		try {
-			// Build query param based on context type
 			let queryParam = '';
 			if (lessonId) {
 				queryParam = `lesson_id=${lessonId}`;
-			} else if (moduleId) {
-				queryParam = `module_id=${moduleId}`;
 			} else if (courseId) {
 				queryParam = `course_id=${courseId}`;
 			}
@@ -84,17 +79,13 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 	const saveQuiz = async () => {
 		setSaving(true);
 		try {
-			// Determine quiz title based on context
 			let quizTitle = 'Quiz';
 			if (lessonId) {
 				quizTitle = `Quiz for Lesson ${lessonId}`;
-			} else if (moduleId) {
-				quizTitle = `Quiz for Module ${moduleId}`;
 			} else if (courseId) {
 				quizTitle = `Quiz for Course ${courseId}`;
 			}
 
-			// Build meta object - only include the relevant ID field
 			const meta = {
 				_lk_passing_score: settings.passingScore,
 				_lk_time_limit: settings.timeLimit,
@@ -103,11 +94,8 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 				_lk_questions: JSON.stringify(questions)
 			};
 
-			// Add the appropriate context ID
 			if (lessonId) {
 				meta._lk_lesson_id = lessonId;
-			} else if (moduleId) {
-				meta._lk_module_id = moduleId;
 			} else if (courseId) {
 				meta._lk_course_id = courseId;
 			}
