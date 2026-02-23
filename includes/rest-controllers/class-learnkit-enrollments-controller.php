@@ -266,7 +266,7 @@ class LearnKit_Enrollments_Controller extends LearnKit_Base_Controller {
 		$course_id = (int) $request['course_id'];
 		$table     = $wpdb->prefix . 'learnkit_enrollments';
 
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$enrollments = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM $table WHERE course_id = %d ORDER BY enrolled_at DESC",
@@ -303,7 +303,7 @@ class LearnKit_Enrollments_Controller extends LearnKit_Base_Controller {
 		$user_id = (int) $request['user_id'];
 		$table   = $wpdb->prefix . 'learnkit_enrollments';
 
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$enrollments = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM $table WHERE user_id = %d ORDER BY enrolled_at DESC",

@@ -20,7 +20,7 @@ $attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
 
 // Get all quiz attempts.
 $attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
-$attempts       = $wpdb->get_results(
+$attempts = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 	$wpdb->prepare(
 		"SELECT 
 			a.*, 
