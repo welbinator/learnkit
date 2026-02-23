@@ -120,8 +120,8 @@ const CourseBuilder = () => {
 	};
 
 	// Module handlers
-	const handleCreateModule = () => {
-		setEditingModule(null);
+	const handleCreateModule = (courseId) => {
+		setEditingModule({ _courseId: courseId });
 		setShowModuleModal(true);
 	};
 
@@ -135,10 +135,10 @@ const CourseBuilder = () => {
 			if (editingModule) {
 				await updateModule(editingModule.id, moduleData);
 			} else {
-				await createModule(selectedCourseId, moduleData);
+				await createModule(moduleData.courseId, moduleData);
 			}
 			
-			await loadCourseStructure(selectedCourseId);
+			await loadCourseStructure(moduleData.courseId || selectedCourseId);
 			setShowModuleModal(false);
 			setEditingModule(null);
 		} catch (error) {
