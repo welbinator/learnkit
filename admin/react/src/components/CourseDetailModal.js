@@ -37,7 +37,6 @@ const CourseDetailModal = ({
 	const [accessType, setAccessType] = useState('free');
 	const [quizModalOpen, setQuizModalOpen] = useState(false);
 	const [selectedLesson, setSelectedLesson] = useState(null);
-	const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
 	const [editingLesson, setEditingLesson] = useState(null);
 
 	// "Add Existing Module" picker state.
@@ -103,8 +102,7 @@ const CourseDetailModal = ({
 	};
 
 	const handleEditLesson = (lesson) => {
-		setEditingLesson(lesson);
-		setLessonEditorOpen(true);
+		window.location.href = `/wp-admin/post.php?post=${lesson.id}&action=edit`;
 	};
 
 	const handleLessonSaved = () => {
