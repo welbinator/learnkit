@@ -108,6 +108,7 @@ const QuizModal = ({ isOpen, onClose, lessonId, courseId, lessonTitle, contextTy
 					<QuizBuilder 
 						lessonId={lessonId} 
 						courseId={courseId}
+						lessonTitle={lessonTitle}
 						contextType={contextType}
 						onClose={onClose}
 					/>
