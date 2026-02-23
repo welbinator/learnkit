@@ -120,7 +120,7 @@ class LearnKit_Quiz_Controller extends LearnKit_Base_Controller {
 		}
 
 		if ( ! empty( $meta_query ) ) {
-			$args['meta_query'] = $meta_query;
+			$args['meta_query'] = $meta_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Intentional meta query for quiz filtering; meta keys are indexed on activation.
 		}
 
 		$quizzes = get_posts( $args );
