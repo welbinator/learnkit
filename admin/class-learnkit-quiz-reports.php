@@ -43,11 +43,13 @@ class LearnKit_Quiz_Reports {
 	 * @since    0.4.0
 	 */
 	public function render_page() {
-		// Get filter params.
+		// Get filter params. These are read-only display filters for an admin report page — no data is modified, so nonce verification is not required here.
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
 		$quiz_id    = isset( $_GET['quiz_id'] ) ? absint( $_GET['quiz_id'] ) : 0;
 		$user_id    = isset( $_GET['user_id'] ) ? absint( $_GET['user_id'] ) : 0;
 		$passed     = isset( $_GET['passed'] ) ? sanitize_text_field( wp_unslash( $_GET['passed'] ) ) : '';
 		$export_csv = isset( $_GET['export'] ) && 'csv' === $_GET['export'];
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$filters  = array(
 			'quiz_id' => $quiz_id,
@@ -379,6 +381,6 @@ class LearnKit_Quiz_Reports {
 			);
 		}
 
-		fclose( $output );
+		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- php://output is a PHP stream, not a filesystem file; WP_Filesystem is not applicable here.
 	}
 }
