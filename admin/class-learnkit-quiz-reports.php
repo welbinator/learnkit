@@ -98,7 +98,7 @@ class LearnKit_Quiz_Reports {
 		$this->render_summary_stats( $attempts );
 		$this->render_attempts_table( $attempts );
 
-		echo '</div>'; // Close .wrap
+		echo '</div>'; // Close .wrap.
 	}
 
 	/**

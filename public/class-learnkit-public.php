@@ -240,7 +240,9 @@ class LearnKit_Public {
 		$answers = array();
 		foreach ( $questions as $question ) {
 			$field_name = 'question_' . $question['id'];
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified in handle_quiz_submission() before this method is called.
 			if ( isset( $_POST[ $field_name ] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified in handle_quiz_submission() before this method is called.
 				$answers[ $question['id'] ] = (int) $_POST[ $field_name ];
 			}
 		}
