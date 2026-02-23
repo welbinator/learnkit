@@ -32,6 +32,10 @@ function SortableModule({ moduleId, module, onEdit, onDelete, onCreateLesson, on
 	const [lessonTitle, setLessonTitle] = useState('');
 	const [localLessons, setLocalLessons] = useState(module?.lessons || []);
 
+	useEffect(() => {
+		setLocalLessons(module?.lessons || []);
+	}, [module?.lessons]);
+
 	const {
 		attributes,
 		listeners,
