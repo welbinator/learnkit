@@ -177,8 +177,8 @@ class LearnKit_Drip {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$enrolled_at = $wpdb->get_var(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-				"SELECT enrolled_at FROM $enrollments_table WHERE user_id = %d AND course_id = %d LIMIT 1",
+				'SELECT enrolled_at FROM %i WHERE user_id = %d AND course_id = %d LIMIT 1',
+				$enrollments_table,
 				(int) $user_id,
 				(int) $course_id
 			)

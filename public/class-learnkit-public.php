@@ -9,6 +9,10 @@
  * @subpackage LearnKit/public
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * The public-facing functionality of the plugin.
  *
@@ -195,7 +199,7 @@ class LearnKit_Public {
 		global $wpdb;
 		$attempts_allowed = (int) get_post_meta( $quiz_id, '_lk_attempts_allowed', true );
 		if ( $attempts_allowed > 0 ) {
-			$attempt_count = (int) $wpdb->get_var(
+			$attempt_count = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 				$wpdb->prepare(
 					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
 					"SELECT COUNT(*) FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE user_id = %d AND quiz_id = %d",
@@ -321,7 +325,7 @@ class LearnKit_Public {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'learnkit_quiz_attempts';
 
-		$wpdb->insert(
+		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Custom plugin table, no WP API equivalent.
 			$table_name,
 			array(
 				'user_id'      => $user_id,

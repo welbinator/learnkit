@@ -47,8 +47,8 @@ function learnkit_enroll_user( $user_id, $course_id, $source = 'manual', $expire
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 	$existing = $wpdb->get_row(
 		$wpdb->prepare(
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-			"SELECT id, status FROM $table WHERE user_id = %d AND course_id = %d",
+			'SELECT id, status FROM %i WHERE user_id = %d AND course_id = %d',
+			$table,
 			$user_id,
 			$course_id
 		)
@@ -302,7 +302,7 @@ function learnkit_get_course_progress( $user_id, $course_id ) {
 
 	$total          = count( $lesson_ids );
 	$placeholders   = implode( ',', array_fill( 0, $total, '%d' ) );
-	$progress_table = $wpdb->prefix . 'learnkit_progress';
+	$progress_table = esc_sql( $wpdb->prefix . 'learnkit_progress' );
 	$args           = array_merge( array( $user_id ), $lesson_ids );
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared

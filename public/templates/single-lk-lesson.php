@@ -9,6 +9,12 @@
  * @subpackage LearnKit/public/templates
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template-scoped variables, not true PHP globals.
+
 get_header();
 
 // Get current lesson.
@@ -239,7 +245,7 @@ if ( ! $is_available ) {
 					// Check if there's a required quiz that must be passed before completing.
 					global $wpdb;
 
-					$required_quiz = $wpdb->get_row(
+					$required_quiz = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 						$wpdb->prepare(
 							"SELECT p.ID FROM {$wpdb->posts} p
 							INNER JOIN {$wpdb->postmeta} pm_lesson ON p.ID = pm_lesson.post_id
@@ -263,8 +269,8 @@ if ( ! $is_available ) {
 						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 						$passing_attempt = $wpdb->get_var(
 							$wpdb->prepare(
-								// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-								"SELECT COUNT(*) FROM $attempts_table WHERE user_id = %d AND quiz_id = %d AND passed = 1",
+								'SELECT COUNT(*) FROM %i WHERE user_id = %d AND quiz_id = %d AND passed = 1',
+								$attempts_table,
 								get_current_user_id(),
 								(int) $required_quiz->ID
 							)
@@ -298,7 +304,7 @@ if ( ! $is_available ) {
 
 					<?php
 					// Check if there's any quiz for this lesson (for Take Quiz button).
-					$quiz = $wpdb->get_row(
+					$quiz = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 						$wpdb->prepare(
 							"SELECT ID FROM {$wpdb->posts} p
 							INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
@@ -409,4 +415,5 @@ if ( ! $is_available ) {
 </div>
 
 <?php
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 get_footer();

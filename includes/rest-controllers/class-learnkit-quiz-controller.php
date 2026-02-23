@@ -120,7 +120,7 @@ class LearnKit_Quiz_Controller extends LearnKit_Base_Controller {
 		}
 
 		if ( ! empty( $meta_query ) ) {
-			$args['meta_query'] = $meta_query;
+			$args['meta_query'] = $meta_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Intentional meta query for quiz filtering; meta keys are indexed on activation.
 		}
 
 		$quizzes = get_posts( $args );
@@ -197,7 +197,7 @@ class LearnKit_Quiz_Controller extends LearnKit_Base_Controller {
 			return null;
 		}
 
-		$attempt_count = (int) $wpdb->get_var(
+		$attempt_count = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 			$wpdb->prepare(
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
 				"SELECT COUNT(*) FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE user_id = %d AND quiz_id = %d",

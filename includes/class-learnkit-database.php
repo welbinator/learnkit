@@ -125,19 +125,19 @@ class LearnKit_Database {
 	public static function drop_tables() {
 		global $wpdb;
 
-		$enrollments_table   = $wpdb->prefix . 'learnkit_enrollments';
-		$progress_table      = $wpdb->prefix . 'learnkit_progress';
-		$quiz_attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
-		$email_queue_table   = $wpdb->prefix . 'learnkit_email_queue';
-		$email_prefs_table   = $wpdb->prefix . 'learnkit_email_preferences';
+		$enrollments_table   = esc_sql( $wpdb->prefix . 'learnkit_enrollments' );
+		$progress_table      = esc_sql( $wpdb->prefix . 'learnkit_progress' );
+		$quiz_attempts_table = esc_sql( $wpdb->prefix . 'learnkit_quiz_attempts' );
+		$email_queue_table   = esc_sql( $wpdb->prefix . 'learnkit_email_queue' );
+		$email_prefs_table   = esc_sql( $wpdb->prefix . 'learnkit_email_preferences' );
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.CodeAnalysis.DirectDB.UnescapedDBParameter
 		$wpdb->query( "DROP TABLE IF EXISTS $email_prefs_table" );
 		$wpdb->query( "DROP TABLE IF EXISTS $email_queue_table" );
 		$wpdb->query( "DROP TABLE IF EXISTS $quiz_attempts_table" );
 		$wpdb->query( "DROP TABLE IF EXISTS $progress_table" );
 		$wpdb->query( "DROP TABLE IF EXISTS $enrollments_table" );
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		delete_option( 'learnkit_db_version' );
 	}

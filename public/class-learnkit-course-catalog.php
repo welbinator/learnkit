@@ -11,6 +11,10 @@
  * @subpackage LearnKit/public
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Course Catalog functionality.
  *
@@ -125,7 +129,8 @@ class LearnKit_Course_Catalog {
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$enrolled_course_ids = $wpdb->get_col(
 				$wpdb->prepare(
-					"SELECT course_id FROM $enrollments_table WHERE user_id = %d AND status = 'active'",
+					'SELECT course_id FROM %i WHERE user_id = %d AND status = \'active\'',
+					$enrollments_table,
 					$user_id
 				)
 			);
@@ -356,7 +361,8 @@ class LearnKit_Course_Catalog {
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$existing = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM $enrollments_table WHERE user_id = %d AND course_id = %d",
+				'SELECT * FROM %i WHERE user_id = %d AND course_id = %d',
+				$enrollments_table,
 				$user_id,
 				$course_id
 			)

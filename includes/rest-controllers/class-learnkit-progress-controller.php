@@ -107,10 +107,11 @@ class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 
 		$table = $wpdb->prefix . 'learnkit_progress';
 
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$existing = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM $table WHERE user_id = %d AND lesson_id = %d",
+				'SELECT * FROM %i WHERE user_id = %d AND lesson_id = %d',
+				$table,
 				$user_id,
 				$lesson_id
 			)
@@ -128,7 +129,7 @@ class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 		}
 
 		// Insert new progress record.
-		$inserted = $wpdb->insert(
+		$inserted = $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Custom plugin table, no WP API equivalent.
 			$table,
 			array(
 				'user_id'      => $user_id,
@@ -168,7 +169,7 @@ class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 	private function check_quiz_gate( $lesson_id, $user_id ) {
 		global $wpdb;
 
-		$required_quiz = $wpdb->get_row(
+		$required_quiz = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 			$wpdb->prepare(
 				"SELECT p.ID FROM {$wpdb->posts} p
 				INNER JOIN {$wpdb->postmeta} pm_lesson ON p.ID = pm_lesson.post_id
@@ -189,11 +190,11 @@ class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 		}
 
 		$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$passing_attempt = $wpdb->get_var(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-				"SELECT COUNT(*) FROM $attempts_table WHERE user_id = %d AND quiz_id = %d AND passed = 1",
+				'SELECT COUNT(*) FROM %i WHERE user_id = %d AND quiz_id = %d AND passed = 1',
+				$attempts_table,
 				$user_id,
 				(int) $required_quiz->ID
 			)
@@ -226,7 +227,7 @@ class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 
 		$table = $wpdb->prefix . 'learnkit_progress';
 
-		$deleted = $wpdb->delete(
+		$deleted = $wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 			$table,
 			array(
 				'user_id'   => $user_id,
@@ -297,14 +298,14 @@ class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 			);
 
 			if ( ! empty( $lesson_ids ) ) {
-				$table        = $wpdb->prefix . 'learnkit_progress';
+				$table        = esc_sql( $wpdb->prefix . 'learnkit_progress' );
 				$placeholders = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
 				$args         = array_merge( array( $user_id ), $lesson_ids );
 
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				$completed_lesson_ids = array_map(
 					'intval',
-					(array) $wpdb->get_col(
+					(array) $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 						$wpdb->prepare(
 							// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
 							"SELECT lesson_id FROM {$table} WHERE user_id = %d AND lesson_id IN ({$placeholders})",
@@ -365,10 +366,10 @@ class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 		}
 
 		// Get completed lessons.
-		$table        = $wpdb->prefix . 'learnkit_progress';
+		$table        = esc_sql( $wpdb->prefix . 'learnkit_progress' );
 		$placeholders = implode( ',', array_fill( 0, count( $lesson_ids ), '%d' ) );
 
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$completed = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT lesson_id FROM $table WHERE user_id = %d AND lesson_id IN ($placeholders)",
@@ -473,7 +474,7 @@ class LearnKit_Progress_Controller extends LearnKit_Base_Controller {
 		}
 
 		$total        = count( $lessons );
-		$progress_tbl = $wpdb->prefix . 'learnkit_progress';
+		$progress_tbl = esc_sql( $wpdb->prefix . 'learnkit_progress' );
 		$placeholders = implode( ',', array_fill( 0, $total, '%d' ) );
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared

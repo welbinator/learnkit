@@ -6,6 +6,8 @@
  * @since   0.4.0
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Admin page-scoped variables, not true PHP globals.
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -20,7 +22,7 @@ $attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
 
 // Get all quiz attempts.
 $attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
-$attempts       = $wpdb->get_results(
+$attempts = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 	$wpdb->prepare(
 		"SELECT 
 			a.*, 

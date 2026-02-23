@@ -121,8 +121,8 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 		);
 
 		if ( ! empty( $request['course_id'] ) ) {
-			$args['meta_key']   = '_lk_course_id';
-			$args['meta_value'] = (int) $request['course_id'];
+			$args['meta_key']   = '_lk_course_id'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional meta query; indexed by plugin on activation.
+			$args['meta_value'] = (int) $request['course_id']; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 		}
 
 		$modules = get_posts( $args );

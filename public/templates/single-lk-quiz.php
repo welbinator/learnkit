@@ -6,6 +6,8 @@
  * @since   0.4.0
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template-scoped variables, not true PHP globals.
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -46,10 +48,10 @@ $attempts = array();
 if ( $user_id ) {
 	global $wpdb;
 	$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
-	$attempts       = $wpdb->get_results(
+	$attempts       = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 		$wpdb->prepare(
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-			"SELECT * FROM $attempts_table WHERE user_id = %d AND quiz_id = %d ORDER BY completed_at DESC",
+			'SELECT * FROM %i WHERE user_id = %d AND quiz_id = %d ORDER BY completed_at DESC',
+			$attempts_table,
 			$user_id,
 			$quiz_id
 		)
@@ -86,11 +88,11 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 		if ( $user_id ) {
 			global $wpdb;
 			$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$latest_attempt = $wpdb->get_row(
 				$wpdb->prepare(
-					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-					"SELECT * FROM $attempts_table WHERE user_id = %d AND quiz_id = %d ORDER BY completed_at DESC LIMIT 1",
+					'SELECT * FROM %i WHERE user_id = %d AND quiz_id = %d ORDER BY completed_at DESC LIMIT 1',
+					$attempts_table,
 					$user_id,
 					$quiz_id
 				)
@@ -508,4 +510,5 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 </div>
 
 <?php
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 get_footer();

@@ -9,6 +9,10 @@
  * @subpackage LearnKit/includes
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * LearnKit Emails class.
  *
@@ -412,8 +416,8 @@ class LearnKit_Emails {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-				"SELECT enabled FROM $table WHERE user_id = %d AND email_type = %s LIMIT 1",
+				'SELECT enabled FROM %i WHERE user_id = %d AND email_type = %s LIMIT 1',
+				$table,
 				$user_id,
 				$email_type
 			)
