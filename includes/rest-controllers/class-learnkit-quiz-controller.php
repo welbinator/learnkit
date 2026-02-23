@@ -86,7 +86,6 @@ class LearnKit_Quiz_Controller extends LearnKit_Base_Controller {
 	 */
 	public function get_quizzes( $request ) {
 		$lesson_id = $request->get_param( 'lesson_id' );
-		$module_id = $request->get_param( 'module_id' );
 		$course_id = $request->get_param( 'course_id' );
 
 		$args = array(
@@ -95,20 +94,12 @@ class LearnKit_Quiz_Controller extends LearnKit_Base_Controller {
 			'post_status'    => 'any',
 		);
 
-		// Build meta query based on which ID is provided.
 		$meta_query = array();
 
 		if ( $lesson_id ) {
 			$meta_query[] = array(
 				'key'   => '_lk_lesson_id',
 				'value' => $lesson_id,
-			);
-		}
-
-		if ( $module_id ) {
-			$meta_query[] = array(
-				'key'   => '_lk_module_id',
-				'value' => $module_id,
 			);
 		}
 
@@ -132,7 +123,6 @@ class LearnKit_Quiz_Controller extends LearnKit_Base_Controller {
 				'title' => $quiz->post_title,
 				'meta'  => array(
 					'_lk_lesson_id'            => get_post_meta( $quiz->ID, '_lk_lesson_id', true ),
-					'_lk_module_id'            => get_post_meta( $quiz->ID, '_lk_module_id', true ),
 					'_lk_course_id'            => get_post_meta( $quiz->ID, '_lk_course_id', true ),
 					'_lk_passing_score'        => get_post_meta( $quiz->ID, '_lk_passing_score', true ),
 					'_lk_time_limit'           => get_post_meta( $quiz->ID, '_lk_time_limit', true ),

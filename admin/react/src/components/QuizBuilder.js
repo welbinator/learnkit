@@ -9,8 +9,9 @@ import { CSS } from '@dnd-kit/utilities';
  * 
  * Allows instructors to create and manage quiz questions for a lesson, module, or course.
  */
-const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => {
+const QuizBuilder = ({ lessonId, courseId, lessonTitle, contextType, onClose }) => {
 	const [quiz, setQuiz] = useState(null);
+	const [quizTitle, setQuizTitle] = useState('');
 	const [questions, setQuestions] = useState([]);
 	const [settings, setSettings] = useState({
 		passingScore: 70,
@@ -29,10 +30,8 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 		})
 	);
 
-	// Determine the context ID
-	const contextId = lessonId || moduleId || courseId;
+	const contextId = lessonId || courseId;
 
-	// Load quiz data
 	useEffect(() => {
 		if (contextId) {
 			loadQuiz();
@@ -42,12 +41,9 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 	const loadQuiz = async () => {
 		setLoading(true);
 		try {
-			// Build query param based on context type
 			let queryParam = '';
 			if (lessonId) {
 				queryParam = `lesson_id=${lessonId}`;
-			} else if (moduleId) {
-				queryParam = `module_id=${moduleId}`;
 			} else if (courseId) {
 				queryParam = `course_id=${courseId}`;
 			}
@@ -64,6 +60,7 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 				if (data.length > 0) {
 					const quizData = data[0];
 					setQuiz(quizData);
+					setQuizTitle(quizData.title || '');
 					setQuestions(JSON.parse(quizData.meta._lk_questions || '[]'));
 					setSettings({
 						passingScore: parseInt(quizData.meta._lk_passing_score) || 70,
@@ -71,6 +68,10 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 						attemptsAllowed: parseInt(quizData.meta._lk_attempts_allowed) || 0,
 						requiredToComplete: quizData.meta._lk_required_to_complete === '1' || quizData.meta._lk_required_to_complete === true
 					});
+				} else {
+					// New quiz — default title from lesson title
+					const defaultTitle = lessonTitle ? `${lessonTitle} Quiz` : (courseId ? 'Course Quiz' : 'Quiz');
+					setQuizTitle(defaultTitle);
 				}
 			}
 		} catch (error) {
@@ -84,17 +85,6 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 	const saveQuiz = async () => {
 		setSaving(true);
 		try {
-			// Determine quiz title based on context
-			let quizTitle = 'Quiz';
-			if (lessonId) {
-				quizTitle = `Quiz for Lesson ${lessonId}`;
-			} else if (moduleId) {
-				quizTitle = `Quiz for Module ${moduleId}`;
-			} else if (courseId) {
-				quizTitle = `Quiz for Course ${courseId}`;
-			}
-
-			// Build meta object - only include the relevant ID field
 			const meta = {
 				_lk_passing_score: settings.passingScore,
 				_lk_time_limit: settings.timeLimit,
@@ -103,11 +93,8 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 				_lk_questions: JSON.stringify(questions)
 			};
 
-			// Add the appropriate context ID
 			if (lessonId) {
 				meta._lk_lesson_id = lessonId;
-			} else if (moduleId) {
-				meta._lk_module_id = moduleId;
 			} else if (courseId) {
 				meta._lk_course_id = courseId;
 			}
@@ -214,6 +201,17 @@ const QuizBuilder = ({ lessonId, moduleId, courseId, contextType, onClose }) => 
 
 	return (
 		<div className="lk-quiz-builder">
+			{/* Quiz Title */}
+			<div className="lk-quiz-title-field" style={{ marginBottom: '24px' }}>
+				<label style={{ display: 'block', fontWeight: 600, marginBottom: '4px' }}>Quiz Title</label>
+				<input
+					type="text"
+					value={quizTitle}
+					onChange={(e) => setQuizTitle(e.target.value)}
+					style={{ width: '100%', padding: '8px 12px', fontSize: '15px', border: '1px solid #dcdcde', borderRadius: '4px' }}
+				/>
+			</div>
+
 			{/* Settings Section */}
 			<div className="lk-quiz-settings">
 				<h3>Quiz Settings</h3>

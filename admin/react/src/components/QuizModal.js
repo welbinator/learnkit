@@ -7,8 +7,7 @@ import QuizBuilder from './QuizBuilder';
  * 
  * Modal wrapper for the Quiz Builder.
  */
-const QuizModal = ({ isOpen, onClose, lessonId, moduleId, courseId, lessonTitle, contextType }) => {
-	console.log('QuizModal render:', { isOpen, lessonId, moduleId, courseId, contextType });
+const QuizModal = ({ isOpen, onClose, lessonId, courseId, lessonTitle, contextType }) => {
 	
 	if (!isOpen) {
 		console.log('QuizModal: isOpen is false, returning null');
@@ -21,14 +20,11 @@ const QuizModal = ({ isOpen, onClose, lessonId, moduleId, courseId, lessonTitle,
 	let modalTitle = 'Create Quiz';
 	if (contextType === 'lesson' && lessonTitle) {
 		modalTitle = `Quiz for Lesson: ${lessonTitle}`;
-	} else if (contextType === 'module' && lessonTitle) {
-		modalTitle = `Quiz for Module: ${lessonTitle}`;
 	} else if (contextType === 'course') {
 		modalTitle = 'Course Quiz';
 	}
 
-	// Pass the appropriate ID to QuizBuilder
-	const quizContextId = lessonId || moduleId || courseId;
+	const quizContextId = lessonId || courseId;
 
 	console.log('About to return Modal component...');
 
@@ -111,8 +107,8 @@ const QuizModal = ({ isOpen, onClose, lessonId, moduleId, courseId, lessonTitle,
 				<div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
 					<QuizBuilder 
 						lessonId={lessonId} 
-						moduleId={moduleId}
 						courseId={courseId}
+						lessonTitle={lessonTitle}
 						contextType={contextType}
 						onClose={onClose}
 					/>

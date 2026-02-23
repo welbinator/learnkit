@@ -62,7 +62,6 @@ foreach ( $lessons as $index => $l ) {
 
 // Check if we're on last lesson of module - find next module's first lesson.
 $next_module_first_lesson = null;
-$next_module_quiz         = null;
 if ( ! $next_lesson_id && $course_id && $module_id ) {
 	// Get all modules in this course.
 	$modules_query = new WP_Query(
@@ -89,7 +88,7 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 		}
 	}
 
-	// If there's a next module, get its first lesson — or its quiz if it has no lessons.
+	// If there's a next module, get its first lesson.
 	if ( null !== $current_module_idx && isset( $modules[ $current_module_idx + 1 ] ) ) {
 		$next_module    = $modules[ $current_module_idx + 1 ];
 		$next_mod_query = new WP_Query(
@@ -111,29 +110,6 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 				'title'       => $next_mod_query->posts[0]->post_title,
 				'module_name' => $next_module->post_title,
 			);
-		} else {
-			// No lessons in next module — check for a quiz instead.
-			global $wpdb;
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$module_quiz = $wpdb->get_row(
-				$wpdb->prepare(
-					"SELECT p.ID, p.post_title FROM {$wpdb->posts} p
-					INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-					WHERE p.post_type = 'lk_quiz'
-					AND p.post_status = 'publish'
-					AND pm.meta_key = '_lk_module_id'
-					AND pm.meta_value = %d
-					LIMIT 1",
-					$next_module->ID
-				)
-			);
-			if ( $module_quiz ) {
-				$next_module_quiz = array(
-					'id'          => $module_quiz->ID,
-					'title'       => $module_quiz->post_title,
-					'module_name' => $next_module->post_title,
-				);
-			}
 		}
 	}
 }
@@ -368,13 +344,6 @@ if ( ! $is_available ) {
 						<div style="display: flex; flex-direction: column; align-items: flex-end;">
 							<span style="font-size: 12px; opacity: 0.8;">Next Module:</span>
 							<span><?php echo esc_html( $next_module_first_lesson['module_name'] ); ?> <span class="arrow">→</span></span>
-						</div>
-					</a>
-				<?php elseif ( $next_module_quiz ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $next_module_quiz['id'] ) ); ?>" class="learnkit-nav-button next next-module btn--primary">
-						<div style="display: flex; flex-direction: column; align-items: flex-end;">
-							<span style="font-size: 12px; opacity: 0.8;">Next: <?php echo esc_html( $next_module_quiz['module_name'] ); ?></span>
-							<span>📝 Take Module Quiz <span class="arrow">→</span></span>
 						</div>
 					</a>
 				<?php else : ?>
