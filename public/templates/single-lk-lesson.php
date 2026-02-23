@@ -239,7 +239,7 @@ if ( ! $is_available ) {
 					// Check if there's a required quiz that must be passed before completing.
 					global $wpdb;
 
-					$required_quiz = $wpdb->get_row(
+					$required_quiz = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 						$wpdb->prepare(
 							"SELECT p.ID FROM {$wpdb->posts} p
 							INNER JOIN {$wpdb->postmeta} pm_lesson ON p.ID = pm_lesson.post_id
@@ -298,7 +298,7 @@ if ( ! $is_available ) {
 
 					<?php
 					// Check if there's any quiz for this lesson (for Take Quiz button).
-					$quiz = $wpdb->get_row(
+					$quiz = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table, no WP API equivalent.
 						$wpdb->prepare(
 							"SELECT ID FROM {$wpdb->posts} p
 							INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
