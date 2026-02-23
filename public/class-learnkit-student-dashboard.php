@@ -196,7 +196,16 @@ class LearnKit_Student_Dashboard {
 				</div>
 				<div class="course-actions">
 					<?php if ( 100 === $progress_percent ) : ?>
-						<a href="<?php echo esc_url( add_query_arg( 'download_certificate', $course_id, home_url() ) ); ?>" class="button button-certificate">
+						<?php
+						$cert_url = add_query_arg(
+							array(
+								'download_certificate' => $course_id,
+								'_wpnonce'             => wp_create_nonce( 'learnkit_certificate_' . $course_id ),
+							),
+							home_url()
+						);
+						?>
+						<a href="<?php echo esc_url( $cert_url ); ?>" class="button button-certificate">
 							<?php esc_html_e( 'Download Certificate', 'learnkit' ); ?>
 						</a>
 					<?php else : ?>

@@ -446,9 +446,14 @@ class LearnKit_Courses_Controller {
 	 * Check write permission.
 	 *
 	 * @since    0.2.13
+	 * @param    WP_REST_Request $request Full request data.
 	 * @return   bool True if user can write.
 	 */
-	public function check_write_permission() {
+	public function check_write_permission( $request ) {
+		$id = isset( $request['id'] ) ? (int) $request['id'] : 0;
+		if ( $id ) {
+			return current_user_can( 'edit_post', $id );
+		}
 		return current_user_can( 'edit_posts' );
 	}
 }

@@ -295,12 +295,25 @@ class LearnKit_Modules_Controller {
 	 * @return   WP_REST_Response Response object.
 	 */
 	public function reorder_modules( $request ) {
-		$order = $request['order'];
+		$order     = $request['order'];
+		$course_id = (int) $request['id'];
 
 		foreach ( $order as $index => $module_id ) {
+			$module_id = (int) $module_id;
+			$module    = get_post( $module_id );
+			if ( ! $module || 'lk_module' !== $module->post_type ) {
+				continue;
+			}
+			// Verify it belongs to the course in the URL.
+			if ( (int) get_post_meta( $module_id, '_lk_course_id', true ) !== $course_id ) {
+				continue;
+			}
+			if ( ! current_user_can( 'edit_post', $module_id ) ) {
+				continue;
+			}
 			wp_update_post(
 				array(
-					'ID'         => (int) $module_id,
+					'ID'         => $module_id,
 					'menu_order' => $index,
 				)
 			);
@@ -381,9 +394,14 @@ class LearnKit_Modules_Controller {
 	 * Check write permission.
 	 *
 	 * @since    0.2.13
+	 * @param    WP_REST_Request $request Full request data.
 	 * @return   bool True if user can write.
 	 */
-	public function check_write_permission() {
+	public function check_write_permission( $request ) {
+		$id = isset( $request['id'] ) ? (int) $request['id'] : 0;
+		if ( $id ) {
+			return current_user_can( 'edit_post', $id );
+		}
 		return current_user_can( 'edit_posts' );
 	}
 }

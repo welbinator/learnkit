@@ -141,6 +141,11 @@ class LearnKit_Enrollments_Controller {
 			);
 		}
 
+		// Non-admins can only self-enroll in published courses.
+		if ( ! current_user_can( 'edit_posts' ) && 'publish' !== $course->post_status ) {
+			return new WP_REST_Response( array( 'message' => __( 'Course not available.', 'learnkit' ) ), 403 );
+		}
+
 		// Non-admins can only enroll themselves in free courses.
 		$current_user_id = get_current_user_id();
 		if ( ! current_user_can( 'edit_posts' ) ) {
@@ -241,8 +246,10 @@ class LearnKit_Enrollments_Controller {
 		foreach ( $enrollments as &$enrollment ) {
 			$user = get_user_by( 'id', $enrollment['user_id'] );
 			if ( $user ) {
-				$enrollment['user_name']  = $user->display_name;
-				$enrollment['user_email'] = $user->user_email;
+				$enrollment['user_name'] = $user->display_name;
+				if ( current_user_can( 'manage_options' ) ) {
+					$enrollment['user_email'] = $user->user_email;
+				}
 			}
 		}
 
@@ -312,9 +319,10 @@ class LearnKit_Enrollments_Controller {
 	 * @return   bool True if user can access.
 	 */
 	public function check_user_permission( $request ) {
-		$user_id         = (int) $request['user_id'];
-		$current_user_id = get_current_user_id();
-
-		return $current_user_id === $user_id || current_user_can( 'edit_posts' );
+		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+		$requested_id = isset( $request['user_id'] ) ? (int) $request['user_id'] : 0;
+		return get_current_user_id() === $requested_id || current_user_can( 'manage_options' );
 	}
 }

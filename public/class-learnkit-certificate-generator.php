@@ -36,12 +36,23 @@ class LearnKit_Certificate_Generator {
 	 * @since    0.3.0
 	 */
 	public function handle_certificate_download() {
-		if ( ! isset( $_GET['download_certificate'] ) || ! is_user_logged_in() ) {
+		if ( ! isset( $_GET['download_certificate'] ) ) {
 			return;
 		}
 
+		if ( ! is_user_logged_in() ) {
+			wp_safe_redirect( wp_login_url( get_permalink() ) );
+			exit;
+		}
+
 		$course_id = intval( $_GET['download_certificate'] );
-		$user_id   = get_current_user_id();
+
+		$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $nonce, 'learnkit_certificate_' . $course_id ) ) {
+			wp_die( esc_html__( 'Security check failed.', 'learnkit' ) );
+		}
+
+		$user_id = get_current_user_id();
 
 		// Verify user is enrolled.
 		if ( ! $this->is_user_enrolled( $user_id, $course_id ) ) {

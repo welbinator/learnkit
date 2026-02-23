@@ -96,6 +96,18 @@ class LearnKit_Progress_Controller {
 			);
 		}
 
+		// Resolve lesson → module → course chain.
+		$module_id = (int) get_post_meta( $lesson_id, '_lk_module_id', true );
+		$course_id = $module_id ? (int) get_post_meta( $module_id, '_lk_course_id', true ) : 0;
+
+		// Require enrollment.
+		if ( $course_id && ! learnkit_is_enrolled( $user_id, $course_id ) ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'You are not enrolled in this course.', 'learnkit' ) ),
+				403
+			);
+		}
+
 		// Backend gate: enforce required quiz passage.
 		$gate_error = $this->check_quiz_gate( $lesson_id, $user_id );
 		if ( $gate_error instanceof WP_REST_Response ) {
@@ -411,10 +423,19 @@ class LearnKit_Progress_Controller {
 	 * Check user permission.
 	 *
 	 * @since    0.2.14
-	 * @return   bool True if user is logged in.
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   bool True if user is logged in and authorised.
 	 */
-	public function check_user_permission() {
-		return is_user_logged_in();
+	public function check_user_permission( $request ) {
+		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+		$requested_id = isset( $request['user_id'] ) ? (int) $request['user_id'] : 0;
+		// For the mark-complete POST endpoint, no user_id in URL — only check login.
+		if ( 0 === $requested_id ) {
+			return true;
+		}
+		return get_current_user_id() === $requested_id || current_user_can( 'manage_options' );
 	}
 
 	/**

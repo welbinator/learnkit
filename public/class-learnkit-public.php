@@ -192,16 +192,43 @@ class LearnKit_Public {
 		$questions     = $quiz_data['questions'];
 		$passing_score = $quiz_data['passing_score'];
 
+		// Enforce attempt limits server-side (form POST path).
+		global $wpdb;
+		$attempts_allowed = (int) get_post_meta( $quiz_id, '_lk_attempts_allowed', true );
+		if ( $attempts_allowed > 0 ) {
+			$attempt_count = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+					"SELECT COUNT(*) FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE user_id = %d AND quiz_id = %d",
+					$user_id,
+					$quiz_id
+				)
+			);
+			if ( $attempt_count >= $attempts_allowed ) {
+				wp_die( esc_html__( 'You have reached the maximum number of attempts for this quiz.', 'learnkit' ) );
+			}
+		}
+
 		$answers    = $this->collect_answers( $questions );
 		$score_data = $this->grade_quiz( $questions, $answers, $passing_score );
 
 		$this->save_quiz_attempt( $user_id, $quiz_id, $score_data, $answers );
 
+		$result_token = wp_generate_password( 16, false );
+		set_transient(
+			'lk_quiz_result_' . $user_id . '_' . $quiz_id . '_' . $result_token,
+			array(
+				'score'         => $score_data['score_percentage'],
+				'passed'        => $score_data['passed'],
+				'correct_count' => isset( $score_data['correct_count'] ) ? $score_data['correct_count'] : 0,
+				'total'         => isset( $score_data['total_questions'] ) ? $score_data['total_questions'] : count( $questions ),
+			),
+			300 // 5 minutes.
+		);
 		$redirect_url = add_query_arg(
 			array(
-				'quiz_result' => 'submitted',
-				'score'       => $score_data['score_percentage'],
-				'passed'      => $score_data['passed'] ? '1' : '0',
+				'quiz_result'  => 'submitted',
+				'result_token' => $result_token,
 			),
 			get_permalink( $quiz_id )
 		);

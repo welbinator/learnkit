@@ -144,6 +144,26 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 		$answers = $request->get_param( 'answers' );
 		$user_id = get_current_user_id();
 
+		// Enforce attempt limits server-side.
+		global $wpdb;
+		$attempts_allowed = (int) get_post_meta( $quiz_id, '_lk_attempts_allowed', true );
+		if ( $attempts_allowed > 0 ) {
+			$attempt_count = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+					"SELECT COUNT(*) FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE user_id = %d AND quiz_id = %d",
+					$user_id,
+					$quiz_id
+				)
+			);
+			if ( $attempt_count >= $attempts_allowed ) {
+				return new WP_REST_Response(
+					array( 'message' => __( 'You have reached the maximum number of attempts for this quiz.', 'learnkit' ) ),
+					403
+				);
+			}
+		}
+
 		// Get quiz data.
 		$questions_json = get_post_meta( $quiz_id, '_lk_questions', true );
 		$questions      = json_decode( $questions_json, true );
@@ -179,7 +199,6 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 		$passed     = $percentage >= $passing_score;
 
 		// Save attempt.
-		global $wpdb;
 		$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching

@@ -249,8 +249,17 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 	<?php
 	// Show results if quiz was just submitted.
 	if ( isset( $_GET['quiz_result'] ) && 'submitted' === $_GET['quiz_result'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$result_score  = isset( $_GET['score'] ) ? (int) $_GET['score'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$result_passed = isset( $_GET['passed'] ) && '1' === $_GET['passed']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$result_data  = array();
+		$result_token = isset( $_GET['result_token'] ) ? sanitize_text_field( wp_unslash( $_GET['result_token'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( $result_token && is_user_logged_in() ) {
+			$transient_key = 'lk_quiz_result_' . get_current_user_id() . '_' . $quiz_id . '_' . $result_token;
+			$result_data   = get_transient( $transient_key );
+			if ( $result_data ) {
+				delete_transient( $transient_key ); // One-time use.
+			}
+		}
+		$result_score  = isset( $result_data['score'] ) ? (int) $result_data['score'] : 0;
+		$result_passed = isset( $result_data['passed'] ) ? (bool) $result_data['passed'] : false;
 
 		// Load the most recent attempt for answer review (Option C).
 		$latest_attempt   = null;
