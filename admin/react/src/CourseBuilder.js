@@ -132,7 +132,8 @@ const CourseBuilder = () => {
 
 	const handleSaveModule = async (moduleData) => {
 		try {
-			if (editingModule) {
+			const isEditing = editingModule && editingModule.id;
+			if (isEditing) {
 				await updateModule(editingModule.id, moduleData);
 			} else {
 				await createModule(moduleData.courseId, moduleData);
