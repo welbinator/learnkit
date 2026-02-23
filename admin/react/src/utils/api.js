@@ -281,6 +281,34 @@ export async function deleteEnrollment(enrollmentId) {
 }
 
 /**
+ * Get all lessons (optionally filtered by module_id).
+ */
+export async function getAllLessons( moduleId ) {
+	const endpoint = moduleId ? `/lessons?module_id=${moduleId}` : '/lessons';
+	return await apiRequest( endpoint );
+}
+
+/**
+ * Assign a lesson to a module (sets _lk_module_id).
+ */
+export async function assignLessonToModule( lessonId, moduleId ) {
+	return await apiRequest( `/lessons/${lessonId}/assign-module`, {
+		method: 'POST',
+		body: { module_id: moduleId },
+	} );
+}
+
+/**
+ * Remove a lesson from a module (clears _lk_module_id).
+ */
+export async function removeLessonFromModule( lessonId, moduleId ) {
+	return await apiRequest( `/lessons/${lessonId}/assign-module`, {
+		method: 'DELETE',
+		body: { module_id: moduleId },
+	} );
+}
+
+/**
  * Get WordPress users (for enrollment dropdown).
  */
 export async function getUsers() {

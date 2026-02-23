@@ -261,7 +261,6 @@ const CourseBuilder = () => {
 				onEditModule={handleEditModule}
 				onDeleteModule={handleDeleteModule}
 				onCreateModule={handleCreateModule}
-				onCreateLesson={handleCreateLesson}
 				onDeleteLesson={handleDeleteLesson}
 				onReorderModules={handleReorderModules}
 				onReloadStructure={loadCourseStructure}
