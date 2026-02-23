@@ -183,39 +183,6 @@ export async function createLesson(moduleId, lessonData) {
 }
 
 /**
- * Get all lessons (no filter — for "add existing" pickers).
- */
-export async function getAllLessons() {
-	return await apiRequest('/lessons');
-}
-
-/**
- * Assign a lesson to a module (additive — does not remove other assignments).
- *
- * @param {number} lessonId
- * @param {number} moduleId
- */
-export async function assignLessonToModule(lessonId, moduleId) {
-	return await apiRequest(`/lessons/${lessonId}/assign-module`, {
-		method: 'POST',
-		body: { module_id: moduleId },
-	});
-}
-
-/**
- * Remove a lesson's assignment from a module.
- *
- * @param {number} lessonId
- * @param {number} moduleId
- */
-export async function removeLessonFromModule(lessonId, moduleId) {
-	return await apiRequest(`/lessons/${lessonId}/assign-module`, {
-		method: 'DELETE',
-		body: { module_id: moduleId },
-	});
-}
-
-/**
  * Reorder modules in a course.
  */
 export async function reorderModules(courseId, moduleIds) {
@@ -224,20 +191,6 @@ export async function reorderModules(courseId, moduleIds) {
 		body: {
 			order: moduleIds,
 		},
-	});
-}
-
-export async function assignModuleToCourse(moduleId, courseId) {
-	return await apiRequest(`/modules/${moduleId}/assign-course`, {
-		method: 'POST',
-		body: { course_id: courseId },
-	});
-}
-
-export async function removeModuleFromCourse(moduleId, courseId) {
-	return await apiRequest(`/modules/${moduleId}/assign-course`, {
-		method: 'DELETE',
-		body: { course_id: courseId },
 	});
 }
 
