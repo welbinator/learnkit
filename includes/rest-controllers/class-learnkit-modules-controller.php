@@ -87,6 +87,39 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 
 		register_rest_route(
 			$this->namespace,
+			'/modules/(?P<id>\d+)/assign-course',
+			array(
+				array(
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => array( $this, 'assign_course' ),
+					'permission_callback' => array( $this, 'check_write_permission' ),
+					'args'                => array(
+						'course_id' => array(
+							'required'          => true,
+							'type'              => 'integer',
+							'description'       => __( 'Course ID to assign this module to.', 'learnkit' ),
+							'sanitize_callback' => 'absint',
+						),
+					),
+				),
+				array(
+					'methods'             => WP_REST_Server::DELETABLE,
+					'callback'            => array( $this, 'remove_course' ),
+					'permission_callback' => array( $this, 'check_write_permission' ),
+					'args'                => array(
+						'course_id' => array(
+							'required'          => true,
+							'type'              => 'integer',
+							'description'       => __( 'Course ID to remove this module from.', 'learnkit' ),
+							'sanitize_callback' => 'absint',
+						),
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			$this->namespace,
 			'/courses/(?P<id>\d+)/reorder-modules',
 			array(
 				'methods'             => WP_REST_Server::EDITABLE,
@@ -159,6 +192,10 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 	/**
 	 * Create module.
 	 *
+	 * Accepts either `course_id` (single integer, backwards compat) or
+	 * `course_ids` (array of integers) to assign the new module to one or
+	 * more courses at creation time.
+	 *
 	 * @since    0.2.13
 	 * @param    WP_REST_Request $request Full request data.
 	 * @return   WP_REST_Response Response object.
@@ -182,8 +219,15 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 			);
 		}
 
-		if ( ! empty( $request['course_id'] ) ) {
-			update_post_meta( $module_id, '_lk_course_id', (int) $request['course_id'] );
+		// Resolve course IDs — accept course_ids array or fall back to single course_id.
+		$course_ids = $this->resolve_course_ids( $request );
+
+		if ( ! empty( $course_ids ) ) {
+			// Delete any existing rows first (clean slate), then add each.
+			delete_post_meta( $module_id, '_lk_course_id' );
+			foreach ( $course_ids as $course_id ) {
+				add_post_meta( $module_id, '_lk_course_id', $course_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
+			}
 		}
 
 		if ( isset( $request['menu_order'] ) ) {
@@ -207,6 +251,10 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Update module.
+	 *
+	 * Accepts either `course_id` (single integer, backwards compat) or
+	 * `course_ids` (array of integers).  When provided, existing course
+	 * assignments are replaced atomically (delete all, re-add).
 	 *
 	 * @since    0.2.13
 	 * @param    WP_REST_Request $request Full request data.
@@ -252,8 +300,15 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 			);
 		}
 
-		if ( ! empty( $request['course_id'] ) ) {
-			update_post_meta( $module_id, '_lk_course_id', (int) $request['course_id'] );
+		// Replace course assignments only when the caller explicitly provides them.
+		$course_ids = $this->resolve_course_ids( $request );
+
+		if ( null !== $course_ids ) {
+			// Atomic replacement: delete all rows, then re-add.
+			delete_post_meta( $module_id, '_lk_course_id' );
+			foreach ( $course_ids as $course_id ) {
+				add_post_meta( $module_id, '_lk_course_id', $course_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
+			}
 		}
 
 		return new WP_REST_Response(
@@ -296,6 +351,79 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 	}
 
 	/**
+	 * Add a single course assignment to a module (additive).
+	 *
+	 * POST /modules/{id}/assign-course
+	 *
+	 * @since    0.6.0
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   WP_REST_Response Response object.
+	 */
+	public function assign_course( $request ) {
+		$module_id = (int) $request['id'];
+		$module    = get_post( $module_id );
+
+		if ( ! $module || 'lk_module' !== $module->post_type ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'Module not found', 'learnkit' ) ),
+				404
+			);
+		}
+
+		$course_id      = (int) $request['course_id'];
+		$existing_ids   = array_map( 'intval', get_post_meta( $module_id, '_lk_course_id', false ) );
+
+		if ( in_array( $course_id, $existing_ids, true ) ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'Module is already assigned to this course', 'learnkit' ) ),
+				200
+			);
+		}
+
+		add_post_meta( $module_id, '_lk_course_id', $course_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
+
+		return new WP_REST_Response(
+			array(
+				'message' => __( 'Course assigned successfully', 'learnkit' ),
+				'module'  => $this->prepare_module_response( get_post( $module_id ) ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * Remove a single course assignment from a module.
+	 *
+	 * DELETE /modules/{id}/assign-course
+	 *
+	 * @since    0.6.0
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   WP_REST_Response Response object.
+	 */
+	public function remove_course( $request ) {
+		$module_id = (int) $request['id'];
+		$module    = get_post( $module_id );
+
+		if ( ! $module || 'lk_module' !== $module->post_type ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'Module not found', 'learnkit' ) ),
+				404
+			);
+		}
+
+		$course_id = (int) $request['course_id'];
+		delete_post_meta( $module_id, '_lk_course_id', $course_id );
+
+		return new WP_REST_Response(
+			array(
+				'message' => __( 'Course removed successfully', 'learnkit' ),
+				'module'  => $this->prepare_module_response( get_post( $module_id ) ),
+			),
+			200
+		);
+	}
+
+	/**
 	 * Reorder modules.
 	 *
 	 * @since    0.2.13
@@ -312,8 +440,9 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 			if ( ! $module || 'lk_module' !== $module->post_type ) {
 				continue;
 			}
-			// Verify it belongs to the course in the URL.
-			if ( (int) get_post_meta( $module_id, '_lk_course_id', true ) !== $course_id ) {
+			// Verify it belongs to the course in the URL (any of its assigned courses).
+			$assigned = array_map( 'intval', get_post_meta( $module_id, '_lk_course_id', false ) );
+			if ( ! in_array( $course_id, $assigned, true ) ) {
 				continue;
 			}
 			if ( ! current_user_can( 'edit_post', $module_id ) ) {
@@ -336,6 +465,9 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 	/**
 	 * Prepare module data for API response.
 	 *
+	 * Returns `course_ids` (array) for many-to-many support.
+	 * `course_id` (single value, backwards compat) is intentionally removed.
+	 *
 	 * @since    0.2.13
 	 * @param    WP_Post $module Module post object.
 	 * @return   array Module data.
@@ -351,10 +483,34 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 			'date_created'   => $module->post_date,
 			'date_modified'  => $module->post_modified,
 			'menu_order'     => $module->menu_order,
-			'course_id'      => get_post_meta( $module->ID, '_lk_course_id', true ),
+			'course_ids'     => array_map( 'intval', get_post_meta( $module->ID, '_lk_course_id', false ) ),
 			'permalink'      => get_permalink( $module->ID ),
 			'edit_link'      => get_edit_post_link( $module->ID, 'raw' ),
 		);
+	}
+
+	/**
+	 * Resolve course IDs from a request, supporting both `course_ids` (array)
+	 * and the legacy `course_id` (single integer) parameter.
+	 *
+	 * Returns an array of sanitised integer course IDs, or null when neither
+	 * parameter is present (so callers can distinguish "not provided" from
+	 * "empty array").
+	 *
+	 * @since    0.6.0
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   int[]|null Array of course IDs, or null if not provided.
+	 */
+	private function resolve_course_ids( $request ) {
+		if ( isset( $request['course_ids'] ) && is_array( $request['course_ids'] ) ) {
+			return array_map( 'absint', array_filter( $request['course_ids'] ) );
+		}
+
+		if ( ! empty( $request['course_id'] ) ) {
+			return array( absint( $request['course_id'] ) );
+		}
+
+		return null;
 	}
 
 	/**
@@ -376,8 +532,16 @@ class LearnKit_Modules_Controller extends LearnKit_Base_Controller {
 			),
 			'course_id' => array(
 				'type'              => 'integer',
-				'description'       => __( 'Filter modules by course ID.', 'learnkit' ),
+				'description'       => __( 'Assign module to a single course (backwards compat). Prefer course_ids.', 'learnkit' ),
 				'sanitize_callback' => 'absint',
+			),
+			'course_ids' => array(
+				'type'              => 'array',
+				'description'       => __( 'Assign module to one or more courses (many-to-many).', 'learnkit' ),
+				'items'             => array(
+					'type'              => 'integer',
+					'sanitize_callback' => 'absint',
+				),
 			),
 			'menu_order' => array(
 				'validate_callback' => function ( $param ) {

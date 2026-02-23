@@ -87,6 +87,39 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 
 		register_rest_route(
 			$this->namespace,
+			'/lessons/(?P<id>\d+)/assign-module',
+			array(
+				array(
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => array( $this, 'assign_module' ),
+					'permission_callback' => array( $this, 'check_write_permission' ),
+					'args'                => array(
+						'module_id' => array(
+							'required'          => true,
+							'type'              => 'integer',
+							'description'       => __( 'Module ID to assign this lesson to.', 'learnkit' ),
+							'sanitize_callback' => 'absint',
+						),
+					),
+				),
+				array(
+					'methods'             => WP_REST_Server::DELETABLE,
+					'callback'            => array( $this, 'remove_module' ),
+					'permission_callback' => array( $this, 'check_write_permission' ),
+					'args'                => array(
+						'module_id' => array(
+							'required'          => true,
+							'type'              => 'integer',
+							'description'       => __( 'Module ID to remove this lesson from.', 'learnkit' ),
+							'sanitize_callback' => 'absint',
+						),
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			$this->namespace,
 			'/modules/(?P<id>\d+)/reorder-lessons',
 			array(
 				'methods'             => WP_REST_Server::EDITABLE,
@@ -184,7 +217,9 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 			);
 		}
 
-		update_post_meta( $lesson_id, '_lk_module_id', $module_id );
+		// Assign to primary module (the URL param).
+		delete_post_meta( $lesson_id, '_lk_module_id' );
+		add_post_meta( $lesson_id, '_lk_module_id', $module_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
 
 		if ( isset( $request['menu_order'] ) ) {
 			wp_update_post(
@@ -207,6 +242,10 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 
 	/**
 	 * Update lesson.
+	 *
+	 * Accepts either `module_id` (single integer, backwards compat) or
+	 * `module_ids` (array of integers).  When provided, existing module
+	 * assignments are replaced atomically (delete all, re-add).
 	 *
 	 * @since    0.2.13
 	 * @param    WP_REST_Request $request Full request data.
@@ -260,8 +299,15 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 	 * @param    WP_REST_Request $request   Full request data.
 	 */
 	private function update_lesson_meta( $lesson_id, $request ) {
-		if ( ! empty( $request['module_id'] ) ) {
-			update_post_meta( $lesson_id, '_lk_module_id', (int) $request['module_id'] );
+		// Resolve module IDs — accept module_ids array or fall back to single module_id.
+		$module_ids = $this->resolve_module_ids( $request );
+
+		if ( null !== $module_ids ) {
+			// Atomic replacement: delete all rows, then re-add.
+			delete_post_meta( $lesson_id, '_lk_module_id' );
+			foreach ( $module_ids as $module_id ) {
+				add_post_meta( $lesson_id, '_lk_module_id', $module_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
+			}
 		}
 
 		// Drip content meta.
@@ -276,6 +322,79 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 		if ( isset( $request['release_date'] ) ) {
 			update_post_meta( $lesson_id, '_lk_release_date', sanitize_text_field( $request['release_date'] ) );
 		}
+	}
+
+	/**
+	 * Add a single module assignment to a lesson (additive).
+	 *
+	 * POST /lessons/{id}/assign-module
+	 *
+	 * @since    0.6.0
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   WP_REST_Response Response object.
+	 */
+	public function assign_module( $request ) {
+		$lesson_id = (int) $request['id'];
+		$lesson    = get_post( $lesson_id );
+
+		if ( ! $lesson || 'lk_lesson' !== $lesson->post_type ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'Lesson not found', 'learnkit' ) ),
+				404
+			);
+		}
+
+		$module_id    = (int) $request['module_id'];
+		$existing_ids = array_map( 'intval', get_post_meta( $lesson_id, '_lk_module_id', false ) );
+
+		if ( in_array( $module_id, $existing_ids, true ) ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'Lesson is already assigned to this module', 'learnkit' ) ),
+				200
+			);
+		}
+
+		add_post_meta( $lesson_id, '_lk_module_id', $module_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
+
+		return new WP_REST_Response(
+			array(
+				'message' => __( 'Module assigned successfully', 'learnkit' ),
+				'lesson'  => $this->prepare_lesson_response( get_post( $lesson_id ) ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * Remove a single module assignment from a lesson.
+	 *
+	 * DELETE /lessons/{id}/assign-module
+	 *
+	 * @since    0.6.0
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   WP_REST_Response Response object.
+	 */
+	public function remove_module( $request ) {
+		$lesson_id = (int) $request['id'];
+		$lesson    = get_post( $lesson_id );
+
+		if ( ! $lesson || 'lk_lesson' !== $lesson->post_type ) {
+			return new WP_REST_Response(
+				array( 'message' => __( 'Lesson not found', 'learnkit' ) ),
+				404
+			);
+		}
+
+		$module_id = (int) $request['module_id'];
+		delete_post_meta( $lesson_id, '_lk_module_id', $module_id );
+
+		return new WP_REST_Response(
+			array(
+				'message' => __( 'Module removed successfully', 'learnkit' ),
+				'lesson'  => $this->prepare_lesson_response( get_post( $lesson_id ) ),
+			),
+			200
+		);
 	}
 
 	/**
@@ -328,8 +447,9 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 			if ( ! $lesson || 'lk_lesson' !== $lesson->post_type ) {
 				continue;
 			}
-			// Verify it belongs to the module in the URL.
-			if ( (int) get_post_meta( $lesson_id, '_lk_module_id', true ) !== $module_id ) {
+			// Verify it belongs to the module in the URL (any of its assigned modules).
+			$assigned = array_map( 'intval', get_post_meta( $lesson_id, '_lk_module_id', false ) );
+			if ( ! in_array( $module_id, $assigned, true ) ) {
 				continue;
 			}
 			if ( ! current_user_can( 'edit_post', $lesson_id ) ) {
@@ -352,6 +472,9 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 	/**
 	 * Prepare lesson data for API response.
 	 *
+	 * Returns `module_ids` (array) for many-to-many support.
+	 * `module_id` (single value, backwards compat) is intentionally removed.
+	 *
 	 * @since    0.2.13
 	 * @param    WP_Post $lesson Lesson post object.
 	 * @return   array Lesson data.
@@ -366,13 +489,37 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 			'date_created'   => $lesson->post_date,
 			'date_modified'  => $lesson->post_modified,
 			'menu_order'     => $lesson->menu_order,
-			'module_id'      => get_post_meta( $lesson->ID, '_lk_module_id', true ),
+			'module_ids'     => array_map( 'intval', get_post_meta( $lesson->ID, '_lk_module_id', false ) ),
 			'permalink'      => get_permalink( $lesson->ID ),
 			'edit_link'      => get_edit_post_link( $lesson->ID, 'raw' ),
 			'release_type'   => get_post_meta( $lesson->ID, '_lk_release_type', true ) ? get_post_meta( $lesson->ID, '_lk_release_type', true ) : 'immediate',
 			'release_days'   => (int) get_post_meta( $lesson->ID, '_lk_release_days', true ),
 			'release_date'   => get_post_meta( $lesson->ID, '_lk_release_date', true ),
 		);
+	}
+
+	/**
+	 * Resolve module IDs from a request, supporting both `module_ids` (array)
+	 * and the legacy `module_id` (single integer) parameter.
+	 *
+	 * Returns an array of sanitised integer module IDs, or null when neither
+	 * parameter is present (so callers can distinguish "not provided" from
+	 * "empty array").
+	 *
+	 * @since    0.6.0
+	 * @param    WP_REST_Request $request Full request data.
+	 * @return   int[]|null Array of module IDs, or null if not provided.
+	 */
+	private function resolve_module_ids( $request ) {
+		if ( isset( $request['module_ids'] ) && is_array( $request['module_ids'] ) ) {
+			return array_map( 'absint', array_filter( $request['module_ids'] ) );
+		}
+
+		if ( ! empty( $request['module_id'] ) ) {
+			return array( absint( $request['module_id'] ) );
+		}
+
+		return null;
 	}
 
 	/**
@@ -393,9 +540,17 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 				'sanitize_callback' => 'sanitize_textarea_field',
 			),
 			'module_id' => array(
-				'validate_callback' => function ( $param ) {
-					return is_numeric( $param );
-				},
+				'type'              => 'integer',
+				'description'       => __( 'Assign lesson to a single module (backwards compat). Prefer module_ids.', 'learnkit' ),
+				'sanitize_callback' => 'absint',
+			),
+			'module_ids' => array(
+				'type'              => 'array',
+				'description'       => __( 'Assign lesson to one or more modules (many-to-many).', 'learnkit' ),
+				'items'             => array(
+					'type'              => 'integer',
+					'sanitize_callback' => 'absint',
+				),
 			),
 			'menu_order' => array(
 				'validate_callback' => function ( $param ) {
