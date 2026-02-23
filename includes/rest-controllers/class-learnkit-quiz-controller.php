@@ -222,7 +222,6 @@ class LearnKit_Quiz_Controller extends WP_REST_Controller {
 		$user_id = $request->get_param( 'user_id' );
 
 		global $wpdb;
-		$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
 
 		$where = $wpdb->prepare( 'quiz_id = %d', $quiz_id );
 

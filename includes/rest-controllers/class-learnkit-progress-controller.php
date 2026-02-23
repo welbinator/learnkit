@@ -96,48 +96,14 @@ class LearnKit_Progress_Controller {
 			);
 		}
 
-		// Backend gate: enforce required quiz passage before allowing completion.
-		$required_quiz = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT p.ID FROM {$wpdb->posts} p
-				INNER JOIN {$wpdb->postmeta} pm_lesson ON p.ID = pm_lesson.post_id
-					AND pm_lesson.meta_key = '_lk_lesson_id'
-					AND pm_lesson.meta_value = %d
-				INNER JOIN {$wpdb->postmeta} pm_required ON p.ID = pm_required.post_id
-					AND pm_required.meta_key = '_lk_required_to_complete'
-					AND pm_required.meta_value = '1'
-				WHERE p.post_type = 'lk_quiz'
-				AND p.post_status = 'publish'
-				LIMIT 1",
-				$lesson_id
-			)
-		);
-
-		if ( $required_quiz ) {
-			$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$passing_attempt = $wpdb->get_var(
-				$wpdb->prepare(
-					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
-					"SELECT COUNT(*) FROM $attempts_table WHERE user_id = %d AND quiz_id = %d AND passed = 1",
-					$user_id,
-					(int) $required_quiz->ID
-				)
-			);
-
-			if ( empty( $passing_attempt ) || 0 === (int) $passing_attempt ) {
-				return new WP_REST_Response(
-					array(
-						'message' => __( 'You must pass the quiz before marking this lesson complete.', 'learnkit' ),
-					),
-					403
-				);
-			}
+		// Backend gate: enforce required quiz passage.
+		$gate_error = $this->check_quiz_gate( $lesson_id, $user_id );
+		if ( $gate_error instanceof WP_REST_Response ) {
+			return $gate_error;
 		}
 
 		$table = $wpdb->prefix . 'learnkit_progress';
 
-		// Insert or update progress record.
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$existing = $wpdb->get_row(
 			$wpdb->prepare(
@@ -149,7 +115,6 @@ class LearnKit_Progress_Controller {
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		if ( $existing ) {
-			// Already marked complete.
 			return new WP_REST_Response(
 				array(
 					'message'   => __( 'Lesson already marked complete', 'learnkit' ),
@@ -187,6 +152,60 @@ class LearnKit_Progress_Controller {
 			),
 			201
 		);
+	}
+
+	/**
+	 * Check whether a required quiz has been passed before allowing lesson completion.
+	 *
+	 * @since    0.2.14
+	 * @param    int $lesson_id Lesson post ID.
+	 * @param    int $user_id   Current user ID.
+	 * @return   WP_REST_Response|true  Error response if gate blocks, true if clear.
+	 */
+	private function check_quiz_gate( $lesson_id, $user_id ) {
+		global $wpdb;
+
+		$required_quiz = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT p.ID FROM {$wpdb->posts} p
+				INNER JOIN {$wpdb->postmeta} pm_lesson ON p.ID = pm_lesson.post_id
+					AND pm_lesson.meta_key = '_lk_lesson_id'
+					AND pm_lesson.meta_value = %d
+				INNER JOIN {$wpdb->postmeta} pm_required ON p.ID = pm_required.post_id
+					AND pm_required.meta_key = '_lk_required_to_complete'
+					AND pm_required.meta_value = '1'
+				WHERE p.post_type = 'lk_quiz'
+				AND p.post_status = 'publish'
+				LIMIT 1",
+				$lesson_id
+			)
+		);
+
+		if ( ! $required_quiz ) {
+			return true;
+		}
+
+		$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$passing_attempt = $wpdb->get_var(
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safely prefixed.
+				"SELECT COUNT(*) FROM $attempts_table WHERE user_id = %d AND quiz_id = %d AND passed = 1",
+				$user_id,
+				(int) $required_quiz->ID
+			)
+		);
+
+		if ( empty( $passing_attempt ) || 0 === (int) $passing_attempt ) {
+			return new WP_REST_Response(
+				array(
+					'message' => __( 'You must pass the quiz before marking this lesson complete.', 'learnkit' ),
+				),
+				403
+			);
+		}
+
+		return true;
 	}
 
 	/**

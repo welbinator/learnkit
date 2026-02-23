@@ -46,23 +46,26 @@ class LearnKit_Quiz_Reports {
 		global $wpdb;
 
 		// Get filter params.
-		$quiz_id   = isset( $_GET['quiz_id'] ) ? absint( $_GET['quiz_id'] ) : 0;
-		$user_id   = isset( $_GET['user_id'] ) ? absint( $_GET['user_id'] ) : 0;
-		$passed    = isset( $_GET['passed'] ) ? sanitize_text_field( wp_unslash( $_GET['passed'] ) ) : '';
+		$quiz_id    = isset( $_GET['quiz_id'] ) ? absint( $_GET['quiz_id'] ) : 0;
+		$user_id    = isset( $_GET['user_id'] ) ? absint( $_GET['user_id'] ) : 0;
+		$passed     = isset( $_GET['passed'] ) ? sanitize_text_field( wp_unslash( $_GET['passed'] ) ) : '';
 		$export_csv = isset( $_GET['export'] ) && 'csv' === $_GET['export'];
 
+		$filters = array(
+			'quiz_id' => $quiz_id,
+			'user_id' => $user_id,
+			'passed'  => $passed,
+		);
+
 		// Build query.
-		$attempts_table = $wpdb->prefix . 'learnkit_quiz_attempts';
-		$where          = array( '1=1' );
+		$where = array( '1=1' );
 
 		if ( $quiz_id ) {
 			$where[] = $wpdb->prepare( 'quiz_id = %d', $quiz_id );
 		}
-
 		if ( $user_id ) {
 			$where[] = $wpdb->prepare( 'user_id = %d', $user_id );
 		}
-
 		if ( 'yes' === $passed ) {
 			$where[] = 'passed = 1';
 		} elseif ( 'no' === $passed ) {
@@ -80,7 +83,9 @@ class LearnKit_Quiz_Reports {
 			exit;
 		}
 
-		// Get all quizzes for filter.
+		$this->render_page_header();
+
+		// Get all quizzes for filter dropdown.
 		$quizzes = get_posts(
 			array(
 				'post_type'      => 'lk_quiz',
@@ -89,160 +94,199 @@ class LearnKit_Quiz_Reports {
 			)
 		);
 
+		$this->render_filters_form( $filters, $quizzes );
+		$this->render_summary_stats( $attempts );
+		$this->render_attempts_table( $attempts );
+
+		echo '</div>'; // Close .wrap
+	}
+
+	/**
+	 * Render page header.
+	 *
+	 * @since    0.4.0
+	 */
+	private function render_page_header() {
+		echo '<div class="wrap">';
+		echo '<h1>' . esc_html__( 'Quiz Reports', 'learnkit' ) . '</h1>';
+	}
+
+	/**
+	 * Render the filters form.
+	 *
+	 * @since    0.4.0
+	 * @param    array $filters  Current filter values (quiz_id, user_id, passed).
+	 * @param    array $quizzes  Array of quiz WP_Post objects for the dropdown.
+	 */
+	private function render_filters_form( $filters, $quizzes ) {
+		$quiz_id = $filters['quiz_id'];
+		$passed  = $filters['passed'];
 		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Quiz Reports', 'learnkit' ); ?></h1>
+		<!-- Filters -->
+		<form method="get" class="lk-reports-filters" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px;">
+			<input type="hidden" name="page" value="learnkit-quiz-reports">
 
-			<!-- Filters -->
-			<form method="get" class="lk-reports-filters" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px;">
-				<input type="hidden" name="page" value="learnkit-quiz-reports">
-
-				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-					<div>
-						<label for="quiz_id"><strong><?php esc_html_e( 'Quiz', 'learnkit' ); ?></strong></label><br>
-						<select name="quiz_id" id="quiz_id" style="width: 100%;">
-							<option value=""><?php esc_html_e( 'All Quizzes', 'learnkit' ); ?></option>
-							<?php foreach ( $quizzes as $quiz ) : ?>
-								<option value="<?php echo esc_attr( $quiz->ID ); ?>" <?php selected( $quiz_id, $quiz->ID ); ?>>
-									<?php echo esc_html( $quiz->post_title ); ?>
-								</option>
-							<?php endforeach; ?>
-						</select>
-					</div>
-
-					<div>
-						<label for="passed"><strong><?php esc_html_e( 'Result', 'learnkit' ); ?></strong></label><br>
-						<select name="passed" id="passed" style="width: 100%;">
-							<option value=""><?php esc_html_e( 'All Results', 'learnkit' ); ?></option>
-							<option value="yes" <?php selected( $passed, 'yes' ); ?>><?php esc_html_e( 'Passed', 'learnkit' ); ?></option>
-							<option value="no" <?php selected( $passed, 'no' ); ?>><?php esc_html_e( 'Failed', 'learnkit' ); ?></option>
-						</select>
-					</div>
-
-					<div>
-						<label><strong>&nbsp;</strong></label><br>
-						<button type="submit" class="button button-primary"><?php esc_html_e( 'Filter', 'learnkit' ); ?></button>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=learnkit-quiz-reports' ) ); ?>" class="button"><?php esc_html_e( 'Reset', 'learnkit' ); ?></a>
-					</div>
-				</div>
-			</form>
-
-			<!-- Summary Stats -->
-			<?php
-			$total_attempts  = count( $attempts );
-			$passed_attempts = 0;
-			$total_score     = 0;
-
-			foreach ( $attempts as $attempt ) {
-				if ( $attempt->passed ) {
-					$passed_attempts++;
-				}
-				$total_score += ( $attempt->score / $attempt->max_score ) * 100;
-			}
-
-			$pass_rate   = $total_attempts > 0 ? round( ( $passed_attempts / $total_attempts ) * 100 ) : 0;
-			$avg_score   = $total_attempts > 0 ? round( $total_score / $total_attempts ) : 0;
-			?>
-
-			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
-				<div style="background: #fff; padding: 20px; border-radius: 8px; text-align: center;">
-					<div style="font-size: 14px; color: #757575; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
-						<?php esc_html_e( 'Total Attempts', 'learnkit' ); ?>
-					</div>
-					<div style="font-size: 32px; font-weight: 700; color: #1d2327;">
-						<?php echo esc_html( $total_attempts ); ?>
-					</div>
-				</div>
-
-				<div style="background: #fff; padding: 20px; border-radius: 8px; text-align: center;">
-					<div style="font-size: 14px; color: #757575; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
-						<?php esc_html_e( 'Pass Rate', 'learnkit' ); ?>
-					</div>
-					<div style="font-size: 32px; font-weight: 700; color: #1d2327;">
-						<?php echo esc_html( $pass_rate ); ?>%
-					</div>
-				</div>
-
-				<div style="background: #fff; padding: 20px; border-radius: 8px; text-align: center;">
-					<div style="font-size: 14px; color: #757575; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
-						<?php esc_html_e( 'Average Score', 'learnkit' ); ?>
-					</div>
-					<div style="font-size: 32px; font-weight: 700; color: #1d2327;">
-						<?php echo esc_html( $avg_score ); ?>%
-					</div>
-				</div>
-
-				<div style="background: #fff; padding: 20px; border-radius: 8px; text-align: center;">
-					<div style="font-size: 14px; color: #757575; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
-						<?php esc_html_e( 'Passed', 'learnkit' ); ?>
-					</div>
-					<div style="font-size: 32px; font-weight: 700; color: #28a745;">
-						<?php echo esc_html( $passed_attempts ); ?>
-					</div>
-				</div>
-			</div>
-
-			<!-- Export Button -->
-			<div style="margin: 20px 0;">
-				<a href="<?php echo esc_url( add_query_arg( 'export', 'csv' ) ); ?>" class="button">
-					<?php esc_html_e( 'Export to CSV', 'learnkit' ); ?>
-				</a>
-			</div>
-
-			<!-- Attempts Table -->
-			<table class="wp-list-table widefat fixed striped">
-				<thead>
-					<tr>
-						<th><?php esc_html_e( 'Student', 'learnkit' ); ?></th>
-						<th><?php esc_html_e( 'Quiz', 'learnkit' ); ?></th>
-						<th><?php esc_html_e( 'Score', 'learnkit' ); ?></th>
-						<th><?php esc_html_e( 'Percentage', 'learnkit' ); ?></th>
-						<th><?php esc_html_e( 'Result', 'learnkit' ); ?></th>
-						<th><?php esc_html_e( 'Date', 'learnkit' ); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php if ( empty( $attempts ) ) : ?>
-						<tr>
-							<td colspan="6" style="text-align: center; padding: 40px; color: #757575;">
-								<?php esc_html_e( 'No quiz attempts found.', 'learnkit' ); ?>
-							</td>
-						</tr>
-					<?php else : ?>
-						<?php foreach ( $attempts as $attempt ) : ?>
-							<?php
-							$user = get_user_by( 'id', $attempt->user_id );
-							$quiz = get_post( $attempt->quiz_id );
-							$percentage = ( $attempt->score / $attempt->max_score ) * 100;
-							?>
-							<tr>
-								<td>
-									<?php echo $user ? esc_html( $user->display_name ) : 'Unknown User'; ?>
-									<br><small><?php echo $user ? esc_html( $user->user_email ) : ''; ?></small>
-								</td>
-								<td><?php echo $quiz ? esc_html( $quiz->post_title ) : 'Deleted Quiz'; ?></td>
-								<td><?php echo esc_html( $attempt->score ); ?> / <?php echo esc_html( $attempt->max_score ); ?></td>
-								<td><?php echo esc_html( round( $percentage ) ); ?>%</td>
-								<td>
-									<?php if ( $attempt->passed ) : ?>
-										<span style="color: #28a745; font-weight: 600;">✅ <?php esc_html_e( 'Passed', 'learnkit' ); ?></span>
-									<?php else : ?>
-										<span style="color: #dc3545; font-weight: 600;">❌ <?php esc_html_e( 'Failed', 'learnkit' ); ?></span>
-									<?php endif; ?>
-								</td>
-								<td><?php echo esc_html( wp_date( 'F j, Y g:i a', strtotime( $attempt->completed_at ) ) ); ?></td>
-							</tr>
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+				<div>
+					<label for="quiz_id"><strong><?php esc_html_e( 'Quiz', 'learnkit' ); ?></strong></label><br>
+					<select name="quiz_id" id="quiz_id" style="width: 100%;">
+						<option value=""><?php esc_html_e( 'All Quizzes', 'learnkit' ); ?></option>
+						<?php foreach ( $quizzes as $quiz ) : ?>
+							<option value="<?php echo esc_attr( $quiz->ID ); ?>" <?php selected( $quiz_id, $quiz->ID ); ?>>
+								<?php echo esc_html( $quiz->post_title ); ?>
+							</option>
 						<?php endforeach; ?>
-					<?php endif; ?>
-				</tbody>
-			</table>
+					</select>
+				</div>
 
-			<?php if ( count( $attempts ) >= 500 ) : ?>
-				<p style="margin-top: 20px; color: #757575;">
-					<?php esc_html_e( 'Showing first 500 attempts. Use filters to narrow results.', 'learnkit' ); ?>
-				</p>
-			<?php endif; ?>
+				<div>
+					<label for="passed"><strong><?php esc_html_e( 'Result', 'learnkit' ); ?></strong></label><br>
+					<select name="passed" id="passed" style="width: 100%;">
+						<option value=""><?php esc_html_e( 'All Results', 'learnkit' ); ?></option>
+						<option value="yes" <?php selected( $passed, 'yes' ); ?>><?php esc_html_e( 'Passed', 'learnkit' ); ?></option>
+						<option value="no" <?php selected( $passed, 'no' ); ?>><?php esc_html_e( 'Failed', 'learnkit' ); ?></option>
+					</select>
+				</div>
+
+				<div>
+					<label><strong>&nbsp;</strong></label><br>
+					<button type="submit" class="button button-primary"><?php esc_html_e( 'Filter', 'learnkit' ); ?></button>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=learnkit-quiz-reports' ) ); ?>" class="button"><?php esc_html_e( 'Reset', 'learnkit' ); ?></a>
+				</div>
+			</div>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Render summary statistics cards.
+	 *
+	 * @since    0.4.0
+	 * @param    array $attempts  Array of attempt objects.
+	 */
+	private function render_summary_stats( $attempts ) {
+		$total_attempts  = count( $attempts );
+		$passed_attempts = 0;
+		$total_score     = 0;
+
+		foreach ( $attempts as $attempt ) {
+			if ( $attempt->passed ) {
+				$passed_attempts++;
+			}
+			$total_score += ( $attempt->score / $attempt->max_score ) * 100;
+		}
+
+		$pass_rate = $total_attempts > 0 ? round( ( $passed_attempts / $total_attempts ) * 100 ) : 0;
+		$avg_score = $total_attempts > 0 ? round( $total_score / $total_attempts ) : 0;
+		?>
+		<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
+			<div style="background: #fff; padding: 20px; border-radius: 8px; text-align: center;">
+				<div style="font-size: 14px; color: #757575; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+					<?php esc_html_e( 'Total Attempts', 'learnkit' ); ?>
+				</div>
+				<div style="font-size: 32px; font-weight: 700; color: #1d2327;">
+					<?php echo esc_html( $total_attempts ); ?>
+				</div>
+			</div>
+
+			<div style="background: #fff; padding: 20px; border-radius: 8px; text-align: center;">
+				<div style="font-size: 14px; color: #757575; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+					<?php esc_html_e( 'Pass Rate', 'learnkit' ); ?>
+				</div>
+				<div style="font-size: 32px; font-weight: 700; color: #1d2327;">
+					<?php echo esc_html( $pass_rate ); ?>%
+				</div>
+			</div>
+
+			<div style="background: #fff; padding: 20px; border-radius: 8px; text-align: center;">
+				<div style="font-size: 14px; color: #757575; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+					<?php esc_html_e( 'Average Score', 'learnkit' ); ?>
+				</div>
+				<div style="font-size: 32px; font-weight: 700; color: #1d2327;">
+					<?php echo esc_html( $avg_score ); ?>%
+				</div>
+			</div>
+
+			<div style="background: #fff; padding: 20px; border-radius: 8px; text-align: center;">
+				<div style="font-size: 14px; color: #757575; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+					<?php esc_html_e( 'Passed', 'learnkit' ); ?>
+				</div>
+				<div style="font-size: 32px; font-weight: 700; color: #28a745;">
+					<?php echo esc_html( $passed_attempts ); ?>
+				</div>
+			</div>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Render the attempts table.
+	 *
+	 * @since    0.4.0
+	 * @param    array $attempts  Array of attempt objects.
+	 */
+	private function render_attempts_table( $attempts ) {
+		?>
+		<!-- Export Button -->
+		<div style="margin: 20px 0;">
+			<a href="<?php echo esc_url( add_query_arg( 'export', 'csv' ) ); ?>" class="button">
+				<?php esc_html_e( 'Export to CSV', 'learnkit' ); ?>
+			</a>
+		</div>
+
+		<!-- Attempts Table -->
+		<table class="wp-list-table widefat fixed striped">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Student', 'learnkit' ); ?></th>
+					<th><?php esc_html_e( 'Quiz', 'learnkit' ); ?></th>
+					<th><?php esc_html_e( 'Score', 'learnkit' ); ?></th>
+					<th><?php esc_html_e( 'Percentage', 'learnkit' ); ?></th>
+					<th><?php esc_html_e( 'Result', 'learnkit' ); ?></th>
+					<th><?php esc_html_e( 'Date', 'learnkit' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php if ( empty( $attempts ) ) : ?>
+					<tr>
+						<td colspan="6" style="text-align: center; padding: 40px; color: #757575;">
+							<?php esc_html_e( 'No quiz attempts found.', 'learnkit' ); ?>
+						</td>
+					</tr>
+				<?php else : ?>
+					<?php foreach ( $attempts as $attempt ) : ?>
+						<?php
+						$user       = get_user_by( 'id', $attempt->user_id );
+						$quiz       = get_post( $attempt->quiz_id );
+						$percentage = ( $attempt->score / $attempt->max_score ) * 100;
+						?>
+						<tr>
+							<td>
+								<?php echo $user ? esc_html( $user->display_name ) : 'Unknown User'; ?>
+								<br><small><?php echo $user ? esc_html( $user->user_email ) : ''; ?></small>
+							</td>
+							<td><?php echo $quiz ? esc_html( $quiz->post_title ) : 'Deleted Quiz'; ?></td>
+							<td><?php echo esc_html( $attempt->score ); ?> / <?php echo esc_html( $attempt->max_score ); ?></td>
+							<td><?php echo esc_html( round( $percentage ) ); ?>%</td>
+							<td>
+								<?php if ( $attempt->passed ) : ?>
+									<span style="color: #28a745; font-weight: 600;">✅ <?php esc_html_e( 'Passed', 'learnkit' ); ?></span>
+								<?php else : ?>
+									<span style="color: #dc3545; font-weight: 600;">❌ <?php esc_html_e( 'Failed', 'learnkit' ); ?></span>
+								<?php endif; ?>
+							</td>
+							<td><?php echo esc_html( wp_date( 'F j, Y g:i a', strtotime( $attempt->completed_at ) ) ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
+			</tbody>
+		</table>
+
+		<?php if ( count( $attempts ) >= 500 ) : ?>
+			<p style="margin-top: 20px; color: #757575;">
+				<?php esc_html_e( 'Showing first 500 attempts. Use filters to narrow results.', 'learnkit' ); ?>
+			</p>
+		<?php endif; ?>
 		<?php
 	}
 

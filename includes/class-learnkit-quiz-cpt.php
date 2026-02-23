@@ -91,6 +91,16 @@ class LearnKit_Quiz_CPT {
 	 * @since    0.4.0
 	 */
 	private function register_meta_fields() {
+		$this->register_quiz_question_meta_fields();
+		$this->register_quiz_settings_meta_fields();
+	}
+
+	/**
+	 * Register meta fields that relate to question data and associations.
+	 *
+	 * @since    0.4.0
+	 */
+	private function register_quiz_question_meta_fields() {
 		// Lesson ID (quiz belongs to this lesson).
 		register_post_meta(
 			'lk_quiz',
@@ -139,6 +149,30 @@ class LearnKit_Quiz_CPT {
 			)
 		);
 
+		// Quiz questions (JSON array).
+		register_post_meta(
+			'lk_quiz',
+			'_lk_questions',
+			array(
+				'type'              => 'string',
+				'description'       => __( 'Quiz questions data (JSON)', 'learnkit' ),
+				'single'            => true,
+				'default'           => '[]',
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'sanitize_textarea_field',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+	}
+
+	/**
+	 * Register meta fields that relate to quiz behaviour/settings.
+	 *
+	 * @since    0.4.0
+	 */
+	private function register_quiz_settings_meta_fields() {
 		// Passing score percentage.
 		register_post_meta(
 			'lk_quiz',
@@ -201,23 +235,6 @@ class LearnKit_Quiz_CPT {
 				'default'           => false,
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'rest_sanitize_boolean',
-				'auth_callback'     => function () {
-					return current_user_can( 'edit_posts' );
-				},
-			)
-		);
-
-		// Quiz questions (JSON array).
-		register_post_meta(
-			'lk_quiz',
-			'_lk_questions',
-			array(
-				'type'              => 'string',
-				'description'       => __( 'Quiz questions data (JSON)', 'learnkit' ),
-				'single'            => true,
-				'default'           => '[]',
-				'show_in_rest'      => true,
-				'sanitize_callback' => 'sanitize_textarea_field',
 				'auth_callback'     => function () {
 					return current_user_can( 'edit_posts' );
 				},
