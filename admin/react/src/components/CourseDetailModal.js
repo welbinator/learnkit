@@ -37,7 +37,7 @@ const CourseDetailModal = ({
 	const [accessType, setAccessType] = useState('free');
 	const [quizModalOpen, setQuizModalOpen] = useState(false);
 	const [selectedLesson, setSelectedLesson] = useState(null);
-	const [editingLesson, setEditingLesson] = useState(null);
+	const [editingLesson, setEditingLesson] = useState(null); // kept for future use
 
 	// "Add Existing Module" picker state.
 	const [showExistingModulePicker, setShowExistingModulePicker] = useState(false);
@@ -106,8 +106,7 @@ const CourseDetailModal = ({
 	};
 
 	const handleLessonSaved = () => {
-		setLessonEditorOpen(false);
-		setEditingLesson(null);
+		// no-op: lesson editing happens in the WP block editor
 	};
 
 	const handleShowExistingModulePicker = () => {
@@ -396,17 +395,6 @@ const CourseDetailModal = ({
 				return null;
 			}
 		})()}
-		{lessonEditorOpen && editingLesson && createPortal(
-			<LessonEditorModal
-				lesson={editingLesson}
-				onSave={handleLessonSaved}
-				onClose={() => {
-					setLessonEditorOpen(false);
-					setEditingLesson(null);
-				}}
-			/>,
-			document.body
-		)}
 		</>
 	);
 };
