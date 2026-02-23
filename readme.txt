@@ -4,7 +4,7 @@ Tags: lms, courses, elearning, quizzes, learning management
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.5.3
+Stable tag: 0.5.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,10 @@ Yes. Lessons are gated behind enrollment by default.
 Basic certificate infrastructure is included. A full certificate builder is planned for a future release.
 
 == Changelog ==
+
+= 0.5.4 =
+* Fix: Wire up featured image upload in Create Course modal (was a static div with no click handler)
+* Fix: Correct PluginCheck sniff name for UnescapedDBParameter suppression in quiz reports
 
 = 0.5.3 =
 * Fix release zip: include composer.json, exclude .gitkeep, add languages/learnkit.pot
