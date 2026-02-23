@@ -9,7 +9,17 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
     strategy:
       matrix:
         php: ['7.4', '8.0', '8.1', '8.2']
