@@ -9,6 +9,10 @@
  * @subpackage LearnKit/public/templates
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template-scoped variables, not true PHP globals.
 
 get_header();

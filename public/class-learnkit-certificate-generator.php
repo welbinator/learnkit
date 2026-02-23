@@ -11,6 +11,10 @@
  * @subpackage LearnKit/public
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Certificate Generator functionality.
  *

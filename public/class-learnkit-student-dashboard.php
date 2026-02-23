@@ -11,6 +11,10 @@
  * @subpackage LearnKit/public
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Student Dashboard functionality.
  *
