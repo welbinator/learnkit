@@ -9,13 +9,14 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { Modal, Button, TextControl, TextareaControl, TabPanel, SelectControl } from '@wordpress/components';
+import { Modal, Button, TextControl, TextareaControl, TabPanel, SelectControl, Spinner } from '@wordpress/components';
 import { useState, useEffect } from '@wordpress/element';
 import { createPortal } from 'react-dom';
 import CourseStructure from './CourseStructure';
 import EnrollmentManager from './EnrollmentManager';
 import QuizModal from './QuizModal';
 import LessonEditorModal from './LessonEditorModal';
+import { getAllModules, assignModuleToCourse, getCourseStructure } from '../utils/api';
 
 const CourseDetailModal = ({
 	course,
@@ -28,6 +29,7 @@ const CourseDetailModal = ({
 	onCreateModule,
 	onCreateLesson,
 	onReorderModules,
+	onReloadStructure,
 }) => {
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
@@ -37,6 +39,13 @@ const CourseDetailModal = ({
 	const [selectedLesson, setSelectedLesson] = useState(null);
 	const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
 	const [editingLesson, setEditingLesson] = useState(null);
+
+	// "Add Existing Module" picker state.
+	const [showExistingModulePicker, setShowExistingModulePicker] = useState(false);
+	const [allModules, setAllModules] = useState([]);
+	const [modulesPickerLoading, setModulesPickerLoading] = useState(false);
+	const [selectedExistingModule, setSelectedExistingModule] = useState('');
+	const [addExistingError, setAddExistingError] = useState('');
 
 	// Update form fields when course changes
 	useEffect(() => {
@@ -101,6 +110,44 @@ const CourseDetailModal = ({
 	const handleLessonSaved = () => {
 		setLessonEditorOpen(false);
 		setEditingLesson(null);
+	};
+
+	const handleShowExistingModulePicker = () => {
+		setShowExistingModulePicker(true);
+		setSelectedExistingModule('');
+		setAddExistingError('');
+		setModulesPickerLoading(true);
+
+		getAllModules()
+			.then((modules) => {
+				setAllModules(modules);
+			})
+			.catch(() => {
+				setAddExistingError(__('Failed to load modules', 'learnkit'));
+			})
+			.finally(() => {
+				setModulesPickerLoading(false);
+			});
+	};
+
+	const handleAddExistingModule = async () => {
+		const moduleId = parseInt(selectedExistingModule, 10);
+		if (!moduleId) {
+			return;
+		}
+
+		try {
+			await assignModuleToCourse(moduleId, course.id);
+			setShowExistingModulePicker(false);
+			setSelectedExistingModule('');
+			setAddExistingError('');
+			// Reload structure so the newly-linked module appears.
+			if (onReloadStructure) {
+				onReloadStructure(course.id);
+			}
+		} catch {
+			setAddExistingError(__('Failed to add module. Please try again.', 'learnkit'));
+		}
 	};
 
 	if (!isOpen || !course) {
@@ -194,10 +241,84 @@ const CourseDetailModal = ({
 								<div className="modules-section">
 									<div className="section-header">
 										<h3>{__('Modules', 'learnkit')} ({structure?.modules?.length || 0})</h3>
-										<Button variant="secondary" onClick={() => onCreateModule(course?.id)}>
-											{__('Add Module', 'learnkit')}
-										</Button>
+										<div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+											<Button variant="secondary" onClick={() => onCreateModule(course?.id)}>
+												{__('Add Module', 'learnkit')}
+											</Button>
+											<Button
+												variant="secondary"
+												onClick={handleShowExistingModulePicker}
+											>
+												{__('Add Existing Module', 'learnkit')}
+											</Button>
+										</div>
 									</div>
+
+									{/* Existing-module picker */}
+									{showExistingModulePicker && (
+										<div
+											style={{
+												background: '#f6f7f7',
+												border: '1px solid #ddd',
+												borderRadius: '4px',
+												padding: '12px',
+												marginBottom: '12px',
+											}}
+										>
+											{addExistingError && (
+												<div className="notice notice-error" style={{ marginBottom: '8px' }}>
+													<p>{addExistingError}</p>
+												</div>
+											)}
+
+											{modulesPickerLoading ? (
+												<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+													<Spinner />
+													<span>{__('Loading modules…', 'learnkit')}</span>
+												</div>
+											) : (
+												<div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+													<SelectControl
+														label={__('Choose a module to add', 'learnkit')}
+														value={selectedExistingModule}
+														onChange={setSelectedExistingModule}
+														options={[
+															{ label: __('— select a module —', 'learnkit'), value: '' },
+															...allModules
+																.filter(
+																	(m) =>
+																		!structure?.modules?.some(
+																			(sm) => sm.id === m.id
+																		)
+																)
+																.map((m) => ({
+																	label: m.title || `Module #${m.id}`,
+																	value: String(m.id),
+																})),
+														]}
+														style={{ marginBottom: 0 }}
+													/>
+													<Button
+														variant="primary"
+														isSmall
+														onClick={handleAddExistingModule}
+														disabled={!selectedExistingModule}
+													>
+														{__('Add', 'learnkit')}
+													</Button>
+													<Button
+														isSmall
+														onClick={() => {
+															setShowExistingModulePicker(false);
+															setAddExistingError('');
+														}}
+													>
+														{__('Cancel', 'learnkit')}
+													</Button>
+												</div>
+											)}
+										</div>
+									)}
 
 									<CourseStructure
 										structure={structure}

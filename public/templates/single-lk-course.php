@@ -32,8 +32,7 @@ $modules = get_posts(
 				'value' => $course_id,
 			),
 		),
-		'orderby'        => 'meta_value_num',
-		'meta_key'       => '_lk_order', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+		'orderby'        => 'menu_order',
 		'order'          => 'ASC',
 	)
 );
@@ -267,8 +266,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 									'value' => $module->ID,
 								),
 							),
-							'orderby'        => 'meta_value_num',
-							'meta_key'       => '_lk_order', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+							'orderby'        => 'menu_order',
 							'order'          => 'ASC',
 						)
 					);

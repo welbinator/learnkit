@@ -1,7 +1,7 @@
 /**
  * Lesson Editor Modal Component
  *
- * Modal for editing lesson content and drip settings.
+ * Modal for editing lesson content, drip settings, and module assignments.
  *
  * @package LearnKit
  * @since 0.5.0
@@ -10,7 +10,7 @@
 import { __ } from '@wordpress/i18n';
 import { useState, useEffect } from '@wordpress/element';
 import { Modal, Button, TextControl, TextareaControl, SelectControl, Spinner } from '@wordpress/components';
-import { updateLesson, getLesson } from '../utils/api';
+import { updateLesson, getLesson, getAllModules, assignLessonToModule, removeLessonFromModule } from '../utils/api';
 
 function LessonEditorModal({ lesson, onSave, onClose }) {
 	const [title, setTitle] = useState('');
@@ -21,6 +21,13 @@ function LessonEditorModal({ lesson, onSave, onClose }) {
 	const [saving, setSaving] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
+
+	// Module assignment state.
+	const [allModules, setAllModules] = useState([]);
+	const [assignedModuleIds, setAssignedModuleIds] = useState([]);
+	const [modulesLoading, setModulesLoading] = useState(false);
+	const [selectedModuleToAdd, setSelectedModuleToAdd] = useState('');
+	const [assignError, setAssignError] = useState('');
 
 	// Fetch full lesson data when modal opens to avoid saving over existing content.
 	useEffect(() => {
@@ -38,6 +45,11 @@ function LessonEditorModal({ lesson, onSave, onClose }) {
 				setReleaseType(fullLesson?.release_type || 'immediate');
 				setReleaseDays(String(fullLesson?.release_days || ''));
 				setReleaseDate(fullLesson?.release_date || '');
+				// Seed module assignments from the API response.
+				const ids = Array.isArray(fullLesson?.module_ids)
+					? fullLesson.module_ids.map(Number)
+					: [];
+				setAssignedModuleIds(ids);
 			})
 			.catch(() => {
 				// Fall back to shallow data from the course structure endpoint.
@@ -46,11 +58,51 @@ function LessonEditorModal({ lesson, onSave, onClose }) {
 				setReleaseType('immediate');
 				setReleaseDays('');
 				setReleaseDate('');
+				setAssignedModuleIds([]);
 			})
 			.finally(() => {
 				setLoading(false);
 			});
+
+		// Also load all modules for the assignment picker.
+		setModulesLoading(true);
+		getAllModules()
+			.then((modules) => {
+				setAllModules(modules);
+			})
+			.catch(() => {
+				// Non-fatal: assignment picker simply won't show options.
+			})
+			.finally(() => {
+				setModulesLoading(false);
+			});
 	}, [lesson?.id]);
+
+	const handleAddModule = async () => {
+		const moduleId = parseInt(selectedModuleToAdd, 10);
+		if (!moduleId) {
+			return;
+		}
+
+		try {
+			await assignLessonToModule(lesson.id, moduleId);
+			setAssignedModuleIds((prev) => [...prev, moduleId]);
+			setSelectedModuleToAdd('');
+			setAssignError('');
+		} catch {
+			setAssignError(__('Failed to assign module. Please try again.', 'learnkit'));
+		}
+	};
+
+	const handleRemoveModule = async (moduleId) => {
+		try {
+			await removeLessonFromModule(lesson.id, moduleId);
+			setAssignedModuleIds((prev) => prev.filter((id) => id !== moduleId));
+			setAssignError('');
+		} catch {
+			setAssignError(__('Failed to remove module assignment. Please try again.', 'learnkit'));
+		}
+	};
 
 	const handleSave = async () => {
 		if (!title.trim()) {
@@ -81,6 +133,19 @@ function LessonEditorModal({ lesson, onSave, onClose }) {
 			setSaving(false);
 		}
 	};
+
+	// Modules not yet assigned to this lesson.
+	const unassignedModules = allModules.filter(
+		(m) => !assignedModuleIds.includes(m.id)
+	);
+
+	const addModuleOptions = [
+		{ label: __('— select a module —', 'learnkit'), value: '' },
+		...unassignedModules.map((m) => ({
+			label: m.title || `Module #${m.id}`,
+			value: String(m.id),
+		})),
+	];
 
 	return (
 		<Modal
@@ -151,6 +216,80 @@ function LessonEditorModal({ lesson, onSave, onClose }) {
 								onChange={(val) => setReleaseDate(val)}
 								help={__('The lesson becomes available on this date.', 'learnkit')}
 							/>
+						)}
+
+						{/* Module Assignments */}
+						<hr style={{ margin: '24px 0' }} />
+						<h3 style={{ marginBottom: '12px' }}>{__('Assigned to Modules', 'learnkit')}</h3>
+
+						{assignError && (
+							<div className="notice notice-error" style={{ marginBottom: '8px' }}>
+								<p>{assignError}</p>
+							</div>
+						)}
+
+						{modulesLoading ? (
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+								<Spinner />
+								<span>{__('Loading modules…', 'learnkit')}</span>
+							</div>
+						) : (
+							<>
+								{assignedModuleIds.length === 0 ? (
+									<p style={{ color: '#757575', marginBottom: '12px' }}>
+										{__('Not assigned to any module yet.', 'learnkit')}
+									</p>
+								) : (
+									<ul style={{ listStyle: 'none', margin: '0 0 12px', padding: 0 }}>
+										{assignedModuleIds.map((moduleId) => {
+											const mod = allModules.find((m) => m.id === moduleId);
+											return (
+												<li
+													key={moduleId}
+													style={{
+														display: 'flex',
+														alignItems: 'center',
+														justifyContent: 'space-between',
+														padding: '4px 0',
+														borderBottom: '1px solid #e0e0e0',
+													}}
+												>
+													<span>{mod ? mod.title : `Module #${moduleId}`}</span>
+													<Button
+														isSmall
+														isDestructive
+														onClick={() => handleRemoveModule(moduleId)}
+														aria-label={__('Remove module assignment', 'learnkit')}
+													>
+														&times;
+													</Button>
+												</li>
+											);
+										})}
+									</ul>
+								)}
+
+								{unassignedModules.length > 0 && (
+									<div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+										<SelectControl
+											label={__('Add to module', 'learnkit')}
+											value={selectedModuleToAdd}
+											options={addModuleOptions}
+											onChange={setSelectedModuleToAdd}
+											style={{ marginBottom: 0 }}
+										/>
+										<Button
+											variant="secondary"
+											isSmall
+											onClick={handleAddModule}
+											disabled={!selectedModuleToAdd}
+											style={{ marginTop: '22px' }}
+										>
+											{__('Add', 'learnkit')}
+										</Button>
+									</div>
+								)}
+							</>
 						)}
 					</>
 				)}

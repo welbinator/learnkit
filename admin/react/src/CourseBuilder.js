@@ -121,7 +121,7 @@ const CourseBuilder = () => {
 
 	// Module handlers
 	const handleCreateModule = (courseId) => {
-		setEditingModule({ _courseId: courseId });
+		setEditingModule({ _courseId: courseId || selectedCourseId });
 		setShowModuleModal(true);
 	};
 
@@ -244,6 +244,7 @@ const CourseBuilder = () => {
 				onCreateModule={handleCreateModule}
 				onCreateLesson={handleCreateLesson}
 				onReorderModules={handleReorderModules}
+				onReloadStructure={loadCourseStructure}
 			/>
 
 			<EditModuleModal
