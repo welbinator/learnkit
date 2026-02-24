@@ -316,12 +316,16 @@ class LearnKit_Course_Catalog {
 			 * @param bool $is_enrolled Whether the current user is enrolled.
 			 */
 			do_action( 'learnkit_course_enrollment_cta', $course_id, get_current_user_id(), $is_enrolled );
-		else :
+		elseif ( $self_enroll_enabled ) :
+			// Free course, not logged in — prompt to log in.
 			?>
-			<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="button button-login">
+			<a href="<?php echo esc_url( wp_login_url( get_permalink( $course_id ) ) ); ?>" class="button button-login">
 				<?php esc_html_e( 'Login to Enroll', 'learnkit' ); ?>
 			</a>
 			<?php
+		else :
+			// Paid course, not logged in — show purchase button via hook.
+			do_action( 'learnkit_course_enrollment_cta', $course_id, 0, false );
 		endif;
 		return ob_get_clean();
 	}

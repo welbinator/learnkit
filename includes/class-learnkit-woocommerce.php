@@ -377,7 +377,6 @@ class LearnKit_WooCommerce {
 	public static function render_course_cta( $course_id, $user_id, $is_enrolled ) {
 		$products = self::get_products_for_course( $course_id );
 		if ( empty( $products ) ) {
-			echo '<span class="lk-not-available">' . esc_html__( 'Not available', 'learnkit' ) . '</span>';
 			return;
 		}
 
@@ -390,7 +389,7 @@ class LearnKit_WooCommerce {
 		$cta_url    = self::get_course_cta_url( $course_id, $products );
 		$price_html = $products[0]->get_price_html();
 
-		echo '<a href="' . esc_url( $cta_url ) . '" class="lk-buy-now-button btn--primary">';
+		echo '<a href="' . esc_url( $cta_url ) . '" class="' . esc_attr( learnkit_button_classes( 'enroll_button', 'btn--lk-enroll' ) ) . '">';
 		esc_html_e( 'Enroll', 'learnkit' );
 		if ( $price_html ) {
 			echo ' &mdash; ' . wp_kses_post( $price_html );
