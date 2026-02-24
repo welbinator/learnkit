@@ -168,20 +168,20 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 			</p>
 			<div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
 				<?php if ( false === $result_passed && ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'retake_quiz_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+					<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'retake_quiz_button', 'btn--lk-submit' ) ); ?>">
 						<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
 					</a>
 				<?php elseif ( true === $result_passed && ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'retake_quiz_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+					<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'retake_quiz_button', 'btn--lk-submit' ) ); ?>">
 						<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
 					</a>
 				<?php endif; ?>
 				<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+					<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'btn--lk-submit' ) ); ?>">
 						<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
 					</a>
 				<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_course_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+					<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_course_button', 'btn--lk-submit' ) ); ?>">
 						<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
 					</a>
 				<?php endif; ?>
@@ -268,7 +268,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 		<div class="not-enrolled">
 			<h3><?php esc_html_e( 'Login Required', 'learnkit' ); ?></h3>
 			<p><?php esc_html_e( 'You must be logged in to take this quiz.', 'learnkit' ); ?></p>
-			<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'login_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+			<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'login_button', 'btn--lk-submit' ) ); ?>">
 				<?php esc_html_e( 'Log In', 'learnkit' ); ?>
 			</a>
 		</div>
@@ -277,7 +277,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 			<h3><?php esc_html_e( 'Enrollment Required', 'learnkit' ); ?></h3>
 			<p><?php esc_html_e( 'You must be enrolled in this course to take this quiz.', 'learnkit' ); ?></p>
 			<?php if ( $course_id ) : ?>
-				<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_course_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+				<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_course_button', 'btn--lk-submit' ) ); ?>">
 					<?php esc_html_e( 'View Course', 'learnkit' ); ?>
 				</a>
 			<?php endif; ?>
@@ -288,7 +288,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 			<h1 class="quiz-title"><?php the_title(); ?></h1>
 			<div class="quiz-meta">
 				<div class="quiz-meta-item">
-					<span>📝</span>
+					<span class="lk-icon"><svg aria-hidden="true" focusable="false" width="1em" height="1em" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="white"><g><path d="M154.8,424.7h202.4c12.8,0,23.2-10.4,23.2-23.2V139.3c0-12.8-10.4-23.2-23.2-23.2h-29.8V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-48.9V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-48.9V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-29.8c-12.8,0-23.2,10.4-23.2,23.2v262.1C131.6,414.2,142,424.7,154.8,424.7z M146.6,139.3c0-4.5,3.7-8.2,8.2-8.2h29.8v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h48.9v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h48.9v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h29.8c4.5,0,8.2,3.7,8.2,8.2v262.1c0,4.5-3.7,8.2-8.2,8.2H154.8c-4.5,0-8.2-3.7-8.2-8.2V139.3z"/><path d="M181.9,219.4c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6c-2.9-2.9-7.7-2.9-10.6,0l-21.2,21.2l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,219.4z"/><path d="M238.1,208.3h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,208.3,238.1,208.3z"/><path d="M181.9,289c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6s-7.7-2.9-10.6,0L187.2,273l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,289z"/><path d="M238.1,277.9h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,277.9,238.1,277.9z"/><path d="M181.9,358.5c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6s-7.7-2.9-10.6,0l-21.2,21.2l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,358.5z"/><path d="M238.1,347.5h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,347.5,238.1,347.5z"/></g></svg></span>
 					<span><?php echo esc_html( count( $questions ) ); ?> <?php esc_html_e( 'Questions', 'learnkit' ); ?></span>
 				</div>
 				<?php if ( $time_limit > 0 ) : ?>
@@ -330,11 +330,11 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				</p>
 				<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
 					<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'btn--lk-submit' ) ); ?>">
 							<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
 						</a>
 					<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_course_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+						<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_course_button', 'btn--lk-submit' ) ); ?>">
 							<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
 						</a>
 					<?php endif; ?>
@@ -361,11 +361,11 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				<?php endif; ?>
 				<div style="margin-top: 20px;">
 					<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'btn--lk-submit' ) ); ?>">
 							<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
 						</a>
 					<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_course_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+						<a href="<?php echo esc_url( get_permalink( $course_id ? $course_id : $module_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_course_button', 'btn--lk-submit' ) ); ?>">
 							<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
 						</a>
 					<?php endif; ?>
@@ -406,7 +406,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 					<p style="color: #d63638; font-weight: 600; margin-bottom: 30px;">
 						<?php esc_html_e( 'The timer will start as soon as you click the button below.', 'learnkit' ); ?>
 					</p>
-					<button type="button" id="start-quiz-button" class="<?php echo esc_attr( learnkit_button_classes( 'start_quiz_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+					<button type="button" id="start-quiz-button" class="<?php echo esc_attr( learnkit_button_classes( 'start_quiz_button', 'btn--lk-submit' ) ); ?>">
 						<?php esc_html_e( 'Start Quiz', 'learnkit' ); ?>
 					</button>
 				</div>
@@ -454,7 +454,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				<?php endforeach; ?>
 
 				<div class="quiz-submit">
-					<button type="submit" class="<?php echo esc_attr( learnkit_button_classes( 'submit_quiz_button', 'lk-button-submit lk-button-submit' ) ); ?>">
+					<button type="submit" class="<?php echo esc_attr( learnkit_button_classes( 'submit_quiz_button', 'btn--lk-submit' ) ); ?>">
 						<?php esc_html_e( 'Submit Quiz', 'learnkit' ); ?>
 					</button>
 				</div>
