@@ -253,6 +253,21 @@ class LearnKit_Public {
 		$passing_score  = (int) get_post_meta( $quiz_id, '_lk_passing_score', true );
 		$passing_score  = $passing_score > 0 ? $passing_score : 70;
 
+		// Normalize questions: assign id and resolve correctAnswer index from string if needed.
+		if ( is_array( $questions ) ) {
+			foreach ( $questions as $idx => &$q ) {
+				if ( ! isset( $q['id'] ) ) {
+					$q['id'] = $idx;
+				}
+				if ( ! isset( $q['correctAnswer'] ) && ! isset( $q['correct'] ) ) {
+					if ( isset( $q['correct_answer'] ) && isset( $q['options'] ) ) {
+						$q['correctAnswer'] = (int) array_search( $q['correct_answer'], $q['options'], true );
+					}
+				}
+			}
+			unset( $q );
+		}
+
 		return array(
 			'questions'     => $questions,
 			'passing_score' => $passing_score,
