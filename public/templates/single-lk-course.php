@@ -107,11 +107,11 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 				<?php endif; ?>
 
 				<?php if ( $is_enrolled ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'continue_learning_button', 'lk-continue-button' ) ); ?>">
+					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'continue_learning_button', 'lk-button-continue' ) ); ?>">
 						Continue Learning →
 					</a>
 				<?php elseif ( $user_id && $self_enrollment ) : ?>
-					<button class="<?php echo esc_attr( learnkit_button_classes( 'enroll_button', 'lk-enroll-button' ) ); ?>" data-course-id="<?php echo esc_attr( $course_id ); ?>">
+					<button class="<?php echo esc_attr( learnkit_button_classes( 'enroll_button', 'lk-button-enroll' ) ); ?>" data-course-id="<?php echo esc_attr( $course_id ); ?>">
 						Enroll Now
 					</button>
 				<?php elseif ( ! $user_id ) : ?>
@@ -429,7 +429,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 	});
 
 	// Enroll button handler
-	const enrollButton = document.querySelector('.lk-enroll-button');
+	const enrollButton = document.querySelector('.lk-button-enroll');
 	if (enrollButton) {
 		enrollButton.addEventListener('click', async () => {
 			const courseId = enrollButton.dataset.courseId;

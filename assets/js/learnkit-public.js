@@ -12,7 +12,7 @@
 
 	$(document).ready(function () {
 		// Handle mark complete button
-		$('.learnkit-mark-complete').on('click', function (e) {
+		$('.lk-button-mark-complete').on('click', function (e) {
 			e.preventDefault();
 
 			const $button = $(this);
@@ -29,8 +29,8 @@
 				},
 				success: function (response) {
 					$button
-						.removeClass('learnkit-mark-complete')
-						.addClass('learnkit-marked-complete')
+						.removeClass('lk-button-mark-complete')
+						.addClass('lk-button-mark-complete--done')
 						.prop('disabled', false)
 						.html('<span class="checkmark">✓</span> Completed');
 
@@ -78,7 +78,7 @@
 
 		function loadProgressData() {
 			// Get lesson ID from the button (either state)
-			const lessonId = $('.learnkit-mark-complete').data('lesson-id') || $('.learnkit-marked-complete').data('lesson-id');
+			const lessonId = $('.lk-button-mark-complete').data('lesson-id') || $('.lk-button-mark-complete--done').data('lesson-id');
 			if (!lessonId) {
 				return;
 			}
@@ -108,9 +108,9 @@
 
 					// Check if current lesson is complete
 					if (response.completed_lesson_ids.includes(parseInt(lessonId))) {
-						$('.learnkit-mark-complete')
-							.removeClass('learnkit-mark-complete')
-							.addClass('learnkit-marked-complete')
+						$('.lk-button-mark-complete')
+							.removeClass('lk-button-mark-complete')
+							.addClass('lk-button-mark-complete--done')
 							.html('<span class="checkmark">✓</span> Completed');
 					}
 				}
