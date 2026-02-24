@@ -179,6 +179,10 @@ body a:where(:not([class*="btn--"])) {
 
 }
 
+.btn--lk-login {
+
+}
+
 .btn--lk-certificate {
 	display: inline-flex;
 	align-items: center;
