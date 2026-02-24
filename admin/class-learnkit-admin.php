@@ -657,22 +657,8 @@ class LearnKit_Admin {
 				<h3 style="margin-top:0;">
 					<?php esc_html_e( 'Step 2 — Link the product to a course', 'learnkit' ); ?>
 				</h3>
-				<p><?php esc_html_e( 'On the WooCommerce product edit screen, add the course ID to the', 'learnkit' ); ?> <code>_learnkit_course_ids</code> <?php esc_html_e( 'custom field. If the field is not visible, enable it via Screen Options → Custom Fields.', 'learnkit' ); ?></p>
-				<table class="widefat striped" style="max-width:600px; margin-bottom:20px;">
-					<thead>
-						<tr>
-							<th><?php esc_html_e( 'Custom Field', 'learnkit' ); ?></th>
-							<th><?php esc_html_e( 'Value', 'learnkit' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td><code>_learnkit_course_ids</code></td>
-							<td><?php esc_html_e( 'The post ID of the course (e.g. 42). Add multiple rows for multiple courses.', 'learnkit' ); ?></td>
-						</tr>
-					</tbody>
-				</table>
-				<p><?php esc_html_e( 'One product can unlock multiple courses, and one course can be linked to multiple products.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'On the WooCommerce product edit screen, find the "Product data" panel and click the "LearnKit Courses" tab. You\'ll see a list of all published courses — select one or more to link them to this product. Students will be enrolled in every selected course when an order containing this product is completed.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'You can also set an "Access duration (days)" value. Leave it at 0 for lifetime access, or enter a positive number to automatically expire enrollment after that many days.', 'learnkit' ); ?></p>
 			</div>
 
 			<!-- Step 3 -->
