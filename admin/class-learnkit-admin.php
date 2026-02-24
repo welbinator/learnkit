@@ -240,12 +240,59 @@ class LearnKit_Admin {
 	 * @since    0.1.0
 	 */
 	public function render_settings_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// Save settings.
+		if ( isset( $_POST['learnkit_settings_nonce'] ) ) {
+			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['learnkit_settings_nonce'] ) ), 'learnkit_settings' ) ) {
+				wp_die( esc_html__( 'Security check failed.', 'learnkit' ) );
+			}
+
+			$acss_settings = array(
+				'button_class' => sanitize_text_field( wp_unslash( $_POST['learnkit_acss_button_class'] ?? '' ) ),
+			);
+			update_option( 'learnkit_acss_settings', $acss_settings );
+
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'learnkit' ) . '</p></div>';
+		}
+
+		$acss_settings    = get_option( 'learnkit_acss_settings', array( 'button_class' => '' ) );
+		$acss_is_active   = defined( 'ACSS_PLUGIN_FILE' );
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<div class="notice notice-info">
-				<p><?php esc_html_e( 'Settings page coming in Sprint 5+. For now, all defaults are active.', 'learnkit' ); ?></p>
-			</div>
+			<form method="post" action="">
+				<?php wp_nonce_field( 'learnkit_settings', 'learnkit_settings_nonce' ); ?>
+
+				<?php if ( $acss_is_active ) : ?>
+				<h2><?php esc_html_e( 'Automatic CSS Settings', 'learnkit' ); ?></h2>
+				<p><?php esc_html_e( 'These settings apply because Automatic CSS is active on your site.', 'learnkit' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tbody>
+						<tr>
+							<th scope="row">
+								<label for="learnkit_acss_button_class"><?php esc_html_e( 'Button Class', 'learnkit' ); ?></label>
+							</th>
+							<td>
+								<input
+									type="text"
+									id="learnkit_acss_button_class"
+									name="learnkit_acss_button_class"
+									value="<?php echo esc_attr( $acss_settings['button_class'] ); ?>"
+									class="regular-text"
+									placeholder="e.g. btn"
+								/>
+								<p class="description"><?php esc_html_e( 'ACSS button utility class to apply to all LearnKit frontend buttons.', 'learnkit' ); ?></p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<?php endif; ?>
+
+				<?php submit_button(); ?>
+			</form>
 		</div>
 		<?php
 	}
