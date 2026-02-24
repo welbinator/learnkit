@@ -24,8 +24,23 @@ function learnkit_button_classes( $button_key, $base_classes = '' ) {
 	$classes = array_filter( explode( ' ', $base_classes ) );
 
 	if ( defined( 'ACSS_PLUGIN_FILE' ) ) {
-		$acss_settings = get_option( 'learnkit_acss_settings', array() );
-		$acss_class    = $acss_settings[ $button_key . '_class' ] ?? '';
+		$defaults = array(
+			'enroll_button_class'            => 'btn--primary',
+			'start_course_button_class'      => 'btn--primary',
+			'continue_learning_button_class' => 'btn--primary',
+			'next_lesson_button_class'       => 'btn--primary',
+			'prev_lesson_button_class'       => 'btn--secondary',
+			'mark_complete_button_class'     => 'btn--success',
+			'take_quiz_button_class'         => 'btn--tertiary',
+			'start_quiz_button_class'        => 'btn--tertiary',
+			'submit_quiz_button_class'       => 'btn--tertiary',
+			'retake_quiz_button_class'       => 'btn--tertiary',
+			'back_to_lesson_button_class'    => 'btn--secondary',
+			'back_to_course_button_class'    => 'btn--secondary',
+			'login_button_class'             => 'btn--warning',
+		);
+		$acss_settings = get_option( 'learnkit_acss_settings', $defaults );
+		$acss_class    = $acss_settings[ $button_key . '_class' ] ?? ( $defaults[ $button_key . '_class' ] ?? '' );
 		$outline       = ! empty( $acss_settings[ $button_key . '_outline' ] );
 
 		if ( $acss_class ) {

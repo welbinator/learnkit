@@ -318,7 +318,21 @@ class LearnKit_Admin {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'learnkit' ) . '</p></div>';
 		}
 
-		$acss_settings  = get_option( 'learnkit_acss_settings', array() );
+		$acss_settings  = get_option( 'learnkit_acss_settings', array(
+			'enroll_button_class'            => 'btn--primary',
+			'start_course_button_class'      => 'btn--primary',
+			'continue_learning_button_class' => 'btn--primary',
+			'next_lesson_button_class'       => 'btn--primary',
+			'prev_lesson_button_class'       => 'btn--secondary',
+			'mark_complete_button_class'     => 'btn--success',
+			'take_quiz_button_class'         => 'btn--tertiary',
+			'start_quiz_button_class'        => 'btn--tertiary',
+			'submit_quiz_button_class'       => 'btn--tertiary',
+			'retake_quiz_button_class'       => 'btn--tertiary',
+			'back_to_lesson_button_class'    => 'btn--secondary',
+			'back_to_course_button_class'    => 'btn--secondary',
+			'login_button_class'             => 'btn--warning',
+		) );
 		$btn_classes    = $acss_is_active ? $this->get_acss_button_classes() : array();
 		?>
 		<div class="wrap">
