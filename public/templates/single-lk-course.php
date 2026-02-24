@@ -107,11 +107,11 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 				<?php endif; ?>
 
 				<?php if ( $is_enrolled ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="lk-start-button btn--primary">
+					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="lk-start-button">
 						Continue Learning →
 					</a>
 				<?php elseif ( $user_id && $self_enrollment ) : ?>
-					<button class="lk-enroll-button btn--primary" data-course-id="<?php echo esc_attr( $course_id ); ?>">
+					<button class="lk-enroll-button" data-course-id="<?php echo esc_attr( $course_id ); ?>">
 						Enroll Now
 					</button>
 				<?php elseif ( ! $user_id ) : ?>

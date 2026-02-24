@@ -258,7 +258,7 @@ if ( ! $is_available ) {
 					if ( $quiz_gate_active ) :
 						?>
 						<button
-							class="learnkit-mark-complete btn--primary"
+							class="learnkit-mark-complete"
 							data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
 							disabled
 							aria-disabled="true"
@@ -271,7 +271,7 @@ if ( ! $is_available ) {
 						</p>
 					<?php else : ?>
 						<button
-							class="learnkit-mark-complete btn--primary"
+							class="learnkit-mark-complete"
 							data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
 						>
 							<span class="checkmark">✓</span> Mark as Complete
@@ -305,7 +305,7 @@ if ( ! $is_available ) {
 							)
 						);
 						?>
-						<a href="<?php echo esc_url( get_permalink( $quiz->ID ) ); ?>" class="learnkit-quiz-button btn--primary">
+						<a href="<?php echo esc_url( get_permalink( $quiz->ID ) ); ?>" class="learnkit-quiz-button">
 							<span class="quiz-icon">📝</span>
 							<?php if ( $quiz_attempt ) : ?>
 								<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
@@ -326,7 +326,7 @@ if ( ! $is_available ) {
 
 			<div class="learnkit-lesson-navigation">
 				<?php if ( $prev_lesson_id ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $prev_lesson_id ) ); ?>" class="learnkit-nav-button prev btn--primary">
+					<a href="<?php echo esc_url( get_permalink( $prev_lesson_id ) ); ?>" class="learnkit-nav-button prev">
 						<span class="arrow">←</span> Previous Lesson
 					</a>
 				<?php else : ?>
@@ -336,11 +336,11 @@ if ( ! $is_available ) {
 				<?php endif; ?>
 
 				<?php if ( $next_lesson_id ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $next_lesson_id ) ); ?>" class="learnkit-nav-button next btn--primary">
+					<a href="<?php echo esc_url( get_permalink( $next_lesson_id ) ); ?>" class="learnkit-nav-button next">
 						Next Lesson <span class="arrow">→</span>
 					</a>
 				<?php elseif ( $next_module_first_lesson ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $next_module_first_lesson['id'] ) ); ?>" class="learnkit-nav-button next next-module btn--primary">
+					<a href="<?php echo esc_url( get_permalink( $next_module_first_lesson['id'] ) ); ?>" class="learnkit-nav-button next next-module">
 						<div style="display: flex; flex-direction: column; align-items: flex-end;">
 							<span style="font-size: 12px; opacity: 0.8;">Next Module:</span>
 							<span><?php echo esc_html( $next_module_first_lesson['module_name'] ); ?> <span class="arrow">→</span></span>
