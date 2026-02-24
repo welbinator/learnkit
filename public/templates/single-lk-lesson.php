@@ -184,39 +184,75 @@ $certificate_url    = '';
 if ( $is_last_lesson && $is_enrolled && $user_id && $course_id ) {
 	global $wpdb;
 
-	// Check all lessons in the course are completed.
-	$all_course_lesson_ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->prepare(
-			"SELECT p.ID FROM {$wpdb->posts} p
-			INNER JOIN {$wpdb->postmeta} pm_mod ON p.ID = pm_mod.post_id AND pm_mod.meta_key = '_lk_module_id'
-			INNER JOIN {$wpdb->posts} mod ON mod.ID = pm_mod.meta_value AND mod.post_status = 'publish'
-			INNER JOIN {$wpdb->postmeta} pm_course ON mod.ID = pm_course.post_id AND pm_course.meta_key = '_lk_course_id' AND pm_course.meta_value = %d
-			WHERE p.post_type = 'lk_lesson' AND p.post_status = 'publish'",
-			$course_id
+	// Get all module IDs for this course.
+	$course_module_ids = get_posts(
+		array(
+			'post_type'      => 'lk_module',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+			'meta_query'     => array(
+				array(
+					'key'   => '_lk_course_id',
+					'value' => $course_id,
+				),
+			),
 		)
 	);
 
+	// Get all lesson IDs in those modules.
+	$all_course_lesson_ids = array();
+	if ( ! empty( $course_module_ids ) ) {
+		$all_course_lesson_ids = get_posts(
+			array(
+				'post_type'      => 'lk_lesson',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'meta_query'     => array(
+					array(
+						'key'     => '_lk_module_id',
+						'value'   => $course_module_ids,
+						'compare' => 'IN',
+					),
+				),
+			)
+		);
+	}
+
+	// Get completed lesson IDs for this user (presence in table = completed).
 	$completed_lesson_ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->prepare(
-			"SELECT lesson_id FROM {$wpdb->prefix}learnkit_progress WHERE user_id = %d AND completed = 1",
+			"SELECT lesson_id FROM {$wpdb->prefix}learnkit_progress WHERE user_id = %d",
 			$user_id
 		)
 	);
 
 	$all_lessons_done = ! empty( $all_course_lesson_ids ) &&
-		count( array_diff( $all_course_lesson_ids, $completed_lesson_ids ) ) === 0;
+		count( array_diff( array_map( 'strval', $all_course_lesson_ids ), array_map( 'strval', $completed_lesson_ids ) ) ) === 0;
 
-	// Check all quizzes in the course are passed.
-	$all_quiz_ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->prepare(
-			"SELECT p.ID FROM {$wpdb->posts} p
-			INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_lk_module_id'
-			INNER JOIN {$wpdb->posts} mod ON mod.ID = pm.meta_value AND mod.post_status = 'publish'
-			INNER JOIN {$wpdb->postmeta} pm_course ON mod.ID = pm_course.post_id AND pm_course.meta_key = '_lk_course_id' AND pm_course.meta_value = %d
-			WHERE p.post_type = 'lk_quiz' AND p.post_status = 'publish'",
-			$course_id
-		)
-	);
+	// Get all quiz IDs for those modules.
+	$all_quiz_ids = array();
+	if ( ! empty( $course_module_ids ) ) {
+		$all_quiz_ids = get_posts(
+			array(
+				'post_type'      => 'lk_quiz',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'meta_query'     => array(
+					array(
+						'key'     => '_lk_module_id',
+						'value'   => $course_module_ids,
+						'compare' => 'IN',
+					),
+				),
+			)
+		);
+	}
 
 	$all_quizzes_passed = true;
 	if ( ! empty( $all_quiz_ids ) ) {
@@ -226,7 +262,7 @@ if ( $is_last_lesson && $is_enrolled && $user_id && $course_id ) {
 				$user_id
 			)
 		);
-		$all_quizzes_passed = count( array_diff( $all_quiz_ids, $passed_quiz_ids ) ) === 0;
+		$all_quizzes_passed = count( array_diff( array_map( 'strval', $all_quiz_ids ), array_map( 'strval', $passed_quiz_ids ) ) ) === 0;
 	}
 
 	if ( $all_lessons_done && $all_quizzes_passed ) {
