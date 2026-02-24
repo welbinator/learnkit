@@ -165,6 +165,17 @@ class LearnKit {
 		 */
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-rest-api.php';
 
+		/**
+		 * Etch integration — injects nested relational data into Etch's dynamic
+		 * data payload for LearnKit post types. Only loaded when Etch is active.
+		 */
+		if ( class_exists( 'Etch\Plugin' ) ) {
+			require_once LEARNKIT_PLUGIN_DIR . 'includes/etch-resolvers/class-learnkit-etch-course-resolver.php';
+			require_once LEARNKIT_PLUGIN_DIR . 'includes/etch-resolvers/class-learnkit-etch-module-resolver.php';
+			require_once LEARNKIT_PLUGIN_DIR . 'includes/etch-resolvers/class-learnkit-etch-lesson-resolver.php';
+			require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-etch-integration.php';
+		}
+
 		$this->loader = new LearnKit_Loader();
 	}
 
@@ -248,6 +259,12 @@ class LearnKit {
 		// Register certificate generator.
 		$certificate_generator = new LearnKit_Certificate_Generator();
 		$certificate_generator->register();
+
+		// Register Etch integration — only when Etch is active.
+		if ( class_exists( 'Etch\Plugin' ) ) {
+			$etch_integration = new LearnKit_Etch_Integration();
+			$this->loader->add_filter( 'etch/dynamic_data/post', $etch_integration, 'inject', 10, 2 );
+		}
 	}
 
 	/**
