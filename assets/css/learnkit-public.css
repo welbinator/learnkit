@@ -157,15 +157,18 @@ body a:where(:not([class*="btn--"])) {
 .learnkit-lesson-progress {
 	display: flex;
 	gap: 1rem;
+	align-self: flex-start;
 }
 
 .learnkit-lesson-footer {
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding-top: 2rem;
-	border-top: 2px solid #e5e7eb;
-	margin-block-start: auto;
+    flex-direction: column;
+    gap: 2rem;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 2rem;
+    border-top: 2px solid #e5e7eb;
+    margin-block-start: auto;
 }
 
 .btn--lk-mark-complete {
@@ -192,7 +195,11 @@ body a:where(:not([class*="btn--"])) {
 
 .learnkit-lesson-navigation {
 	display: flex;
-	gap: 1rem;
+    gap: 1rem;
+    width: 100%;
+    justify-content: space-between;
+    padding-block-start: 2rem;
+    border-top: 2px solid #e5e7eb;
 }
 
 .btn--lk-nav {
@@ -418,10 +425,7 @@ body a:where(:not([class*="btn--"])) {
 		gap: 1rem;
 	}
 
-	.learnkit-lesson-navigation {
-		width: 100%;
-		flex-direction: column;
-	}
+	
 
 	.btn--lk-nav {
 		width: 100%;
