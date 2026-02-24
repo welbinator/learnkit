@@ -293,13 +293,13 @@ class LearnKit_Course_Catalog {
 		ob_start();
 		if ( $is_enrolled ) :
 			?>
-			<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>" class="button button-enrolled">
+			<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'continue_learning_button', 'btn--lk-continue' ) ); ?>">
 				<?php esc_html_e( 'Continue Learning', 'learnkit' ); ?>
 			</a>
 			<?php
 		elseif ( is_user_logged_in() && $self_enroll_enabled ) :
 			?>
-			<button class="button button-enroll" data-course-id="<?php echo esc_attr( $course_id ); ?>">
+			<button class="<?php echo esc_attr( learnkit_button_classes( 'enroll_button', 'btn--lk-enroll' ) ); ?>" data-course-id="<?php echo esc_attr( $course_id ); ?>">
 				<?php esc_html_e( 'Enroll Now', 'learnkit' ); ?>
 			</button>
 			<?php
@@ -319,7 +319,7 @@ class LearnKit_Course_Catalog {
 		elseif ( $self_enroll_enabled ) :
 			// Free course, not logged in — prompt to log in.
 			?>
-			<a href="<?php echo esc_url( wp_login_url( get_permalink( $course_id ) ) ); ?>" class="button button-login">
+			<a href="<?php echo esc_url( wp_login_url( get_permalink( $course_id ) ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'login_button', 'btn--lk-login' ) ); ?>">
 				<?php esc_html_e( 'Login to Enroll', 'learnkit' ); ?>
 			</a>
 			<?php
