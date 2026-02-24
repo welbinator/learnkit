@@ -264,7 +264,7 @@ if ( ! $is_available ) {
 							aria-disabled="true"
 							style="cursor: not-allowed; opacity: 0.5;"
 						>
-							<span class="checkmark">✓</span> Mark as Complete
+							<span class="lk-icon"><svg aria-hidden="true" focusable="false" width="1em" height="1em" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.341,12.247a1,1,0,0,0,1.317,1.505l4-3.5a1,1,0,0,0,.028-1.48l-9-8.5A1,1,0,0,0,.313,1.727l8.2,7.745Z" transform="translate(19 6.5) rotate(90)" fill="currentColor"/></svg></span> Mark as Complete
 						</button>
 						<p class="learnkit-quiz-gate-notice" style="margin: 8px 0 0; font-size: 0.875rem; color: #d63638; font-weight: 600;">
 							<?php esc_html_e( 'Complete the quiz to finish this lesson', 'learnkit' ); ?>
@@ -274,7 +274,7 @@ if ( ! $is_available ) {
 							class="<?php echo esc_attr( learnkit_button_classes( 'mark_complete_button', 'lk-button-mark-complete' ) ); ?>"
 							data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
 						>
-							<span class="checkmark">✓</span> Mark as Complete
+							<span class="lk-icon"><svg aria-hidden="true" focusable="false" width="1em" height="1em" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.341,12.247a1,1,0,0,0,1.317,1.505l4-3.5a1,1,0,0,0,.028-1.48l-9-8.5A1,1,0,0,0,.313,1.727l8.2,7.745Z" transform="translate(19 6.5) rotate(90)" fill="currentColor"/></svg></span> Mark as Complete
 						</button>
 					<?php endif; ?>
 
