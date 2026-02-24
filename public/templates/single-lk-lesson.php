@@ -377,12 +377,24 @@ if ( ! $is_available ) {
 			</div>
 
 			<div class="learnkit-lesson-navigation">
-				<?php if ( $prev_lesson_id ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $prev_lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'prev_lesson_button', 'btn--lk-nav prev' ) ); ?>">
-						<span class="arrow">←</span> Previous Lesson
-					</a>
-				<?php elseif ( $prev_module_last_lesson ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $prev_module_last_lesson['id'] ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'prev_lesson_button', 'btn--lk-nav prev prev-module' ) ); ?>">
+				<?php
+				// Build previous button tooltip.
+				if ( $prev_lesson_id ) {
+					$prev_tooltip = get_the_title( $prev_lesson_id );
+				} elseif ( $prev_module_last_lesson ) {
+					$prev_tooltip = $prev_module_last_lesson['title'];
+				} else {
+					$prev_tooltip = '';
+				}
+
+				if ( $prev_lesson_id || $prev_module_last_lesson ) :
+					$prev_href = $prev_lesson_id ? get_permalink( $prev_lesson_id ) : get_permalink( $prev_module_last_lesson['id'] );
+				?>
+					<a
+						href="<?php echo esc_url( $prev_href ); ?>"
+						class="<?php echo esc_attr( learnkit_button_classes( 'prev_lesson_button', 'btn--lk-nav prev' ) ); ?>"
+						<?php if ( $prev_tooltip ) : ?>title="<?php echo esc_attr( $prev_tooltip ); ?>" data-tooltip="<?php echo esc_attr( $prev_tooltip ); ?>"<?php endif; ?>
+					>
 						<span class="arrow">←</span> Previous Lesson
 					</a>
 				<?php else : ?>
@@ -392,41 +404,35 @@ if ( ! $is_available ) {
 				<?php endif; ?>
 
 				<?php
-				$next_tooltip = $quiz_gate_active ? esc_attr__( 'Complete the quiz to proceed to the next lesson', 'learnkit' ) : '';
-				if ( $next_lesson_id ) :
+				// Build next button tooltip.
+				if ( $quiz_gate_active ) {
+					$next_tooltip = esc_attr__( 'Complete the quiz to proceed to the next lesson', 'learnkit' );
+				} elseif ( $next_lesson_id ) {
+					$next_tooltip = get_the_title( $next_lesson_id );
+				} elseif ( $next_module_first_lesson ) {
+					$next_tooltip = $next_module_first_lesson['title'];
+				} else {
+					$next_tooltip = '';
+				}
+
+				if ( $next_lesson_id || $next_module_first_lesson ) :
+					$next_href = $next_lesson_id ? get_permalink( $next_lesson_id ) : get_permalink( $next_module_first_lesson['id'] );
 					if ( $quiz_gate_active ) : ?>
 						<span
 							class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button_disabled', 'btn--lk-nav next disabled' ) ); ?>"
 							aria-disabled="true"
-							title="<?php echo $next_tooltip; ?>"
-							data-tooltip="<?php echo $next_tooltip; ?>"
+							title="<?php echo esc_attr( $next_tooltip ); ?>"
+							data-tooltip="<?php echo esc_attr( $next_tooltip ); ?>"
 						>
 							Next Lesson <span class="arrow">→</span>
 						</span>
 					<?php else : ?>
-						<a href="<?php echo esc_url( get_permalink( $next_lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button', 'btn--lk-nav next' ) ); ?>">
-							Next Lesson <span class="arrow">→</span>
-						</a>
-					<?php endif; ?>
-				<?php elseif ( $next_module_first_lesson ) :
-					if ( $quiz_gate_active ) : ?>
-						<span
-							class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button_disabled', 'btn--lk-nav next next-module disabled' ) ); ?>"
-							aria-disabled="true"
-							title="<?php echo $next_tooltip; ?>"
-							data-tooltip="<?php echo $next_tooltip; ?>"
+						<a
+							href="<?php echo esc_url( $next_href ); ?>"
+							class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button', 'btn--lk-nav next' ) ); ?>"
+							<?php if ( $next_tooltip ) : ?>title="<?php echo esc_attr( $next_tooltip ); ?>" data-tooltip="<?php echo esc_attr( $next_tooltip ); ?>"<?php endif; ?>
 						>
-							<div style="display: flex; flex-direction: column; align-items: flex-end;">
-								<span style="font-size: 12px; opacity: 0.8;">Next Module:</span>
-								<span><?php echo esc_html( $next_module_first_lesson['module_name'] ); ?> <span class="arrow">→</span></span>
-							</div>
-						</span>
-					<?php else : ?>
-						<a href="<?php echo esc_url( get_permalink( $next_module_first_lesson['id'] ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button', 'btn--lk-nav next next-module' ) ); ?>">
-							<div style="display: flex; flex-direction: column; align-items: flex-end;">
-								<span style="font-size: 12px; opacity: 0.8;">Next Module:</span>
-								<span><?php echo esc_html( $next_module_first_lesson['module_name'] ); ?> <span class="arrow">→</span></span>
-							</div>
+							Next Lesson <span class="arrow">→</span>
 						</a>
 					<?php endif; ?>
 				<?php else : ?>
