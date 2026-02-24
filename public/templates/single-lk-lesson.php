@@ -392,15 +392,35 @@ if ( ! $is_available ) {
 		</div>
 
 		<ul class="learnkit-lessons-list">
-			<?php foreach ( $lessons as $index => $l ) : ?>
-				<li class="lesson-item <?php echo $l->ID === $lesson_id ? 'active' : ''; ?>">
-					<a href="<?php echo esc_url( get_permalink( $l->ID ) ); ?>">
-						<span class="lesson-number"><?php echo esc_html( $index + 1 ); ?>.</span>
-						<span class="lesson-title"><?php echo esc_html( $l->post_title ); ?></span>
-						<span class="lesson-status">
-							<span class="status-icon incomplete">○</span>
+			<?php foreach ( $lessons as $index => $l ) :
+				$is_current   = $l->ID === $lesson_id;
+				$is_after     = $index > array_search( $lesson_id, array_column( $lessons, 'ID' ), true );
+				$is_gated     = $quiz_gate_active && $is_after;
+				$sidebar_tip  = esc_attr__( 'Complete the quiz to proceed to the next lesson', 'learnkit' );
+				?>
+				<li class="lesson-item <?php echo $is_current ? 'active' : ''; ?> <?php echo $is_gated ? 'gated' : ''; ?>">
+					<?php if ( $is_gated ) : ?>
+						<span
+							class="lk-sidebar-lesson-gated"
+							aria-disabled="true"
+							title="<?php echo $sidebar_tip; ?>"
+							data-tooltip="<?php echo $sidebar_tip; ?>"
+						>
+							<span class="lesson-number"><?php echo esc_html( $index + 1 ); ?>.</span>
+							<span class="lesson-title"><?php echo esc_html( $l->post_title ); ?></span>
+							<span class="lesson-status">
+								<span class="status-icon incomplete">○</span>
+							</span>
 						</span>
-					</a>
+					<?php else : ?>
+						<a href="<?php echo esc_url( get_permalink( $l->ID ) ); ?>">
+							<span class="lesson-number"><?php echo esc_html( $index + 1 ); ?>.</span>
+							<span class="lesson-title"><?php echo esc_html( $l->post_title ); ?></span>
+							<span class="lesson-status">
+								<span class="status-icon incomplete">○</span>
+							</span>
+						</a>
+					<?php endif; ?>
 				</li>
 			<?php endforeach; ?>
 		</ul>

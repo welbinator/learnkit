@@ -326,6 +326,56 @@ body a:where(:not([class*="btn--"])) {
 	font-weight: 600;
 }
 
+/* Gated (quiz-locked) sidebar lesson */
+.lesson-item.gated .lk-sidebar-lesson-gated {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem;
+	border-radius: 4px;
+	color: #9ca3af;
+	cursor: not-allowed;
+	position: relative;
+}
+
+.lesson-item.gated .lk-sidebar-lesson-gated[data-tooltip]::after {
+	content: attr(data-tooltip);
+	position: absolute;
+	bottom: calc(100% + 8px);
+	left: 0;
+	background: #111827;
+	color: #ffffff;
+	font-size: 0.78rem;
+	font-weight: 500;
+	padding: 6px 10px;
+	border-radius: 5px;
+	white-space: nowrap;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	z-index: 10;
+	max-width: 240px;
+	white-space: normal;
+}
+
+.lesson-item.gated .lk-sidebar-lesson-gated[data-tooltip]::before {
+	content: '';
+	position: absolute;
+	bottom: calc(100% + 2px);
+	left: 16px;
+	border: 6px solid transparent;
+	border-top-color: #111827;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	z-index: 10;
+}
+
+.lesson-item.gated .lk-sidebar-lesson-gated[data-tooltip]:hover::after,
+.lesson-item.gated .lk-sidebar-lesson-gated[data-tooltip]:hover::before {
+	opacity: 1;
+}
+
 .lesson-number {
 	font-weight: 700;
 	color: #6b7280;
