@@ -12,7 +12,7 @@
 
 	$(document).ready(function () {
 		// Handle mark complete button
-		$('.lk-button-mark-complete').on('click', function (e) {
+		$(document).on('click', '.btn--lk-mark-complete:not([disabled])', function (e) {
 			e.preventDefault();
 
 			const $button = $(this);
@@ -29,10 +29,9 @@
 				},
 				success: function (response) {
 					$button
-						.removeClass('lk-button-mark-complete')
-						.addClass('lk-button-mark-complete--done')
-						.prop('disabled', false)
-						.html('<span class="checkmark">✓</span> Completed');
+						.addClass('btn--lk-mark-complete--done')
+						.prop('disabled', true)
+						.html('<span class="lk-icon"><svg aria-hidden="true" focusable="false" width="1em" height="1em" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.341,12.247a1,1,0,0,0,1.317,1.505l4-3.5a1,1,0,0,0,.028-1.48l-9-8.5A1,1,0,0,0,.313,1.727l8.2,7.745Z" transform="translate(19 6.5) rotate(90)" fill="white"/></svg></span> Completed');
 
 					// Update sidebar lesson status
 					updateLessonStatus(lessonId, true);
@@ -46,14 +45,14 @@
 						message = xhr.responseJSON.message;
 					}
 					alert(message);
-					$button.prop('disabled', false).html('<span class="checkmark">✓</span> Mark as Complete');
+					$button.prop('disabled', false).html('<span class="lk-icon"><svg aria-hidden="true" focusable="false" width="1em" height="1em" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.341,12.247a1,1,0,0,0,1.317,1.505l4-3.5a1,1,0,0,0,.028-1.48l-9-8.5A1,1,0,0,0,.313,1.727l8.2,7.745Z" transform="translate(19 6.5) rotate(90)" fill="white"/></svg></span> Mark as Complete');
 				}
 			});
 		});
 
 		// Update lesson status icon in sidebar
 		function updateLessonStatus(lessonId, completed) {
-			const $lessonItem = $('.lesson-item a[href*="' + lessonId + '"]').parent();
+			const $lessonItem = $('.lesson-item a[href*="/' + lessonId + '/"], .lesson-item a[href$="/' + lessonId + '"]').parent();
 			const $statusIcon = $lessonItem.find('.status-icon');
 
 			if (completed) {
@@ -77,8 +76,8 @@
 		loadProgressData();
 
 		function loadProgressData() {
-			// Get lesson ID from the button (either state)
-			const lessonId = $('.lk-button-mark-complete').data('lesson-id') || $('.lk-button-mark-complete--done').data('lesson-id');
+			const $btn = $('.btn--lk-mark-complete');
+			const lessonId = $btn.data('lesson-id');
 			if (!lessonId) {
 				return;
 			}
@@ -106,12 +105,12 @@
 						updateLessonStatus(completedLessonId, true);
 					});
 
-					// Check if current lesson is complete
+					// Check if current lesson is already complete
 					if (response.completed_lesson_ids.includes(parseInt(lessonId))) {
-						$('.lk-button-mark-complete')
-							.removeClass('lk-button-mark-complete')
-							.addClass('lk-button-mark-complete--done')
-							.html('<span class="checkmark">✓</span> Completed');
+						$('.btn--lk-mark-complete')
+							.addClass('btn--lk-mark-complete--done')
+							.prop('disabled', true)
+							.html('<span class="lk-icon"><svg aria-hidden="true" focusable="false" width="1em" height="1em" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.341,12.247a1,1,0,0,0,1.317,1.505l4-3.5a1,1,0,0,0,.028-1.48l-9-8.5A1,1,0,0,0,.313,1.727l8.2,7.745Z" transform="translate(19 6.5) rotate(90)" fill="white"/></svg></span> Completed');
 					}
 				}
 			});

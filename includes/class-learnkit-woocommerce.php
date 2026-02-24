@@ -382,23 +382,6 @@ class LearnKit_WooCommerce {
 		}
 
 		if ( $is_enrolled ) {
-			// Check whether the enrollment originated from WooCommerce.
-			global $wpdb;
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$source = $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT source FROM {$wpdb->prefix}learnkit_enrollments WHERE user_id = %d AND course_id = %d AND status = 'active'",
-					$user_id,
-					$course_id
-				)
-			);
-
-			if ( 'woocommerce' === $source ) {
-				echo '<span class="lk-enrolled-badge lk-enrolled-badge--woo">';
-				esc_html_e( 'Enrolled (via purchase)', 'learnkit' );
-				echo '</span>';
-			}
-
 			return;
 		}
 

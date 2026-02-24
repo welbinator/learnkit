@@ -46,6 +46,21 @@ $required_to_complete = get_post_meta( $quiz_id, '_lk_required_to_complete', tru
 $questions            = get_post_meta( $quiz_id, '_lk_questions', true );
 $questions            = $questions ? json_decode( $questions, true ) : array();
 
+// Normalize questions: ensure each has an 'id' and a numeric 'correctAnswer' index.
+foreach ( $questions as $idx => &$q ) {
+	// Assign a stable numeric id if missing.
+	if ( ! isset( $q['id'] ) ) {
+		$q['id'] = $idx;
+	}
+	// Convert string correct_answer to a numeric index if needed.
+	if ( ! isset( $q['correctAnswer'] ) && ! isset( $q['correct'] ) ) {
+		if ( isset( $q['correct_answer'] ) && isset( $q['options'] ) ) {
+			$q['correctAnswer'] = (int) array_search( $q['correct_answer'], $q['options'], true );
+		}
+	}
+}
+unset( $q );
+
 // Get user's previous attempts.
 $attempts = array();
 if ( $user_id ) {

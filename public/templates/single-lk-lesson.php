@@ -114,13 +114,167 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 	}
 }
 
-// Check enrollment — gate lesson access.
+// Check if we're on first lesson of module - find previous module's last lesson.
+$prev_module_last_lesson = null;
+if ( ! $prev_lesson_id && $course_id && $module_id ) {
+	// Get all modules in this course (reuse or re-query).
+	$prev_modules_query = new WP_Query(
+		array(
+			'post_type'      => 'lk_module',
+			'posts_per_page' => -1,
+			'post_status'    => 'publish',
+			'no_found_rows'  => true,
+			'meta_key'       => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value'     => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+			'orderby'        => 'menu_order',
+			'order'          => 'ASC',
+		)
+	);
+
+	$all_modules        = $prev_modules_query->posts;
+	$current_module_idx = null;
+
+	foreach ( $all_modules as $idx => $mod ) {
+		if ( (int) $mod->ID === (int) $module_id ) {
+			$current_module_idx = $idx;
+			break;
+		}
+	}
+
+	// If there's a previous module, get its last lesson.
+	if ( null !== $current_module_idx && $current_module_idx > 0 ) {
+		$prev_module      = $all_modules[ $current_module_idx - 1 ];
+		$prev_mod_lessons = new WP_Query(
+			array(
+				'post_type'      => 'lk_lesson',
+				'posts_per_page' => -1,
+				'post_status'    => 'publish',
+				'no_found_rows'  => true,
+				'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $prev_module->ID, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'orderby'        => 'menu_order',
+				'order'          => 'DESC',
+			)
+		);
+
+		if ( $prev_mod_lessons->have_posts() ) {
+			$prev_module_last_lesson = array(
+				'id'          => $prev_mod_lessons->posts[0]->ID,
+				'title'       => $prev_mod_lessons->posts[0]->post_title,
+				'module_name' => $prev_module->post_title,
+			);
+		}
+	}
+}
+
+
 $user_id     = get_current_user_id();
 $is_enrolled = false;
 if ( $user_id && current_user_can( 'manage_options' ) ) {
 	$is_enrolled = true;
 } elseif ( $course_id && $user_id ) {
 	$is_enrolled = learnkit_is_enrolled( $user_id, (int) $course_id );
+}
+
+// Detect if this is the last lesson in the course and whether the user has earned a certificate.
+$is_last_lesson     = ! $next_lesson_id && ! $next_module_first_lesson;
+$show_certificate   = false;
+$certificate_url    = '';
+
+if ( $is_last_lesson && $is_enrolled && $user_id && $course_id ) {
+	global $wpdb;
+
+	// Get all module IDs for this course.
+	$course_module_ids = get_posts(
+		array(
+			'post_type'      => 'lk_module',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+			'meta_query'     => array(
+				array(
+					'key'   => '_lk_course_id',
+					'value' => $course_id,
+				),
+			),
+		)
+	);
+
+	// Get all lesson IDs in those modules.
+	$all_course_lesson_ids = array();
+	if ( ! empty( $course_module_ids ) ) {
+		$all_course_lesson_ids = get_posts(
+			array(
+				'post_type'      => 'lk_lesson',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'meta_query'     => array(
+					array(
+						'key'     => '_lk_module_id',
+						'value'   => $course_module_ids,
+						'compare' => 'IN',
+					),
+				),
+			)
+		);
+	}
+
+	// Get completed lesson IDs for this user (presence in table = completed).
+	$completed_lesson_ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->prepare(
+			"SELECT lesson_id FROM {$wpdb->prefix}learnkit_progress WHERE user_id = %d",
+			$user_id
+		)
+	);
+
+	$all_lessons_done = ! empty( $all_course_lesson_ids ) &&
+		count( array_diff( array_map( 'strval', $all_course_lesson_ids ), array_map( 'strval', $completed_lesson_ids ) ) ) === 0;
+
+	// Get all quiz IDs for those modules.
+	$all_quiz_ids = array();
+	if ( ! empty( $course_module_ids ) ) {
+		$all_quiz_ids = get_posts(
+			array(
+				'post_type'      => 'lk_quiz',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'meta_query'     => array(
+					array(
+						'key'     => '_lk_module_id',
+						'value'   => $course_module_ids,
+						'compare' => 'IN',
+					),
+				),
+			)
+		);
+	}
+
+	$all_quizzes_passed = true;
+	if ( ! empty( $all_quiz_ids ) ) {
+		$passed_quiz_ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare(
+				"SELECT DISTINCT quiz_id FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE user_id = %d AND passed = 1",
+				$user_id
+			)
+		);
+		$all_quizzes_passed = count( array_diff( array_map( 'strval', $all_quiz_ids ), array_map( 'strval', $passed_quiz_ids ) ) ) === 0;
+	}
+
+	if ( $all_lessons_done && $all_quizzes_passed ) {
+		$show_certificate = true;
+		$certificate_url  = add_query_arg(
+			array(
+				'download_certificate' => $course_id,
+				'_wpnonce'             => wp_create_nonce( 'learnkit_certificate_' . $course_id ),
+			),
+			home_url()
+		);
+	}
 }
 
 if ( ! $is_enrolled ) {
@@ -324,8 +478,24 @@ if ( ! $is_available ) {
 			</div>
 
 			<div class="learnkit-lesson-navigation">
-				<?php if ( $prev_lesson_id ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $prev_lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'prev_lesson_button', 'btn--lk-nav prev' ) ); ?>">
+				<?php
+				// Build previous button tooltip.
+				if ( $prev_lesson_id ) {
+					$prev_tooltip = get_the_title( $prev_lesson_id );
+				} elseif ( $prev_module_last_lesson ) {
+					$prev_tooltip = $prev_module_last_lesson['title'];
+				} else {
+					$prev_tooltip = '';
+				}
+
+				if ( $prev_lesson_id || $prev_module_last_lesson ) :
+					$prev_href = $prev_lesson_id ? get_permalink( $prev_lesson_id ) : get_permalink( $prev_module_last_lesson['id'] );
+				?>
+					<a
+						href="<?php echo esc_url( $prev_href ); ?>"
+						class="<?php echo esc_attr( learnkit_button_classes( 'prev_lesson_button', 'btn--lk-nav prev' ) ); ?>"
+						<?php if ( $prev_tooltip ) : ?>title="<?php echo esc_attr( $prev_tooltip ); ?>" data-tooltip="<?php echo esc_attr( $prev_tooltip ); ?>"<?php endif; ?>
+					>
 						<span class="arrow">←</span> Previous Lesson
 					</a>
 				<?php else : ?>
@@ -335,47 +505,47 @@ if ( ! $is_available ) {
 				<?php endif; ?>
 
 				<?php
-				$next_tooltip = $quiz_gate_active ? esc_attr__( 'Complete the quiz to proceed to the next lesson', 'learnkit' ) : '';
-				if ( $next_lesson_id ) :
+				// Build next button tooltip.
+				if ( $quiz_gate_active ) {
+					$next_tooltip = esc_attr__( 'Complete the quiz to proceed to the next lesson', 'learnkit' );
+				} elseif ( $next_lesson_id ) {
+					$next_tooltip = get_the_title( $next_lesson_id );
+				} elseif ( $next_module_first_lesson ) {
+					$next_tooltip = $next_module_first_lesson['title'];
+				} else {
+					$next_tooltip = '';
+				}
+
+				if ( $next_lesson_id || $next_module_first_lesson ) :
+					$next_href = $next_lesson_id ? get_permalink( $next_lesson_id ) : get_permalink( $next_module_first_lesson['id'] );
 					if ( $quiz_gate_active ) : ?>
 						<span
 							class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button_disabled', 'btn--lk-nav next disabled' ) ); ?>"
 							aria-disabled="true"
-							title="<?php echo $next_tooltip; ?>"
-							data-tooltip="<?php echo $next_tooltip; ?>"
+							title="<?php echo esc_attr( $next_tooltip ); ?>"
+							data-tooltip="<?php echo esc_attr( $next_tooltip ); ?>"
 						>
 							Next Lesson <span class="arrow">→</span>
 						</span>
 					<?php else : ?>
-						<a href="<?php echo esc_url( get_permalink( $next_lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button', 'btn--lk-nav next' ) ); ?>">
-							Next Lesson <span class="arrow">→</span>
-						</a>
-					<?php endif; ?>
-				<?php elseif ( $next_module_first_lesson ) :
-					if ( $quiz_gate_active ) : ?>
-						<span
-							class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button_disabled', 'btn--lk-nav next next-module disabled' ) ); ?>"
-							aria-disabled="true"
-							title="<?php echo $next_tooltip; ?>"
-							data-tooltip="<?php echo $next_tooltip; ?>"
+						<a
+							href="<?php echo esc_url( $next_href ); ?>"
+							class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button', 'btn--lk-nav next' ) ); ?>"
+							<?php if ( $next_tooltip ) : ?>title="<?php echo esc_attr( $next_tooltip ); ?>" data-tooltip="<?php echo esc_attr( $next_tooltip ); ?>"<?php endif; ?>
 						>
-							<div style="display: flex; flex-direction: column; align-items: flex-end;">
-								<span style="font-size: 12px; opacity: 0.8;">Next Module:</span>
-								<span><?php echo esc_html( $next_module_first_lesson['module_name'] ); ?> <span class="arrow">→</span></span>
-							</div>
-						</span>
-					<?php else : ?>
-						<a href="<?php echo esc_url( get_permalink( $next_module_first_lesson['id'] ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button', 'btn--lk-nav next next-module' ) ); ?>">
-							<div style="display: flex; flex-direction: column; align-items: flex-end;">
-								<span style="font-size: 12px; opacity: 0.8;">Next Module:</span>
-								<span><?php echo esc_html( $next_module_first_lesson['module_name'] ); ?> <span class="arrow">→</span></span>
-							</div>
+							Next Lesson <span class="arrow">→</span>
 						</a>
 					<?php endif; ?>
 				<?php else : ?>
-					<span class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button_disabled', 'btn--lk-nav next disabled' ) ); ?>">
-						Next Lesson <span class="arrow">→</span>
-					</span>
+					<?php if ( $show_certificate ) : ?>
+						<a href="<?php echo esc_url( $certificate_url ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'certificate_button', 'btn--lk-certificate' ) ); ?>">
+							🎓 Download Certificate
+						</a>
+					<?php else : ?>
+						<span class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button_disabled', 'btn--lk-nav next disabled' ) ); ?>">
+							Next Lesson <span class="arrow">→</span>
+						</span>
+					<?php endif; ?>
 				<?php endif; ?>
 			</div>
 		</div>

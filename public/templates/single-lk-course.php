@@ -147,7 +147,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 					<button class="<?php echo esc_attr( learnkit_button_classes( 'enroll_button', 'btn--lk-enroll' ) ); ?>" data-course-id="<?php echo esc_attr( $course_id ); ?>">
 						Enroll Now
 					</button>
-				<?php elseif ( ! $user_id ) : ?>
+				<?php elseif ( ! $user_id && $self_enrollment ) : ?>
 					<div class="lk-login-prompt">
 						<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>">Login to Enroll</a>
 					</div>
