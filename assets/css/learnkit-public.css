@@ -8,8 +8,7 @@
    ========================================================================== */
 
 .learnkit-lesson-viewer {
-	display: flex;
-	flex-direction: column;
+	display: grid;
 	grid-template-columns: 1fr 320px;
 	gap: 2rem;
 	max-width: 1400px;
@@ -22,6 +21,8 @@
 	border-radius: 8px;
 	padding: 2rem;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	display: flex;
+	flex-direction: column;
 }
 
 .learnkit-breadcrumb {
