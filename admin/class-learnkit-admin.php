@@ -252,7 +252,12 @@ class LearnKit_Admin {
 		if ( ! file_exists( $config_file ) ) {
 			return array();
 		}
-		$all_classes = json_decode( file_get_contents( $config_file ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$decoded = json_decode( file_get_contents( $config_file ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		if ( ! is_array( $decoded ) ) {
+			return array();
+		}
+		// Config may be a flat array or a dict with a 'classes' key.
+		$all_classes = isset( $decoded['classes'] ) ? $decoded['classes'] : $decoded;
 		if ( ! is_array( $all_classes ) ) {
 			return array();
 		}
@@ -260,7 +265,7 @@ class LearnKit_Admin {
 			array_filter(
 				$all_classes,
 				function( $class ) {
-					return strpos( $class, 'btn--' ) === 0 && 'btn--outline' !== $class;
+					return is_string( $class ) && strpos( $class, 'btn--' ) === 0 && 'btn--outline' !== $class;
 				}
 			)
 		);
