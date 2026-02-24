@@ -114,7 +114,60 @@ if ( ! $next_lesson_id && $course_id && $module_id ) {
 	}
 }
 
-// Check enrollment — gate lesson access.
+// Check if we're on first lesson of module - find previous module's last lesson.
+$prev_module_last_lesson = null;
+if ( ! $prev_lesson_id && $course_id && $module_id ) {
+	// Get all modules in this course (reuse or re-query).
+	$prev_modules_query = new WP_Query(
+		array(
+			'post_type'      => 'lk_module',
+			'posts_per_page' => -1,
+			'post_status'    => 'publish',
+			'no_found_rows'  => true,
+			'meta_key'       => '_lk_course_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value'     => $course_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+			'orderby'        => 'menu_order',
+			'order'          => 'ASC',
+		)
+	);
+
+	$all_modules        = $prev_modules_query->posts;
+	$current_module_idx = null;
+
+	foreach ( $all_modules as $idx => $mod ) {
+		if ( (int) $mod->ID === (int) $module_id ) {
+			$current_module_idx = $idx;
+			break;
+		}
+	}
+
+	// If there's a previous module, get its last lesson.
+	if ( null !== $current_module_idx && $current_module_idx > 0 ) {
+		$prev_module      = $all_modules[ $current_module_idx - 1 ];
+		$prev_mod_lessons = new WP_Query(
+			array(
+				'post_type'      => 'lk_lesson',
+				'posts_per_page' => -1,
+				'post_status'    => 'publish',
+				'no_found_rows'  => true,
+				'meta_key'       => '_lk_module_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value'     => $prev_module->ID, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'orderby'        => 'menu_order',
+				'order'          => 'DESC',
+			)
+		);
+
+		if ( $prev_mod_lessons->have_posts() ) {
+			$prev_module_last_lesson = array(
+				'id'          => $prev_mod_lessons->posts[0]->ID,
+				'title'       => $prev_mod_lessons->posts[0]->post_title,
+				'module_name' => $prev_module->post_title,
+			);
+		}
+	}
+}
+
+
 $user_id     = get_current_user_id();
 $is_enrolled = false;
 if ( $user_id && current_user_can( 'manage_options' ) ) {
@@ -326,6 +379,10 @@ if ( ! $is_available ) {
 			<div class="learnkit-lesson-navigation">
 				<?php if ( $prev_lesson_id ) : ?>
 					<a href="<?php echo esc_url( get_permalink( $prev_lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'prev_lesson_button', 'btn--lk-nav prev' ) ); ?>">
+						<span class="arrow">←</span> Previous Lesson
+					</a>
+				<?php elseif ( $prev_module_last_lesson ) : ?>
+					<a href="<?php echo esc_url( get_permalink( $prev_module_last_lesson['id'] ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'prev_lesson_button', 'btn--lk-nav prev prev-module' ) ); ?>">
 						<span class="arrow">←</span> Previous Lesson
 					</a>
 				<?php else : ?>
