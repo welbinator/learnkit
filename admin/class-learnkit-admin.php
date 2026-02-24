@@ -521,12 +521,109 @@ class LearnKit_Admin {
 		<div class="wrap">
 			<h1><?php esc_html_e( 'LearnKit Docs', 'learnkit' ); ?></h1>
 			<p><?php esc_html_e( 'Developer reference for extending LearnKit with hooks and filters.', 'learnkit' ); ?></p>
+
+			<!-- Table of Contents -->
+			<div style="background:#f6f7f7; border:1px solid #c3c4c7; border-radius:4px; padding:16px 24px; margin-bottom:28px; max-width:900px;">
+				<strong style="display:block; margin-bottom:8px;"><?php esc_html_e( 'Table of Contents', 'learnkit' ); ?></strong>
+				<ol style="margin:0; padding-left:20px; line-height:2;">
+					<li><a href="#creating-a-course"><?php esc_html_e( 'Creating a Course', 'learnkit' ); ?></a>
+						<ol style="margin:4px 0; padding-left:20px; line-height:2;">
+							<li><a href="#course-step-1"><?php esc_html_e( 'Step 1 — Create the course', 'learnkit' ); ?></a></li>
+							<li><a href="#course-step-2"><?php esc_html_e( 'Step 2 — Add modules', 'learnkit' ); ?></a></li>
+							<li><a href="#course-step-3"><?php esc_html_e( 'Step 3 — Add lessons', 'learnkit' ); ?></a></li>
+							<li><a href="#course-step-4"><?php esc_html_e( 'Step 4 — Add quizzes (optional)', 'learnkit' ); ?></a></li>
+							<li><a href="#course-step-5"><?php esc_html_e( 'Step 5 — Publish', 'learnkit' ); ?></a></li>
+						</ol>
+					</li>
+					<li><a href="#hooks-filters"><?php esc_html_e( 'Hooks &amp; Filters', 'learnkit' ); ?></a>
+						<ol style="margin:4px 0; padding-left:20px; line-height:2;">
+							<li><a href="#filter-button-classes"><code>learnkit_button_classes</code></a></li>
+						</ol>
+					</li>
+					<li><a href="#woocommerce-integration"><?php esc_html_e( 'WooCommerce Integration', 'learnkit' ); ?></a>
+						<ol style="margin:4px 0; padding-left:20px; line-height:2;">
+							<li><a href="#wc-step-1"><?php esc_html_e( 'Step 1 — Create a WooCommerce product', 'learnkit' ); ?></a></li>
+							<li><a href="#wc-step-2"><?php esc_html_e( 'Step 2 — Link the product to a course', 'learnkit' ); ?></a></li>
+							<li><a href="#wc-step-3"><?php esc_html_e( 'Step 3 — Set the course access type', 'learnkit' ); ?></a></li>
+							<li><a href="#wc-how-it-works"><?php esc_html_e( 'How it works', 'learnkit' ); ?></a></li>
+							<li><a href="#hook-enrollment-cta"><code>learnkit_course_enrollment_cta</code></a></li>
+						</ol>
+					</li>
+				</ol>
+			</div>
+
 			<hr>
 
-			<h2><?php esc_html_e( 'Hooks &amp; Filters', 'learnkit' ); ?></h2>
+			<h2 id="creating-a-course"><?php esc_html_e( 'Creating a Course', 'learnkit' ); ?></h2>
+			<p><?php esc_html_e( 'Courses in LearnKit are made up of modules, and modules are made up of lessons. Quizzes are optional and can be attached to any lesson. Follow these steps to build your first course.', 'learnkit' ); ?></p>
+
+			<!-- Course Step 1 -->
+			<div id="course-step-1" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 1 — Create the course', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'Go to LearnKit → Course Builder and click "New Course". Give it a title, description, and featured image. You\'ll also choose an Access Type:', 'learnkit' ); ?></p>
+				<table class="widefat striped" style="max-width:600px; margin-bottom:16px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Access Type', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Description', 'learnkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><strong><?php esc_html_e( 'Free', 'learnkit' ); ?></strong></td>
+							<td><?php esc_html_e( 'Students can enroll directly from the course page at no cost. No WooCommerce required.', 'learnkit' ); ?></td>
+						</tr>
+						<tr>
+							<td><strong><?php esc_html_e( 'Paid', 'learnkit' ); ?></strong></td>
+							<td><?php esc_html_e( 'Students must purchase the course through WooCommerce before gaining access. Requires WooCommerce to be installed and a product linked to the course (see WooCommerce Integration below).', 'learnkit' ); ?></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- Course Step 2 -->
+			<div id="course-step-2" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 2 — Add modules', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'Modules are the top-level sections of your course (e.g. "Introduction", "Module 1: HTML Basics"). Inside the Course Builder, click "Add Module" to create one inline. You can drag modules to reorder them.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Course Step 3 -->
+			<div id="course-step-3" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 3 — Add lessons', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'Click the edit button on a module to open the module editor. From there you can:', 'learnkit' ); ?></p>
+				<ul style="list-style:disc; padding-left:24px;">
+					<li><strong><?php esc_html_e( 'Create a new lesson', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Type a title in the "Create new lesson" field and hit Enter. The lesson is created and added to the module immediately.', 'learnkit' ); ?></li>
+					<li><strong><?php esc_html_e( 'Add an existing lesson', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Use the "Add existing lesson" dropdown to pick a lesson that\'s already been created and assign it to this module.', 'learnkit' ); ?></li>
+				</ul>
+				<p><?php esc_html_e( 'Each lesson in the list shows three actions:', 'learnkit' ); ?></p>
+				<ul style="list-style:disc; padding-left:24px;">
+					<li><strong><?php esc_html_e( 'Edit Content', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Opens the lesson in the WordPress block editor so you can write and format the lesson content.', 'learnkit' ); ?></li>
+					<li><strong><?php esc_html_e( 'Quiz', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Create or manage a quiz attached to this lesson (see Step 4).', 'learnkit' ); ?></li>
+					<li><strong><?php esc_html_e( 'Delete', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Remove the lesson from the module.', 'learnkit' ); ?></li>
+				</ul>
+				<p><?php esc_html_e( 'Each lesson belongs to exactly one module. Drag the handle (⠿) next to a lesson to reorder it. Lesson order determines the Previous / Next navigation students see on the frontend.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Course Step 4 -->
+			<div id="course-step-4" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 4 — Add quizzes (optional)', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'Quizzes can be attached to any lesson. Inside the module editor, click the "Quiz" link next to a lesson to create or manage its quiz. Each quiz can have multiple questions, each with four answer options and one correct answer.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'If a lesson has a quiz attached, students must pass it before the "Next Lesson" button is enabled. You can set a passing score percentage per quiz.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Course Step 5 -->
+			<div id="course-step-5" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 5 — Publish', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'Once your modules and lessons are set up, publish the course post. Students can browse your course catalog, enroll (free or paid), and begin learning immediately.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'When a student completes all lessons and passes all quizzes, a "Download Certificate" button appears on the final lesson.', 'learnkit' ); ?></p>
+			</div>
+
+			<hr style="margin: 32px 0;">
+
+			<h2 id="hooks-filters"><?php esc_html_e( 'Hooks &amp; Filters', 'learnkit' ); ?></h2>
 
 			<!-- learnkit_button_classes -->
-			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+			<div id="filter-button-classes" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
 				<h3 style="margin-top:0; font-family:monospace; font-size:1.1rem;">learnkit_button_classes</h3>
 				<p><?php esc_html_e( 'Filter the CSS classes applied to any LearnKit frontend button. Use this to add, remove, or replace classes on a per-button basis without modifying template files.', 'learnkit' ); ?></p>
 
@@ -615,6 +712,89 @@ class LearnKit_Admin {
         return 'btn--lk-mark-complete my-complete-btn';
     }
     return $classes;
+}, 10, 3 );</code></pre>
+			</div>
+
+			<hr style="margin: 32px 0;">
+			<h2 id="woocommerce-integration"><?php esc_html_e( 'WooCommerce Integration', 'learnkit' ); ?></h2>
+			<p><?php esc_html_e( 'LearnKit integrates with WooCommerce to gate course access behind a product purchase. No extra plugin required — just follow the steps below.', 'learnkit' ); ?></p>
+
+			<!-- Step 1 -->
+			<div id="wc-step-1" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;">
+					<?php esc_html_e( 'Step 1 — Create a WooCommerce product', 'learnkit' ); ?>
+				</h3>
+				<p><?php esc_html_e( 'Create a Simple product in WooCommerce (Products → Add New). Set the price and publish it. Note the product ID — you\'ll need it in the next step.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Step 2 -->
+			<div id="wc-step-2" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;">
+					<?php esc_html_e( 'Step 2 — Link the product to a course', 'learnkit' ); ?>
+				</h3>
+				<p><?php esc_html_e( 'On the WooCommerce product edit screen, find the "Product data" panel and click the "LearnKit Courses" tab. You\'ll see a list of all published courses — select one or more to link them to this product. Students will be enrolled in every selected course when an order containing this product is completed.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'You can also set an "Access duration (days)" value. Leave it at 0 for lifetime access, or enter a positive number to automatically expire enrollment after that many days.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Step 3 -->
+			<div id="wc-step-3" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;">
+					<?php esc_html_e( 'Step 3 — Set the course access type', 'learnkit' ); ?>
+				</h3>
+				<p><?php esc_html_e( 'In the course settings (Course Builder → course settings or the post meta), make sure the course is NOT set to self-enrollment. Paid courses should have self-enrollment disabled so only purchasers gain access.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- How it works -->
+			<div id="wc-how-it-works" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;">
+					<?php esc_html_e( 'How it works', 'learnkit' ); ?>
+				</h3>
+				<p><?php esc_html_e( 'When a customer completes a WooCommerce order containing a linked product, LearnKit automatically enrolls them in the associated course(s). No manual enrollment needed.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'On the course page and catalog, visitors who are not enrolled see an "Enroll — $X.XX" button that links to:', 'learnkit' ); ?></p>
+				<ul style="list-style:disc; padding-left:24px;">
+					<li><?php esc_html_e( 'The product page — if only one product is linked to the course', 'learnkit' ); ?></li>
+					<li><?php esc_html_e( 'The WooCommerce shop archive filtered to that course\'s products — if multiple products are linked', 'learnkit' ); ?></li>
+				</ul>
+				<p><?php esc_html_e( 'The "Login to Enroll" button is only shown on free (self-enrollment) courses. Paid courses always show the purchase CTA instead.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Hook reference -->
+			<div id="hook-enrollment-cta" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0; font-family:monospace; font-size:1.1rem;">learnkit_course_enrollment_cta</h3>
+				<p><?php esc_html_e( 'Action hook that fires in place of the enroll button for paid courses. The built-in WooCommerce integration uses this hook to render the purchase button. You can also use it to add your own payment gateway or custom enrollment logic.', 'learnkit' ); ?></p>
+				<table class="widefat striped" style="max-width:600px; margin-bottom:20px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Parameter', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Type', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Description', 'learnkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>$course_id</code></td>
+							<td><?php esc_html_e( 'int', 'learnkit' ); ?></td>
+							<td><?php esc_html_e( 'The course post ID.', 'learnkit' ); ?></td>
+						</tr>
+						<tr>
+							<td><code>$user_id</code></td>
+							<td><?php esc_html_e( 'int', 'learnkit' ); ?></td>
+							<td><?php esc_html_e( 'The current user ID. 0 if not logged in.', 'learnkit' ); ?></td>
+						</tr>
+						<tr>
+							<td><code>$is_enrolled</code></td>
+							<td><?php esc_html_e( 'bool', 'learnkit' ); ?></td>
+							<td><?php esc_html_e( 'Whether the current user is already enrolled.', 'learnkit' ); ?></td>
+						</tr>
+					</tbody>
+				</table>
+				<h4><?php esc_html_e( 'Example — custom payment gateway button', 'learnkit' ); ?></h4>
+				<pre style="background:#1e1e1e; color:#d4d4d4; padding:16px 20px; border-radius:4px; overflow-x:auto; font-size:13px; line-height:1.6;"><code>add_action( 'learnkit_course_enrollment_cta', function( $course_id, $user_id, $is_enrolled ) {
+    if ( $is_enrolled ) {
+        return;
+    }
+    $checkout_url = 'https://example.com/checkout?course=' . $course_id;
+    echo '&lt;a href="' . esc_url( $checkout_url ) . '" class="btn--lk-enroll"&gt;Buy Now&lt;/a&gt;';
 }, 10, 3 );</code></pre>
 			</div>
 
