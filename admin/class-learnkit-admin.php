@@ -343,6 +343,7 @@ class LearnKit_Admin {
 				<?php if ( $acss_is_active ) : ?>
 				<h2><?php esc_html_e( 'Automatic CSS Settings', 'learnkit' ); ?></h2>
 				<p><?php esc_html_e( 'Automatic CSS is active. Choose an ACSS button class for each LearnKit button. Check "Outline" to also add the btn--outline modifier.', 'learnkit' ); ?></p>
+				<h3><?php esc_html_e( 'Button Classes', 'learnkit' ); ?></h3>
 				<table class="form-table" role="presentation">
 					<thead>
 						<tr>
