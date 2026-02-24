@@ -31,7 +31,10 @@ if ( ! $course_id && $module_id ) {
 $user_id     = get_current_user_id();
 $is_enrolled = false;
 
-if ( $course_id && $user_id ) {
+if ( $user_id && current_user_can( 'manage_options' ) ) {
+	// Admins always have access.
+	$is_enrolled = true;
+} elseif ( $course_id && $user_id ) {
 	$is_enrolled = learnkit_is_enrolled( $user_id, (int) $course_id );
 }
 

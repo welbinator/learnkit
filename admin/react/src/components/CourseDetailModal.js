@@ -28,6 +28,7 @@ const CourseDetailModal = ({
 	onCreateModule,
 	onDeleteLesson,
 	onReorderModules,
+	onReorderLessons,
 	onReloadStructure,
 }) => {
 	const [title, setTitle] = useState('');
@@ -378,6 +379,7 @@ const CourseDetailModal = ({
 										onDeleteLesson={(lessonId) => onDeleteLesson(lessonId, course?.id)}
 										onEditLesson={handleEditLesson}
 										onReorderModules={onReorderModules}
+										onReorderLessons={onReorderLessons}
 										onEditQuiz={handleEditQuiz}
 									/>
 								</div>
