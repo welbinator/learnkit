@@ -59,6 +59,9 @@ class LearnKit_Public {
 
 		// Hook quiz submission.
 		add_action( 'template_redirect', array( $this, 'handle_quiz_submission' ) );
+
+		// Hook WooCommerce purchase CTA for paid courses.
+		add_action( 'learnkit_course_enrollment_cta', array( $this, 'render_purchase_cta' ), 10, 3 );
 	}
 
 	/**
@@ -338,5 +341,68 @@ class LearnKit_Public {
 			),
 			array( '%d', '%d', '%d', '%d', '%d', '%s', '%s' )
 		);
+	}
+
+	/**
+	 * Render a Purchase button for paid courses on the course page and catalog.
+	 * If one WooCommerce product is linked, links directly to it.
+	 * If multiple, links to the shop archive filtered by course.
+	 *
+	 * @since 0.7.0
+	 * @param int  $course_id   The course post ID.
+	 * @param int  $user_id     The current user ID (0 if not logged in).
+	 * @param bool $is_enrolled Whether the user is enrolled.
+	 * @return void
+	 */
+	public function render_purchase_cta( $course_id, $user_id, $is_enrolled ) {
+		if ( $is_enrolled ) {
+			return;
+		}
+
+		// Only run if WooCommerce is active.
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return;
+		}
+
+		$access_type = get_post_meta( $course_id, '_lk_access_type', true );
+		if ( 'paid' !== $access_type ) {
+			return;
+		}
+
+		// Find WooCommerce products linked to this course.
+		$product_ids = get_posts(
+			array(
+				'post_type'      => 'product',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'meta_query'     => array(
+					array(
+						'key'   => '_learnkit_course_id',
+						'value' => $course_id,
+					),
+				),
+			)
+		);
+
+		if ( empty( $product_ids ) ) {
+			return;
+		}
+
+		if ( 1 === count( $product_ids ) ) {
+			$url   = get_permalink( $product_ids[0] );
+			$label = __( 'Purchase Course', 'learnkit' );
+		} else {
+			$url   = add_query_arg( 'learnkit_course', $course_id, get_permalink( wc_get_page_id( 'shop' ) ) );
+			$label = __( 'View Purchase Options', 'learnkit' );
+		}
+
+		if ( ! $user_id ) {
+			$url = wp_login_url( get_permalink( $course_id ) );
+			$label = __( 'Login to Purchase', 'learnkit' );
+		}
+
+		echo '<a href="' . esc_url( $url ) . '" class="' . esc_attr( learnkit_button_classes( 'enroll_button', 'btn--lk-enroll' ) ) . '">' . esc_html( $label ) . '</a>';
 	}
 }
