@@ -110,6 +110,11 @@ class LearnKit {
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-loader.php';
 
 		/**
+		 * Template helper functions (e.g. learnkit_button_classes).
+		 */
+		require_once LEARNKIT_PLUGIN_DIR . 'includes/learnkit-template-helpers.php';
+
+		/**
 		 * The class responsible for defining custom post types.
 		 */
 		require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-post-types.php';

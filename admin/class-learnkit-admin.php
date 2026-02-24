@@ -239,10 +239,60 @@ class LearnKit_Admin {
 	 *
 	 * @since    0.1.0
 	 */
+	/**
+	 * Get the list of ACSS button classes from the ACSS config file.
+	 *
+	 * @return array
+	 */
+	private function get_acss_button_classes() {
+		if ( ! defined( 'ACSS_PLUGIN_DIR' ) ) {
+			return array();
+		}
+		$config_file = ACSS_PLUGIN_DIR . 'config/classes.json';
+		if ( ! file_exists( $config_file ) ) {
+			return array();
+		}
+		$all_classes = json_decode( file_get_contents( $config_file ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		if ( ! is_array( $all_classes ) ) {
+			return array();
+		}
+		return array_values(
+			array_filter(
+				$all_classes,
+				function( $class ) {
+					return strpos( $class, 'btn--' ) === 0 && 'btn--outline' !== $class;
+				}
+			)
+		);
+	}
+
+	/**
+	 * Render settings page.
+	 *
+	 * @since    0.1.0
+	 */
 	public function render_settings_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
+
+		$acss_is_active = defined( 'ACSS_PLUGIN_FILE' );
+
+		// Define all frontend buttons with human-readable labels and their option keys.
+		$buttons = array(
+			'enroll_button'        => __( 'Enroll Button', 'learnkit' ),
+			'start_course_button'  => __( 'Start Course Button', 'learnkit' ),
+			'next_lesson_button'   => __( 'Next Lesson Button', 'learnkit' ),
+			'prev_lesson_button'   => __( 'Previous Lesson Button', 'learnkit' ),
+			'mark_complete_button' => __( 'Mark Complete Button', 'learnkit' ),
+			'take_quiz_button'     => __( 'Take Quiz Button', 'learnkit' ),
+			'start_quiz_button'    => __( 'Start Quiz Button', 'learnkit' ),
+			'submit_quiz_button'   => __( 'Submit Quiz Button', 'learnkit' ),
+			'retake_quiz_button'   => __( 'Retake Quiz Button', 'learnkit' ),
+			'back_to_lesson_button' => __( 'Back to Lesson Button', 'learnkit' ),
+			'back_to_course_button' => __( 'Back to Course Button', 'learnkit' ),
+			'login_button'         => __( 'Log In to Take Quiz Button', 'learnkit' ),
+		);
 
 		// Save settings.
 		if ( isset( $_POST['learnkit_settings_nonce'] ) ) {
@@ -250,16 +300,20 @@ class LearnKit_Admin {
 				wp_die( esc_html__( 'Security check failed.', 'learnkit' ) );
 			}
 
-			$acss_settings = array(
-				'button_class' => sanitize_text_field( wp_unslash( $_POST['learnkit_acss_button_class'] ?? '' ) ),
-			);
-			update_option( 'learnkit_acss_settings', $acss_settings );
+			if ( $acss_is_active ) {
+				$acss_settings = array();
+				foreach ( array_keys( $buttons ) as $key ) {
+					$acss_settings[ $key . '_class' ]   = sanitize_html_class( wp_unslash( $_POST[ 'learnkit_acss_' . $key . '_class' ] ?? '' ) );
+					$acss_settings[ $key . '_outline' ] = isset( $_POST[ 'learnkit_acss_' . $key . '_outline' ] ) ? 1 : 0;
+				}
+				update_option( 'learnkit_acss_settings', $acss_settings );
+			}
 
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'learnkit' ) . '</p></div>';
 		}
 
-		$acss_settings    = get_option( 'learnkit_acss_settings', array( 'button_class' => '' ) );
-		$acss_is_active   = defined( 'ACSS_PLUGIN_FILE' );
+		$acss_settings  = get_option( 'learnkit_acss_settings', array() );
+		$btn_classes    = $acss_is_active ? $this->get_acss_button_classes() : array();
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
@@ -268,25 +322,45 @@ class LearnKit_Admin {
 
 				<?php if ( $acss_is_active ) : ?>
 				<h2><?php esc_html_e( 'Automatic CSS Settings', 'learnkit' ); ?></h2>
-				<p><?php esc_html_e( 'These settings apply because Automatic CSS is active on your site.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'Automatic CSS is active. Choose an ACSS button class for each LearnKit button. Check "Outline" to also add the btn--outline modifier.', 'learnkit' ); ?></p>
 				<table class="form-table" role="presentation">
-					<tbody>
+					<thead>
 						<tr>
-							<th scope="row">
-								<label for="learnkit_acss_button_class"><?php esc_html_e( 'Button Class', 'learnkit' ); ?></label>
-							</th>
+							<th><?php esc_html_e( 'Button', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'ACSS Class', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Outline', 'learnkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $buttons as $key => $label ) :
+							$saved_class   = $acss_settings[ $key . '_class' ] ?? '';
+							$saved_outline = ! empty( $acss_settings[ $key . '_outline' ] );
+							?>
+						<tr>
+							<th scope="row"><?php echo esc_html( $label ); ?></th>
 							<td>
-								<input
-									type="text"
-									id="learnkit_acss_button_class"
-									name="learnkit_acss_button_class"
-									value="<?php echo esc_attr( $acss_settings['button_class'] ); ?>"
-									class="regular-text"
-									placeholder="e.g. btn"
-								/>
-								<p class="description"><?php esc_html_e( 'ACSS button utility class to apply to all LearnKit frontend buttons.', 'learnkit' ); ?></p>
+								<select name="learnkit_acss_<?php echo esc_attr( $key ); ?>_class" id="learnkit_acss_<?php echo esc_attr( $key ); ?>_class">
+									<option value=""><?php esc_html_e( '— None —', 'learnkit' ); ?></option>
+									<?php foreach ( $btn_classes as $class ) : ?>
+										<option value="<?php echo esc_attr( $class ); ?>" <?php selected( $saved_class, $class ); ?>>
+											<?php echo esc_html( $class ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</td>
+							<td>
+								<label>
+									<input
+										type="checkbox"
+										name="learnkit_acss_<?php echo esc_attr( $key ); ?>_outline"
+										value="1"
+										<?php checked( $saved_outline ); ?>
+									/>
+									<?php esc_html_e( 'Outline', 'learnkit' ); ?>
+								</label>
 							</td>
 						</tr>
+						<?php endforeach; ?>
 					</tbody>
 				</table>
 				<?php endif; ?>
