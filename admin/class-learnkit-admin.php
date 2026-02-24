@@ -521,12 +521,34 @@ class LearnKit_Admin {
 		<div class="wrap">
 			<h1><?php esc_html_e( 'LearnKit Docs', 'learnkit' ); ?></h1>
 			<p><?php esc_html_e( 'Developer reference for extending LearnKit with hooks and filters.', 'learnkit' ); ?></p>
+
+			<!-- Table of Contents -->
+			<div style="background:#f6f7f7; border:1px solid #c3c4c7; border-radius:4px; padding:16px 24px; margin-bottom:28px; max-width:900px;">
+				<strong style="display:block; margin-bottom:8px;"><?php esc_html_e( 'Table of Contents', 'learnkit' ); ?></strong>
+				<ol style="margin:0; padding-left:20px; line-height:2;">
+					<li><a href="#hooks-filters"><?php esc_html_e( 'Hooks &amp; Filters', 'learnkit' ); ?></a>
+						<ol style="margin:4px 0; padding-left:20px; line-height:2;">
+							<li><a href="#filter-button-classes"><code>learnkit_button_classes</code></a></li>
+						</ol>
+					</li>
+					<li><a href="#woocommerce-integration"><?php esc_html_e( 'WooCommerce Integration', 'learnkit' ); ?></a>
+						<ol style="margin:4px 0; padding-left:20px; line-height:2;">
+							<li><a href="#wc-step-1"><?php esc_html_e( 'Step 1 — Create a WooCommerce product', 'learnkit' ); ?></a></li>
+							<li><a href="#wc-step-2"><?php esc_html_e( 'Step 2 — Link the product to a course', 'learnkit' ); ?></a></li>
+							<li><a href="#wc-step-3"><?php esc_html_e( 'Step 3 — Set the course access type', 'learnkit' ); ?></a></li>
+							<li><a href="#wc-how-it-works"><?php esc_html_e( 'How it works', 'learnkit' ); ?></a></li>
+							<li><a href="#hook-enrollment-cta"><code>learnkit_course_enrollment_cta</code></a></li>
+						</ol>
+					</li>
+				</ol>
+			</div>
+
 			<hr>
 
-			<h2><?php esc_html_e( 'Hooks &amp; Filters', 'learnkit' ); ?></h2>
+			<h2 id="hooks-filters"><?php esc_html_e( 'Hooks &amp; Filters', 'learnkit' ); ?></h2>
 
 			<!-- learnkit_button_classes -->
-			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+			<div id="filter-button-classes" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
 				<h3 style="margin-top:0; font-family:monospace; font-size:1.1rem;">learnkit_button_classes</h3>
 				<p><?php esc_html_e( 'Filter the CSS classes applied to any LearnKit frontend button. Use this to add, remove, or replace classes on a per-button basis without modifying template files.', 'learnkit' ); ?></p>
 
@@ -619,11 +641,11 @@ class LearnKit_Admin {
 			</div>
 
 			<hr style="margin: 32px 0;">
-			<h2><?php esc_html_e( 'WooCommerce Integration', 'learnkit' ); ?></h2>
+			<h2 id="woocommerce-integration"><?php esc_html_e( 'WooCommerce Integration', 'learnkit' ); ?></h2>
 			<p><?php esc_html_e( 'LearnKit integrates with WooCommerce to gate course access behind a product purchase. No extra plugin required — just follow the steps below.', 'learnkit' ); ?></p>
 
 			<!-- Step 1 -->
-			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+			<div id="wc-step-1" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
 				<h3 style="margin-top:0;">
 					<?php esc_html_e( 'Step 1 — Create a WooCommerce product', 'learnkit' ); ?>
 				</h3>
@@ -631,7 +653,7 @@ class LearnKit_Admin {
 			</div>
 
 			<!-- Step 2 -->
-			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+			<div id="wc-step-2" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
 				<h3 style="margin-top:0;">
 					<?php esc_html_e( 'Step 2 — Link the product to a course', 'learnkit' ); ?>
 				</h3>
@@ -654,7 +676,7 @@ class LearnKit_Admin {
 			</div>
 
 			<!-- Step 3 -->
-			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+			<div id="wc-step-3" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
 				<h3 style="margin-top:0;">
 					<?php esc_html_e( 'Step 3 — Set the course access type', 'learnkit' ); ?>
 				</h3>
@@ -662,7 +684,7 @@ class LearnKit_Admin {
 			</div>
 
 			<!-- How it works -->
-			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+			<div id="wc-how-it-works" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
 				<h3 style="margin-top:0;">
 					<?php esc_html_e( 'How it works', 'learnkit' ); ?>
 				</h3>
@@ -676,7 +698,7 @@ class LearnKit_Admin {
 			</div>
 
 			<!-- Hook reference -->
-			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+			<div id="hook-enrollment-cta" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
 				<h3 style="margin-top:0; font-family:monospace; font-size:1.1rem;">learnkit_course_enrollment_cta</h3>
 				<p><?php esc_html_e( 'Action hook that fires in place of the enroll button for paid courses. The built-in WooCommerce integration uses this hook to render the purchase button. You can also use it to add your own payment gateway or custom enrollment logic.', 'learnkit' ); ?></p>
 				<table class="widefat striped" style="max-width:600px; margin-bottom:20px;">
