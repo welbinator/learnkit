@@ -330,7 +330,7 @@ if ( ! $is_available ) {
 						<span class="arrow">←</span> Previous Lesson
 					</a>
 				<?php else : ?>
-					<span class="btn--lk-nav prev disabled">
+					<span class="<?php echo esc_attr( learnkit_button_classes( 'prev_lesson_button_disabled', 'btn--lk-nav prev disabled' ) ); ?>">
 						<span class="arrow">←</span> Previous Lesson
 					</span>
 				<?php endif; ?>
@@ -347,7 +347,7 @@ if ( ! $is_available ) {
 						</div>
 					</a>
 				<?php else : ?>
-					<span class="btn--lk-nav next disabled">
+					<span class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button_disabled', 'btn--lk-nav next disabled' ) ); ?>">
 						Next Lesson <span class="arrow">→</span>
 					</span>
 				<?php endif; ?>
