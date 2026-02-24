@@ -526,6 +526,15 @@ class LearnKit_Admin {
 			<div style="background:#f6f7f7; border:1px solid #c3c4c7; border-radius:4px; padding:16px 24px; margin-bottom:28px; max-width:900px;">
 				<strong style="display:block; margin-bottom:8px;"><?php esc_html_e( 'Table of Contents', 'learnkit' ); ?></strong>
 				<ol style="margin:0; padding-left:20px; line-height:2;">
+					<li><a href="#creating-a-course"><?php esc_html_e( 'Creating a Course', 'learnkit' ); ?></a>
+						<ol style="margin:4px 0; padding-left:20px; line-height:2;">
+							<li><a href="#course-step-1"><?php esc_html_e( 'Step 1 — Create the course', 'learnkit' ); ?></a></li>
+							<li><a href="#course-step-2"><?php esc_html_e( 'Step 2 — Add modules', 'learnkit' ); ?></a></li>
+							<li><a href="#course-step-3"><?php esc_html_e( 'Step 3 — Add lessons', 'learnkit' ); ?></a></li>
+							<li><a href="#course-step-4"><?php esc_html_e( 'Step 4 — Add quizzes (optional)', 'learnkit' ); ?></a></li>
+							<li><a href="#course-step-5"><?php esc_html_e( 'Step 5 — Publish', 'learnkit' ); ?></a></li>
+						</ol>
+					</li>
 					<li><a href="#hooks-filters"><?php esc_html_e( 'Hooks &amp; Filters', 'learnkit' ); ?></a>
 						<ol style="margin:4px 0; padding-left:20px; line-height:2;">
 							<li><a href="#filter-button-classes"><code>learnkit_button_classes</code></a></li>
@@ -544,6 +553,48 @@ class LearnKit_Admin {
 			</div>
 
 			<hr>
+
+			<h2 id="creating-a-course"><?php esc_html_e( 'Creating a Course', 'learnkit' ); ?></h2>
+			<p><?php esc_html_e( 'Courses in LearnKit are made up of modules, and modules are made up of lessons. Quizzes are optional and can be attached to any lesson. Follow these steps to build your first course.', 'learnkit' ); ?></p>
+
+			<!-- Course Step 1 -->
+			<div id="course-step-1" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 1 — Create the course', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'Go to LearnKit → Course Builder and click "New Course". Give it a title, description, and featured image. You can also set:', 'learnkit' ); ?></p>
+				<ul style="list-style:disc; padding-left:24px;">
+					<li><strong><?php esc_html_e( 'Self-enrollment', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Allow students to enroll for free directly from the course page.', 'learnkit' ); ?></li>
+					<li><strong><?php esc_html_e( 'Access type', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Control who can access the course (all enrolled students, or restricted).', 'learnkit' ); ?></li>
+				</ul>
+			</div>
+
+			<!-- Course Step 2 -->
+			<div id="course-step-2" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 2 — Add modules', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'Modules are the top-level sections of your course (e.g. "Introduction", "Module 1: HTML Basics"). Inside the Course Builder, click "Add Module" to create one inline. You can drag modules to reorder them.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Course Step 3 -->
+			<div id="course-step-3" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 3 — Add lessons', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'Click the "+" button inside a module to add a lesson. You can create a new lesson inline or add an existing one. Each lesson belongs to exactly one module. Click a lesson title to open the full lesson editor where you can write content using the WordPress block editor.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'Drag lessons within a module to reorder them. Lesson order determines the Previous / Next navigation students see on the frontend.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Course Step 4 -->
+			<div id="course-step-4" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 4 — Add quizzes (optional)', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'Quizzes can be attached to any lesson. Inside the module editor, click the quiz icon next to a lesson to create or manage its quiz. Each quiz can have multiple questions, each with four answer options and one correct answer.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'If a lesson has a quiz attached, students must pass it before the "Next Lesson" button is enabled. You can set a passing score percentage per quiz.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Course Step 5 -->
+			<div id="course-step-5" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 5 — Publish', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'Once your modules and lessons are set up, publish the course post. Students can browse your course catalog, enroll (free or paid), and begin learning immediately.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'When a student completes all lessons and passes all quizzes, a "Download Certificate" button appears on the final lesson.', 'learnkit' ); ?></p>
+			</div>
+
+			<hr style="margin: 32px 0;">
 
 			<h2 id="hooks-filters"><?php esc_html_e( 'Hooks &amp; Filters', 'learnkit' ); ?></h2>
 
