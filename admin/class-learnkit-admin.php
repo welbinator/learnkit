@@ -324,14 +324,14 @@ class LearnKit_Admin {
 			'continue_learning_button_class' => 'btn--primary',
 			'next_lesson_button_class'       => 'btn--primary',
 			'prev_lesson_button_class'       => 'btn--secondary',
-			'mark_complete_button_class'     => 'btn--success',
-			'take_quiz_button_class'         => 'btn--tertiary',
-			'start_quiz_button_class'        => 'btn--tertiary',
-			'submit_quiz_button_class'       => 'btn--tertiary',
+			'mark_complete_button_class'     => 'btn--primary',
+			'take_quiz_button_class'         => 'btn--primary',
+			'start_quiz_button_class'        => 'btn--primary',
+			'submit_quiz_button_class'       => 'btn--primary',
 			'retake_quiz_button_class'       => 'btn--tertiary',
 			'back_to_lesson_button_class'    => 'btn--secondary',
 			'back_to_course_button_class'    => 'btn--secondary',
-			'login_button_class'             => 'btn--warning',
+			'login_button_class'             => 'btn--secondary',
 		) );
 		$btn_classes    = $acss_is_active ? $this->get_acss_button_classes() : array();
 		?>
