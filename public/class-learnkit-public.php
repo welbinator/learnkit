@@ -59,9 +59,6 @@ class LearnKit_Public {
 
 		// Hook quiz submission.
 		add_action( 'template_redirect', array( $this, 'handle_quiz_submission' ) );
-
-		// Hook WooCommerce purchase CTA for paid courses.
-		add_action( 'learnkit_course_enrollment_cta', array( $this, 'render_purchase_cta' ), 10, 3 );
 	}
 
 	/**
