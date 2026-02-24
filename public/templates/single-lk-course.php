@@ -38,8 +38,9 @@ $modules = get_posts(
 );
 
 // Check enrollment status.
-$is_enrolled = false;
-$progress    = array(
+$is_enrolled        = false;
+$continue_lesson_id = 0;
+$progress           = array(
 	'completed'  => 0,
 	'total'      => 0,
 	'percentage' => 0,
@@ -85,6 +86,38 @@ if ( $user_id ) {
 			$progress['completed']  = count( $completed_lessons );
 			$progress['percentage'] = round( ( $progress['completed'] / $progress['total'] ) * 100 );
 		}
+
+		// Find the next lesson to continue: first uncompleted lesson in order.
+		$continue_lesson_id = 0;
+		foreach ( $modules as $module ) {
+			$ordered_lessons = get_posts(
+				array(
+					'post_type'              => 'lk_lesson',
+					'posts_per_page'         => -1,
+					'orderby'                => 'menu_order',
+					'order'                  => 'ASC',
+					'no_found_rows'          => true,
+					'update_post_term_cache' => false,
+					'fields'                 => 'ids',
+					'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+						array(
+							'key'   => '_lk_module_id',
+							'value' => $module->ID,
+						),
+					),
+				)
+			);
+			foreach ( $ordered_lessons as $lesson_id ) {
+				if ( ! in_array( $lesson_id, $completed_lessons, true ) ) {
+					$continue_lesson_id = $lesson_id;
+					break 2;
+				}
+			}
+		}
+		// If all lessons completed, link to the first lesson.
+		if ( 0 === $continue_lesson_id && ! empty( $all_lessons ) ) {
+			$continue_lesson_id = $all_lessons[0];
+		}
 	}
 }
 
@@ -107,7 +140,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 				<?php endif; ?>
 
 				<?php if ( $is_enrolled ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'continue_learning_button', 'btn--lk-continue' ) ); ?>">
+					<a href="<?php echo esc_url( get_permalink( $continue_lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'continue_learning_button', 'btn--lk-continue' ) ); ?>">
 						Continue Learning →
 					</a>
 				<?php elseif ( $user_id && $self_enrollment ) : ?>
