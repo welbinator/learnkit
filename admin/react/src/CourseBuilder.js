@@ -26,7 +26,8 @@ import {
 	deleteModule,
 	createLesson,
 	deleteLesson,
-	reorderModules
+	reorderModules,
+	reorderLessons
 } from './utils/api';
 
 const CourseBuilder = () => {
@@ -204,7 +205,26 @@ const CourseBuilder = () => {
 			await reorderModules(selectedCourseId, moduleIds);
 		} catch (error) {
 			console.error('Failed to save module order:', error);
-			// Optionally: reload structure to revert to server state
+		}
+	};
+
+	const handleReorderLessons = async (moduleId, lessonIds) => {
+		// Optimistically update local state
+		setCourseStructure(prev => ({
+			...prev,
+			modules: prev.modules.map(m =>
+				m.id === moduleId
+					? { ...m, lessons: lessonIds.map(id => m.lessons.find(l => l.id === id)).filter(Boolean) }
+					: m
+			),
+		}));
+
+		// Save to backend
+		try {
+			await reorderLessons(moduleId, lessonIds);
+		} catch (error) {
+			console.error('Failed to save lesson order:', error);
+			loadCourseStructure(selectedCourseId);
 		}
 	};
 
@@ -263,6 +283,7 @@ const CourseBuilder = () => {
 				onCreateModule={handleCreateModule}
 				onDeleteLesson={handleDeleteLesson}
 				onReorderModules={handleReorderModules}
+				onReorderLessons={handleReorderLessons}
 				onReloadStructure={loadCourseStructure}
 			/>
 
