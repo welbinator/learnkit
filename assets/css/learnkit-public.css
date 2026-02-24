@@ -179,6 +179,14 @@ body a:where(:not([class*="btn--"])) {
 
 }
 
+.btn--lk-certificate {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	text-decoration: none;
+	font-weight: 600;
+}
+
 .quiz-icon {
 	font-size: 1.25rem;
 }

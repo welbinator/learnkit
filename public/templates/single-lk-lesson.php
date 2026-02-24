@@ -176,6 +176,71 @@ if ( $user_id && current_user_can( 'manage_options' ) ) {
 	$is_enrolled = learnkit_is_enrolled( $user_id, (int) $course_id );
 }
 
+// Detect if this is the last lesson in the course and whether the user has earned a certificate.
+$is_last_lesson     = ! $next_lesson_id && ! $next_module_first_lesson;
+$show_certificate   = false;
+$certificate_url    = '';
+
+if ( $is_last_lesson && $is_enrolled && $user_id && $course_id ) {
+	global $wpdb;
+
+	// Check all lessons in the course are completed.
+	$all_course_lesson_ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->prepare(
+			"SELECT p.ID FROM {$wpdb->posts} p
+			INNER JOIN {$wpdb->postmeta} pm_mod ON p.ID = pm_mod.post_id AND pm_mod.meta_key = '_lk_module_id'
+			INNER JOIN {$wpdb->posts} mod ON mod.ID = pm_mod.meta_value AND mod.post_status = 'publish'
+			INNER JOIN {$wpdb->postmeta} pm_course ON mod.ID = pm_course.post_id AND pm_course.meta_key = '_lk_course_id' AND pm_course.meta_value = %d
+			WHERE p.post_type = 'lk_lesson' AND p.post_status = 'publish'",
+			$course_id
+		)
+	);
+
+	$completed_lesson_ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->prepare(
+			"SELECT lesson_id FROM {$wpdb->prefix}learnkit_progress WHERE user_id = %d AND completed = 1",
+			$user_id
+		)
+	);
+
+	$all_lessons_done = ! empty( $all_course_lesson_ids ) &&
+		count( array_diff( $all_course_lesson_ids, $completed_lesson_ids ) ) === 0;
+
+	// Check all quizzes in the course are passed.
+	$all_quiz_ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->prepare(
+			"SELECT p.ID FROM {$wpdb->posts} p
+			INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_lk_module_id'
+			INNER JOIN {$wpdb->posts} mod ON mod.ID = pm.meta_value AND mod.post_status = 'publish'
+			INNER JOIN {$wpdb->postmeta} pm_course ON mod.ID = pm_course.post_id AND pm_course.meta_key = '_lk_course_id' AND pm_course.meta_value = %d
+			WHERE p.post_type = 'lk_quiz' AND p.post_status = 'publish'",
+			$course_id
+		)
+	);
+
+	$all_quizzes_passed = true;
+	if ( ! empty( $all_quiz_ids ) ) {
+		$passed_quiz_ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare(
+				"SELECT DISTINCT quiz_id FROM {$wpdb->prefix}learnkit_quiz_attempts WHERE user_id = %d AND passed = 1",
+				$user_id
+			)
+		);
+		$all_quizzes_passed = count( array_diff( $all_quiz_ids, $passed_quiz_ids ) ) === 0;
+	}
+
+	if ( $all_lessons_done && $all_quizzes_passed ) {
+		$show_certificate = true;
+		$certificate_url  = add_query_arg(
+			array(
+				'download_certificate' => $course_id,
+				'_wpnonce'             => wp_create_nonce( 'learnkit_certificate_' . $course_id ),
+			),
+			home_url()
+		);
+	}
+}
+
 if ( ! $is_enrolled ) {
 	?>
 	<div style="max-width: 680px; margin: 80px auto; padding: 0 20px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
@@ -436,9 +501,15 @@ if ( ! $is_available ) {
 						</a>
 					<?php endif; ?>
 				<?php else : ?>
-					<span class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button_disabled', 'btn--lk-nav next disabled' ) ); ?>">
-						Next Lesson <span class="arrow">→</span>
-					</span>
+					<?php if ( $show_certificate ) : ?>
+						<a href="<?php echo esc_url( $certificate_url ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'certificate_button', 'btn--lk-certificate' ) ); ?>">
+							🎓 Download Certificate
+						</a>
+					<?php else : ?>
+						<span class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button_disabled', 'btn--lk-nav next disabled' ) ); ?>">
+							Next Lesson <span class="arrow">→</span>
+						</span>
+					<?php endif; ?>
 				<?php endif; ?>
 			</div>
 		</div>
