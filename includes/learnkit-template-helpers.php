@@ -53,5 +53,5 @@ function learnkit_button_classes( $button_key, $base_classes = '' ) {
 		}
 	}
 
-	return implode( ' ', array_unique( $classes ) );
+	return apply_filters( 'learnkit_button_classes', implode( ' ', array_unique( $classes ) ), $button_key, $base_classes );
 }
