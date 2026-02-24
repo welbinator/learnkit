@@ -285,18 +285,19 @@ class LearnKit_Admin {
 
 		// Define all frontend buttons with human-readable labels and their option keys.
 		$buttons = array(
-			'enroll_button'        => __( 'Enroll Button', 'learnkit' ),
-			'start_course_button'  => __( 'Start Course Button', 'learnkit' ),
-			'next_lesson_button'   => __( 'Next Lesson Button', 'learnkit' ),
-			'prev_lesson_button'   => __( 'Previous Lesson Button', 'learnkit' ),
-			'mark_complete_button' => __( 'Mark Complete Button', 'learnkit' ),
-			'take_quiz_button'     => __( 'Take Quiz Button', 'learnkit' ),
-			'start_quiz_button'    => __( 'Start Quiz Button', 'learnkit' ),
-			'submit_quiz_button'   => __( 'Submit Quiz Button', 'learnkit' ),
-			'retake_quiz_button'   => __( 'Retake Quiz Button', 'learnkit' ),
-			'back_to_lesson_button' => __( 'Back to Lesson Button', 'learnkit' ),
-			'back_to_course_button' => __( 'Back to Course Button', 'learnkit' ),
-			'login_button'         => __( 'Log In to Take Quiz Button', 'learnkit' ),
+			'enroll_button'          => __( 'Enroll Button', 'learnkit' ),
+			'start_course_button'    => __( 'Start Course Button', 'learnkit' ),
+			'continue_learning_button' => __( 'Continue Learning Button', 'learnkit' ),
+			'next_lesson_button'     => __( 'Next Lesson Button', 'learnkit' ),
+			'prev_lesson_button'     => __( 'Previous Lesson Button', 'learnkit' ),
+			'mark_complete_button'   => __( 'Mark Complete Button', 'learnkit' ),
+			'take_quiz_button'       => __( 'Take Quiz Button', 'learnkit' ),
+			'start_quiz_button'      => __( 'Start Quiz Button', 'learnkit' ),
+			'submit_quiz_button'     => __( 'Submit Quiz Button', 'learnkit' ),
+			'retake_quiz_button'     => __( 'Retake Quiz Button', 'learnkit' ),
+			'back_to_lesson_button'  => __( 'Back to Lesson Button', 'learnkit' ),
+			'back_to_course_button'  => __( 'Back to Course Button', 'learnkit' ),
+			'login_button'           => __( 'Log In to Take Quiz Button', 'learnkit' ),
 		);
 
 		// Save settings.

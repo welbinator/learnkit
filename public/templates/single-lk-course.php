@@ -107,7 +107,7 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 				<?php endif; ?>
 
 				<?php if ( $is_enrolled ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'start_course_button', 'lk-start-button' ) ); ?>">
+					<a href="<?php echo esc_url( get_permalink( $modules[0]->ID ?? 0 ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'continue_learning_button', 'lk-continue-button' ) ); ?>">
 						Continue Learning →
 					</a>
 				<?php elseif ( $user_id && $self_enrollment ) : ?>
