@@ -590,7 +590,12 @@ class LearnKit_Admin {
 			<!-- Course Step 3 -->
 			<div id="course-step-3" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
 				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 3 — Add lessons', 'learnkit' ); ?></h3>
-				<p><?php esc_html_e( 'Click the "+" button inside a module to add a lesson. You can create a new lesson inline or add an existing one. Each lesson belongs to exactly one module. Click a lesson title to open the full lesson editor where you can write content using the WordPress block editor.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'Click the edit button on a module to open the module editor. From there you can:', 'learnkit' ); ?></p>
+				<ul style="list-style:disc; padding-left:24px;">
+					<li><strong><?php esc_html_e( 'Create a new lesson', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Type a title in the "Create new lesson" field and hit Enter. The lesson is created and added to the module immediately.', 'learnkit' ); ?></li>
+					<li><strong><?php esc_html_e( 'Add an existing lesson', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Use the "Add existing lesson" dropdown to pick a lesson that\'s already been created and assign it to this module.', 'learnkit' ); ?></li>
+				</ul>
+				<p><?php esc_html_e( 'Each lesson belongs to exactly one module. Click a lesson title to open the full lesson editor where you can write content using the WordPress block editor.', 'learnkit' ); ?></p>
 				<p><?php esc_html_e( 'Drag lessons within a module to reorder them. Lesson order determines the Previous / Next navigation students see on the frontend.', 'learnkit' ); ?></p>
 			</div>
 
