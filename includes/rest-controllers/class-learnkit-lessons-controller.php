@@ -217,9 +217,8 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 			);
 		}
 
-		// Assign to primary module (the URL param).
-		delete_post_meta( $lesson_id, '_lk_module_id' );
-		add_post_meta( $lesson_id, '_lk_module_id', $module_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
+		// Assign to module (one-to-one).
+		update_post_meta( $lesson_id, '_lk_module_id', $module_id ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 
 		// Place at end of module's lesson list.
 		if ( isset( $request['menu_order'] ) ) {
@@ -327,10 +326,12 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 		$module_ids = $this->resolve_module_ids( $request );
 
 		if ( null !== $module_ids ) {
-			// Atomic replacement: delete all rows, then re-add.
-			delete_post_meta( $lesson_id, '_lk_module_id' );
-			foreach ( $module_ids as $module_id ) {
-				add_post_meta( $lesson_id, '_lk_module_id', $module_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
+			// One-to-one: store only the first (or only) module ID.
+			$single_module_id = ! empty( $module_ids ) ? reset( $module_ids ) : 0;
+			if ( $single_module_id ) {
+				update_post_meta( $lesson_id, '_lk_module_id', $single_module_id ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			} else {
+				delete_post_meta( $lesson_id, '_lk_module_id' );
 			}
 		}
 
@@ -378,7 +379,8 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 			);
 		}
 
-		add_post_meta( $lesson_id, '_lk_module_id', $module_id, false ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Intentional many-to-many; multiple rows supported.
+		// One-to-one: replaces any existing module assignment.
+		update_post_meta( $lesson_id, '_lk_module_id', $module_id ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 
 		// Place at end of module's lesson list.
 		$existing_lessons = get_posts( array(
@@ -496,9 +498,9 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 			if ( ! $lesson || 'lk_lesson' !== $lesson->post_type ) {
 				continue;
 			}
-			// Verify it belongs to the module in the URL (any of its assigned modules).
-			$assigned = array_map( 'intval', get_post_meta( $lesson_id, '_lk_module_id', false ) );
-			if ( ! in_array( $module_id, $assigned, true ) ) {
+			// Verify it belongs to this module.
+			$assigned_module = (int) get_post_meta( $lesson_id, '_lk_module_id', true );
+			if ( $assigned_module !== $module_id ) {
 				continue;
 			}
 			if ( ! current_user_can( 'edit_post', $lesson_id ) ) {
@@ -521,8 +523,8 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 	/**
 	 * Prepare lesson data for API response.
 	 *
-	 * Returns `module_ids` (array) for many-to-many support.
-	 * `module_id` (single value, backwards compat) is intentionally removed.
+	 * Returns `module_id` (int) for one-to-one module assignment.
+	 * Also returns `module_ids` array for backwards compatibility.
 	 *
 	 * @since    0.2.13
 	 * @param    WP_Post $lesson Lesson post object.
@@ -538,7 +540,8 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 			'date_created'   => $lesson->post_date,
 			'date_modified'  => $lesson->post_modified,
 			'menu_order'     => $lesson->menu_order,
-			'module_ids'     => array_map( 'intval', get_post_meta( $lesson->ID, '_lk_module_id', false ) ),
+			'module_id'      => (int) get_post_meta( $lesson->ID, '_lk_module_id', true ),
+			'module_ids'     => array( (int) get_post_meta( $lesson->ID, '_lk_module_id', true ) ), // backwards compat
 			'permalink'      => get_permalink( $lesson->ID ),
 			'edit_link'      => get_edit_post_link( $lesson->ID, 'raw' ),
 			'release_type'   => get_post_meta( $lesson->ID, '_lk_release_type', true ) ? get_post_meta( $lesson->ID, '_lk_release_type', true ) : 'immediate',
