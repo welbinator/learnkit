@@ -560,11 +560,25 @@ class LearnKit_Admin {
 			<!-- Course Step 1 -->
 			<div id="course-step-1" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
 				<h3 style="margin-top:0;"><?php esc_html_e( 'Step 1 — Create the course', 'learnkit' ); ?></h3>
-				<p><?php esc_html_e( 'Go to LearnKit → Course Builder and click "New Course". Give it a title, description, and featured image. You can also set:', 'learnkit' ); ?></p>
-				<ul style="list-style:disc; padding-left:24px;">
-					<li><strong><?php esc_html_e( 'Self-enrollment', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Allow students to enroll for free directly from the course page.', 'learnkit' ); ?></li>
-					<li><strong><?php esc_html_e( 'Access type', 'learnkit' ); ?></strong> — <?php esc_html_e( 'Control who can access the course (all enrolled students, or restricted).', 'learnkit' ); ?></li>
-				</ul>
+				<p><?php esc_html_e( 'Go to LearnKit → Course Builder and click "New Course". Give it a title, description, and featured image. You\'ll also choose an Access Type:', 'learnkit' ); ?></p>
+				<table class="widefat striped" style="max-width:600px; margin-bottom:16px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Access Type', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Description', 'learnkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><strong><?php esc_html_e( 'Free', 'learnkit' ); ?></strong></td>
+							<td><?php esc_html_e( 'Students can enroll directly from the course page at no cost. No WooCommerce required.', 'learnkit' ); ?></td>
+						</tr>
+						<tr>
+							<td><strong><?php esc_html_e( 'Paid', 'learnkit' ); ?></strong></td>
+							<td><?php esc_html_e( 'Students must purchase the course through WooCommerce before gaining access. Requires WooCommerce to be installed and a product linked to the course (see WooCommerce Integration below).', 'learnkit' ); ?></td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
 
 			<!-- Course Step 2 -->
