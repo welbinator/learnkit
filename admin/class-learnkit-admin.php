@@ -208,6 +208,16 @@ class LearnKit_Admin {
 			'learnkit-email-settings',
 			array( $this, 'render_email_settings_page' )
 		);
+
+		// Docs submenu.
+		add_submenu_page(
+			'learnkit',
+			__( 'Docs', 'learnkit' ),
+			__( 'Docs', 'learnkit' ),
+			'manage_options',
+			'learnkit-docs',
+			array( $this, 'render_docs_page' )
+		);
 	}
 
 	/**
@@ -496,6 +506,118 @@ class LearnKit_Admin {
 				</table>
 				<?php submit_button( __( 'Save Email Settings', 'learnkit' ) ); ?>
 			</form>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the Docs admin page.
+	 *
+	 * @since 0.7.0
+	 * @return void
+	 */
+	public function render_docs_page() {
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'LearnKit Docs', 'learnkit' ); ?></h1>
+			<p><?php esc_html_e( 'Developer reference for extending LearnKit with hooks and filters.', 'learnkit' ); ?></p>
+			<hr>
+
+			<h2><?php esc_html_e( 'Hooks &amp; Filters', 'learnkit' ); ?></h2>
+
+			<!-- learnkit_button_classes -->
+			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0; font-family:monospace; font-size:1.1rem;">learnkit_button_classes</h3>
+				<p><?php esc_html_e( 'Filter the CSS classes applied to any LearnKit frontend button. Use this to add, remove, or replace classes on a per-button basis without modifying template files.', 'learnkit' ); ?></p>
+
+				<table class="widefat striped" style="max-width:600px; margin-bottom:20px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Parameter', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Type', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Description', 'learnkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>$classes</code></td>
+							<td><?php esc_html_e( 'string', 'learnkit' ); ?></td>
+							<td><?php esc_html_e( 'Space-separated class string to be output on the element.', 'learnkit' ); ?></td>
+						</tr>
+						<tr>
+							<td><code>$button_key</code></td>
+							<td><?php esc_html_e( 'string', 'learnkit' ); ?></td>
+							<td><?php esc_html_e( 'Identifier for the button (see keys below).', 'learnkit' ); ?></td>
+						</tr>
+						<tr>
+							<td><code>$base_classes</code></td>
+							<td><?php esc_html_e( 'string', 'learnkit' ); ?></td>
+							<td><?php esc_html_e( 'The original base classes passed by the template.', 'learnkit' ); ?></td>
+						</tr>
+					</tbody>
+				</table>
+
+				<h4><?php esc_html_e( 'Available button keys', 'learnkit' ); ?></h4>
+				<table class="widefat striped" style="max-width:600px; margin-bottom:20px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Key', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Button', 'learnkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php
+						$button_keys = array(
+							'enroll_button'               => __( 'Enroll Button', 'learnkit' ),
+							'start_course_button'         => __( 'Start Course Button', 'learnkit' ),
+							'continue_learning_button'    => __( 'Continue Learning Button', 'learnkit' ),
+							'next_lesson_button'          => __( 'Next Lesson Button', 'learnkit' ),
+							'next_lesson_button_disabled' => __( 'Next Lesson Button (Disabled)', 'learnkit' ),
+							'prev_lesson_button'          => __( 'Previous Lesson Button', 'learnkit' ),
+							'prev_lesson_button_disabled' => __( 'Previous Lesson Button (Disabled)', 'learnkit' ),
+							'mark_complete_button'        => __( 'Mark Complete Button', 'learnkit' ),
+							'take_quiz_button'            => __( 'Take Quiz Button', 'learnkit' ),
+							'start_quiz_button'           => __( 'Start Quiz Button', 'learnkit' ),
+							'submit_quiz_button'          => __( 'Submit Quiz Button', 'learnkit' ),
+							'retake_quiz_button'          => __( 'Retake Quiz Button', 'learnkit' ),
+							'back_to_lesson_button'       => __( 'Back to Lesson Button', 'learnkit' ),
+							'back_to_course_button'       => __( 'Back to Course Button', 'learnkit' ),
+							'login_button'                => __( 'Log In to Take Quiz Button', 'learnkit' ),
+						);
+						foreach ( $button_keys as $key => $label ) :
+							?>
+						<tr>
+							<td><code><?php echo esc_html( $key ); ?></code></td>
+							<td><?php echo esc_html( $label ); ?></td>
+						</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+
+				<h4><?php esc_html_e( 'Examples', 'learnkit' ); ?></h4>
+
+				<p><strong><?php esc_html_e( 'Add a custom class to every button:', 'learnkit' ); ?></strong></p>
+				<pre style="background:#1e1e1e; color:#d4d4d4; padding:16px 20px; border-radius:4px; overflow-x:auto; font-size:13px; line-height:1.6;"><code>add_filter( 'learnkit_button_classes', function( $classes, $button_key, $base_classes ) {
+    return $classes . ' my-custom-class';
+}, 10, 3 );</code></pre>
+
+				<p><strong><?php esc_html_e( 'Add a class only to the Enroll button:', 'learnkit' ); ?></strong></p>
+				<pre style="background:#1e1e1e; color:#d4d4d4; padding:16px 20px; border-radius:4px; overflow-x:auto; font-size:13px; line-height:1.6;"><code>add_filter( 'learnkit_button_classes', function( $classes, $button_key, $base_classes ) {
+    if ( 'enroll_button' === $button_key ) {
+        $classes .= ' btn--xl btn--rounded';
+    }
+    return $classes;
+}, 10, 3 );</code></pre>
+
+				<p><strong><?php esc_html_e( 'Replace all classes on the Mark Complete button:', 'learnkit' ); ?></strong></p>
+				<pre style="background:#1e1e1e; color:#d4d4d4; padding:16px 20px; border-radius:4px; overflow-x:auto; font-size:13px; line-height:1.6;"><code>add_filter( 'learnkit_button_classes', function( $classes, $button_key, $base_classes ) {
+    if ( 'mark_complete_button' === $button_key ) {
+        return 'btn--lk-mark-complete my-complete-btn';
+    }
+    return $classes;
+}, 10, 3 );</code></pre>
+			</div>
+
 		</div>
 		<?php
 	}
