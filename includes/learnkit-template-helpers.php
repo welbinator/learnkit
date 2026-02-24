@@ -25,19 +25,19 @@ function learnkit_button_classes( $button_key, $base_classes = '' ) {
 
 	if ( defined( 'ACSS_PLUGIN_FILE' ) ) {
 		$defaults = array(
-			'enroll_button_class'            => 'btn--primary',
-			'start_course_button_class'      => 'btn--primary',
-			'continue_learning_button_class' => 'btn--primary',
-			'next_lesson_button_class'       => 'btn--primary',
-			'prev_lesson_button_class'       => 'btn--secondary',
-			'mark_complete_button_class'     => 'btn--primary',
-			'take_quiz_button_class'         => 'btn--primary',
-			'start_quiz_button_class'        => 'btn--primary',
-			'submit_quiz_button_class'       => 'btn--primary',
-			'retake_quiz_button_class'       => 'btn--tertiary',
-			'back_to_lesson_button_class'    => 'btn--secondary',
-			'back_to_course_button_class'    => 'btn--secondary',
-			'login_button_class'             => 'btn--secondary',
+			'enroll_button_class'            => '',
+			'start_course_button_class'      => '',
+			'continue_learning_button_class' => '',
+			'next_lesson_button_class'       => '',
+			'prev_lesson_button_class'       => '',
+			'mark_complete_button_class'     => '',
+			'take_quiz_button_class'         => '',
+			'start_quiz_button_class'        => '',
+			'submit_quiz_button_class'       => '',
+			'retake_quiz_button_class'       => '',
+			'back_to_lesson_button_class'    => '',
+			'back_to_course_button_class'    => '',
+			'login_button_class'             => '',
 		);
 		$acss_settings = get_option( 'learnkit_acss_settings', $defaults );
 		$acss_class    = $acss_settings[ $button_key . '_class' ] ?? ( $defaults[ $button_key . '_class' ] ?? '' );
