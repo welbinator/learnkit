@@ -338,8 +338,18 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 							<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
 						</a>
 					<?php endif; ?>
+					<?php if ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) : ?>
+						<button type="button" id="lk-retake-toggle" class="<?php echo esc_attr( learnkit_button_classes( 'retake_quiz_button', 'btn--lk-submit' ) ); ?>">
+							<span class="lk-icon"><svg aria-hidden="true" focusable="false" width="1em" height="1em" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="white"><g><path d="M154.8,424.7h202.4c12.8,0,23.2-10.4,23.2-23.2V139.3c0-12.8-10.4-23.2-23.2-23.2h-29.8V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-48.9V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-48.9V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-29.8c-12.8,0-23.2,10.4-23.2,23.2v262.1C131.6,414.2,142,424.7,154.8,424.7z M146.6,139.3c0-4.5,3.7-8.2,8.2-8.2h29.8v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h48.9v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h48.9v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h29.8c4.5,0,8.2,3.7,8.2,8.2v262.1c0,4.5-3.7,8.2-8.2,8.2H154.8c-4.5,0-8.2-3.7-8.2-8.2V139.3z"/><path d="M181.9,219.4c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6c-2.9-2.9-7.7-2.9-10.6,0l-21.2,21.2l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,219.4z"/><path d="M238.1,208.3h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,208.3,238.1,208.3z"/><path d="M181.9,289c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6s-7.7-2.9-10.6,0L187.2,273l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,289z"/><path d="M238.1,277.9h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,277.9,238.1,277.9z"/><path d="M181.9,358.5c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6s-7.7-2.9-10.6,0l-21.2,21.2l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,358.5z"/><path d="M238.1,347.5h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,347.5,238.1,347.5z"/></g></svg></span>
+							<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
+						</button>
+					<?php endif; ?>
 				</div>
 			</div>
+		<?php endif; ?>
+
+		<?php if ( $has_passed ) : ?>
+			<div id="lk-retake-section" style="display: none;">
 		<?php endif; ?>
 
 		<?php if ( $attempts_allowed > 0 && $attempts_used >= $attempts_allowed && ! $has_passed ) : ?>
@@ -504,6 +514,22 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				</script>
 			<?php endif; ?>
 
+		<?php endif; ?>
+
+		<?php if ( $has_passed ) : ?>
+			</div><!-- #lk-retake-section -->
+			<script>
+			(function() {
+				var btn = document.getElementById('lk-retake-toggle');
+				var section = document.getElementById('lk-retake-section');
+				if (btn && section) {
+					btn.addEventListener('click', function() {
+						section.style.display = 'block';
+						btn.style.display = 'none';
+					});
+				}
+			})();
+			</script>
 		<?php endif; ?>
 
 	<?php endif; ?>
