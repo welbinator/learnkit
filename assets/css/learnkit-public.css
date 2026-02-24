@@ -204,6 +204,49 @@ body a:where(:not([class*="btn--"])) {
 
 .btn--lk-nav.disabled {
 	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+/* Tooltip for quiz-gated next button */
+.btn--lk-nav.disabled[data-tooltip] {
+	position: relative;
+	opacity: 1;
+}
+
+.btn--lk-nav.disabled[data-tooltip]::after {
+	content: attr(data-tooltip);
+	position: absolute;
+	bottom: calc(100% + 8px);
+	right: 0;
+	background: #111827;
+	color: #ffffff;
+	font-size: 0.8rem;
+	font-weight: 500;
+	padding: 6px 10px;
+	border-radius: 5px;
+	white-space: nowrap;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	z-index: 10;
+}
+
+.btn--lk-nav.disabled[data-tooltip]::before {
+	content: '';
+	position: absolute;
+	bottom: calc(100% + 2px);
+	right: 16px;
+	border: 6px solid transparent;
+	border-top-color: #111827;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	z-index: 10;
+}
+
+.btn--lk-nav.disabled[data-tooltip]:hover::after,
+.btn--lk-nav.disabled[data-tooltip]:hover::before {
+	opacity: 1;
 }
 
 .learnkit-lesson-sidebar {
