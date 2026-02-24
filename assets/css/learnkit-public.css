@@ -8,7 +8,8 @@
    ========================================================================== */
 
 .learnkit-lesson-viewer {
-	display: grid;
+	display: flex;
+	flex-direction: column;
 	grid-template-columns: 1fr 320px;
 	gap: 2rem;
 	max-width: 1400px;
@@ -80,6 +81,7 @@
 	align-items: center;
 	padding-top: 2rem;
 	border-top: 2px solid #f0f0f1;
+	margin-block-start: auto;
 }
 
 .lk-button-mark-complete {
