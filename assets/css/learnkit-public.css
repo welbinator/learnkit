@@ -40,7 +40,7 @@
    Link Base Ruleset
    ========================================================================== */
 
-body a:where(:not([class*="lk-button-"])) {
+body a:where(:not([class*="btn--"])) {
 	color: var(--link-color, var(--primary, #4f46e5));
 	font-weight: var(--link-weight, inherit);
 	-webkit-text-decoration: var(--link-decoration, inherit);
@@ -53,8 +53,8 @@ body a:where(:not([class*="lk-button-"])) {
    Button Base Ruleset
    ========================================================================== */
 
-:where([class*="lk-button-"]:not(.lk-button-none)),
-:where([class*="lk-button-"].wp-block-button) > .wp-block-button__link {
+:where([class*="btn--lk-"]:not(.btn--lk-none)),
+:where([class*="btn--lk-"].wp-block-button) > .wp-block-button__link {
 	background: var(--btn-background, var(--lk-btn-background));
 	color: var(--btn-text-color, var(--lk-btn-text-color));
 	padding-block: var(--btn-padding-block, var(--lk-btn-padding-block));
@@ -168,11 +168,11 @@ body a:where(:not([class*="lk-button-"])) {
 	margin-block-start: auto;
 }
 
-.lk-button-mark-complete {
+.btn--lk-mark-complete {
 
 }
 
-.lk-button-take-quiz {
+.btn--lk-take-quiz {
 
 }
 
@@ -195,14 +195,14 @@ body a:where(:not([class*="lk-button-"])) {
 	gap: var(--card-gap, 1rem);
 }
 
-.lk-button-nav {
+.btn--lk-nav {
 	display: flex;
 	align-items: center;
 	text-decoration: none;
 
 }
 
-.lk-button-nav.disabled {
+.btn--lk-nav.disabled {
 	cursor: not-allowed;
 }
 
@@ -330,7 +330,7 @@ body a:where(:not([class*="lk-button-"])) {
 		flex-direction: column;
 	}
 
-	.lk-button-nav {
+	.btn--lk-nav {
 		width: 100%;
 		justify-content: center;
 	}
@@ -670,7 +670,7 @@ body a:where(:not([class*="lk-button-"])) {
 	margin-top: 40px;
 }
 
-.lk-button-submit:disabled {
+.btn--lk-submit:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }

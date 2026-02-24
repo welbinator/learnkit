@@ -258,7 +258,7 @@ if ( ! $is_available ) {
 					if ( $quiz_gate_active ) :
 						?>
 						<button
-							class="<?php echo esc_attr( learnkit_button_classes( 'mark_complete_button', 'lk-button-mark-complete' ) ); ?>"
+							class="<?php echo esc_attr( learnkit_button_classes( 'mark_complete_button', 'btn--lk-mark-complete' ) ); ?>"
 							data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
 							disabled
 							aria-disabled="true"
@@ -271,7 +271,7 @@ if ( ! $is_available ) {
 						</p>
 					<?php else : ?>
 						<button
-							class="<?php echo esc_attr( learnkit_button_classes( 'mark_complete_button', 'lk-button-mark-complete' ) ); ?>"
+							class="<?php echo esc_attr( learnkit_button_classes( 'mark_complete_button', 'btn--lk-mark-complete' ) ); ?>"
 							data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
 						>
 							<span class="lk-icon"><svg aria-hidden="true" focusable="false" width="1em" height="1em" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.341,12.247a1,1,0,0,0,1.317,1.505l4-3.5a1,1,0,0,0,.028-1.48l-9-8.5A1,1,0,0,0,.313,1.727l8.2,7.745Z" transform="translate(19 6.5) rotate(90)" fill="white"/></svg></span> Mark as Complete
@@ -305,7 +305,7 @@ if ( ! $is_available ) {
 							)
 						);
 						?>
-						<a href="<?php echo esc_url( get_permalink( $quiz->ID ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'take_quiz_button', 'lk-button-take-quiz' ) ); ?>">
+						<a href="<?php echo esc_url( get_permalink( $quiz->ID ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'take_quiz_button', 'btn--lk-take-quiz' ) ); ?>">
 							<span class="quiz-icon lk-icon"><svg aria-hidden="true" focusable="false" width="1em" height="1em" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="white"><g><path d="M154.8,424.7h202.4c12.8,0,23.2-10.4,23.2-23.2V139.3c0-12.8-10.4-23.2-23.2-23.2h-29.8V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-48.9V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-48.9V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-29.8c-12.8,0-23.2,10.4-23.2,23.2v262.1C131.6,414.2,142,424.7,154.8,424.7z M146.6,139.3c0-4.5,3.7-8.2,8.2-8.2h29.8v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h48.9v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h48.9v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h29.8c4.5,0,8.2,3.7,8.2,8.2v262.1c0,4.5-3.7,8.2-8.2,8.2H154.8c-4.5,0-8.2-3.7-8.2-8.2V139.3z"/><path d="M181.9,219.4c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6c-2.9-2.9-7.7-2.9-10.6,0l-21.2,21.2l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,219.4z"/><path d="M238.1,208.3h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,208.3,238.1,208.3z"/><path d="M181.9,289c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6s-7.7-2.9-10.6,0L187.2,273l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,289z"/><path d="M238.1,277.9h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,277.9,238.1,277.9z"/><path d="M181.9,358.5c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6s-7.7-2.9-10.6,0l-21.2,21.2l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,358.5z"/><path d="M238.1,347.5h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,347.5,238.1,347.5z"/></g></svg></span>
 							<?php if ( $quiz_attempt ) : ?>
 								<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
@@ -326,28 +326,28 @@ if ( ! $is_available ) {
 
 			<div class="learnkit-lesson-navigation">
 				<?php if ( $prev_lesson_id ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $prev_lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'prev_lesson_button', 'lk-button-nav prev' ) ); ?>">
+					<a href="<?php echo esc_url( get_permalink( $prev_lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'prev_lesson_button', 'btn--lk-nav prev' ) ); ?>">
 						<span class="arrow">←</span> Previous Lesson
 					</a>
 				<?php else : ?>
-					<span class="lk-button-nav prev disabled">
+					<span class="btn--lk-nav prev disabled">
 						<span class="arrow">←</span> Previous Lesson
 					</span>
 				<?php endif; ?>
 
 				<?php if ( $next_lesson_id ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $next_lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button', 'lk-button-nav next' ) ); ?>">
+					<a href="<?php echo esc_url( get_permalink( $next_lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button', 'btn--lk-nav next' ) ); ?>">
 						Next Lesson <span class="arrow">→</span>
 					</a>
 				<?php elseif ( $next_module_first_lesson ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $next_module_first_lesson['id'] ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button', 'lk-button-nav next next-module' ) ); ?>">
+					<a href="<?php echo esc_url( get_permalink( $next_module_first_lesson['id'] ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button', 'btn--lk-nav next next-module' ) ); ?>">
 						<div style="display: flex; flex-direction: column; align-items: flex-end;">
 							<span style="font-size: 12px; opacity: 0.8;">Next Module:</span>
 							<span><?php echo esc_html( $next_module_first_lesson['module_name'] ); ?> <span class="arrow">→</span></span>
 						</div>
 					</a>
 				<?php else : ?>
-					<span class="lk-button-nav next disabled">
+					<span class="btn--lk-nav next disabled">
 						Next Lesson <span class="arrow">→</span>
 					</span>
 				<?php endif; ?>

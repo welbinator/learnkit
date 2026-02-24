@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
  * in Settings → LearnKit → Settings (only when Automatic CSS is active).
  *
  * @param string $button_key  The button identifier key (e.g. 'enroll_button').
- * @param string $base_classes Space-separated base classes always applied (e.g. 'lk-button-enroll').
+ * @param string $base_classes Space-separated base classes always applied (e.g. 'btn--lk-enroll').
  * @return string
  */
 function learnkit_button_classes( $button_key, $base_classes = '' ) {
