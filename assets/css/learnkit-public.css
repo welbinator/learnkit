@@ -37,6 +37,19 @@
 }
 
 /* ==========================================================================
+   Link Base Ruleset
+   ========================================================================== */
+
+body a:where(:not([class*="lk-button-"])) {
+	color: var(--link-color, var(--primary, #4f46e5));
+	font-weight: var(--link-weight, inherit);
+	-webkit-text-decoration: var(--link-decoration, inherit);
+	text-decoration: var(--link-decoration, inherit);
+	text-underline-offset: var(--link-underline-offset, auto);
+	transition: var(--link-transition, var(--transition, color 0.2s ease));
+}
+
+/* ==========================================================================
    Button Base Ruleset
    ========================================================================== */
 
@@ -141,6 +154,11 @@
 	margin-bottom: 1rem;
 }
 
+.learnkit-lesson-progress {
+	display: flex;
+	gap: var(--card-gap, 1rem);
+}
+
 .learnkit-lesson-footer {
 	display: flex;
 	justify-content: space-between;
@@ -174,7 +192,7 @@
 
 .learnkit-lesson-navigation {
 	display: flex;
-	gap: 1rem;
+	gap: var(--card-gap, 1rem);
 }
 
 .lk-button-nav {
@@ -195,7 +213,7 @@
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	height: fit-content;
 	position: sticky;
-	top: 2rem;
+	
 }
 
 .learnkit-module-overview {
