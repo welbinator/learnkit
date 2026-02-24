@@ -618,6 +618,103 @@ class LearnKit_Admin {
 }, 10, 3 );</code></pre>
 			</div>
 
+			<hr style="margin: 32px 0;">
+			<h2><?php esc_html_e( 'WooCommerce Integration', 'learnkit' ); ?></h2>
+			<p><?php esc_html_e( 'LearnKit integrates with WooCommerce to gate course access behind a product purchase. No extra plugin required — just follow the steps below.', 'learnkit' ); ?></p>
+
+			<!-- Step 1 -->
+			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;">
+					<?php esc_html_e( 'Step 1 — Create a WooCommerce product', 'learnkit' ); ?>
+				</h3>
+				<p><?php esc_html_e( 'Create a Simple product in WooCommerce (Products → Add New). Set the price and publish it. Note the product ID — you\'ll need it in the next step.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Step 2 -->
+			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;">
+					<?php esc_html_e( 'Step 2 — Link the product to a course', 'learnkit' ); ?>
+				</h3>
+				<p><?php esc_html_e( 'On the WooCommerce product edit screen, add the course ID to the', 'learnkit' ); ?> <code>_learnkit_course_ids</code> <?php esc_html_e( 'custom field. If the field is not visible, enable it via Screen Options → Custom Fields.', 'learnkit' ); ?></p>
+				<table class="widefat striped" style="max-width:600px; margin-bottom:20px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Custom Field', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Value', 'learnkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>_learnkit_course_ids</code></td>
+							<td><?php esc_html_e( 'The post ID of the course (e.g. 42). Add multiple rows for multiple courses.', 'learnkit' ); ?></td>
+						</tr>
+					</tbody>
+				</table>
+				<p><?php esc_html_e( 'One product can unlock multiple courses, and one course can be linked to multiple products.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Step 3 -->
+			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;">
+					<?php esc_html_e( 'Step 3 — Set the course access type', 'learnkit' ); ?>
+				</h3>
+				<p><?php esc_html_e( 'In the course settings (Course Builder → course settings or the post meta), make sure the course is NOT set to self-enrollment. Paid courses should have self-enrollment disabled so only purchasers gain access.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- How it works -->
+			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;">
+					<?php esc_html_e( 'How it works', 'learnkit' ); ?>
+				</h3>
+				<p><?php esc_html_e( 'When a customer completes a WooCommerce order containing a linked product, LearnKit automatically enrolls them in the associated course(s). No manual enrollment needed.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'On the course page and catalog, visitors who are not enrolled see an "Enroll — $X.XX" button that links to:', 'learnkit' ); ?></p>
+				<ul style="list-style:disc; padding-left:24px;">
+					<li><?php esc_html_e( 'The product page — if only one product is linked to the course', 'learnkit' ); ?></li>
+					<li><?php esc_html_e( 'The WooCommerce shop archive filtered to that course\'s products — if multiple products are linked', 'learnkit' ); ?></li>
+				</ul>
+				<p><?php esc_html_e( 'The "Login to Enroll" button is only shown on free (self-enrollment) courses. Paid courses always show the purchase CTA instead.', 'learnkit' ); ?></p>
+			</div>
+
+			<!-- Hook reference -->
+			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0; font-family:monospace; font-size:1.1rem;">learnkit_course_enrollment_cta</h3>
+				<p><?php esc_html_e( 'Action hook that fires in place of the enroll button for paid courses. The built-in WooCommerce integration uses this hook to render the purchase button. You can also use it to add your own payment gateway or custom enrollment logic.', 'learnkit' ); ?></p>
+				<table class="widefat striped" style="max-width:600px; margin-bottom:20px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Parameter', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Type', 'learnkit' ); ?></th>
+							<th><?php esc_html_e( 'Description', 'learnkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>$course_id</code></td>
+							<td><?php esc_html_e( 'int', 'learnkit' ); ?></td>
+							<td><?php esc_html_e( 'The course post ID.', 'learnkit' ); ?></td>
+						</tr>
+						<tr>
+							<td><code>$user_id</code></td>
+							<td><?php esc_html_e( 'int', 'learnkit' ); ?></td>
+							<td><?php esc_html_e( 'The current user ID. 0 if not logged in.', 'learnkit' ); ?></td>
+						</tr>
+						<tr>
+							<td><code>$is_enrolled</code></td>
+							<td><?php esc_html_e( 'bool', 'learnkit' ); ?></td>
+							<td><?php esc_html_e( 'Whether the current user is already enrolled.', 'learnkit' ); ?></td>
+						</tr>
+					</tbody>
+				</table>
+				<h4><?php esc_html_e( 'Example — custom payment gateway button', 'learnkit' ); ?></h4>
+				<pre style="background:#1e1e1e; color:#d4d4d4; padding:16px 20px; border-radius:4px; overflow-x:auto; font-size:13px; line-height:1.6;"><code>add_action( 'learnkit_course_enrollment_cta', function( $course_id, $user_id, $is_enrolled ) {
+    if ( $is_enrolled ) {
+        return;
+    }
+    $checkout_url = 'https://example.com/checkout?course=' . $course_id;
+    echo '&lt;a href="' . esc_url( $checkout_url ) . '" class="btn--lk-enroll"&gt;Buy Now&lt;/a&gt;';
+}, 10, 3 );</code></pre>
+			</div>
+
 		</div>
 		<?php
 	}
