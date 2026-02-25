@@ -141,6 +141,12 @@ class LearnKit_Rewrite {
 	 * @return void
 	 */
 	public static function maybe_flush() {
+		// Only run on admin page loads — skip REST API, frontend, cron, etc.
+		// flush_rewrite_rules() is expensive; no need to check on every request.
+		if ( ! is_admin() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			return;
+		}
+
 		$course_base = self::get_base( 'learnkit_course_page' ) ?? '';
 		$lesson_base = self::get_base( 'learnkit_lesson_page' ) ?? '';
 		$quiz_base   = self::get_base( 'learnkit_quiz_page' ) ?? '';
