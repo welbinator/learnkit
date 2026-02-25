@@ -426,6 +426,18 @@ class LearnKit_Admin {
 			'login_button_class'             => '',
 		) );
 		$btn_classes    = $acss_is_active ? $this->get_acss_button_classes() : array();
+
+		// Read saved template page IDs. If we just POSTed, use the POST values directly
+		// to bypass object cache on hosts that cache get_option() aggressively (e.g. Redis).
+		if ( isset( $_POST['learnkit_settings_nonce'] ) ) {
+			$saved_course_page = isset( $_POST['learnkit_course_page'] ) ? absint( $_POST['learnkit_course_page'] ) : 0;
+			$saved_lesson_page = isset( $_POST['learnkit_lesson_page'] ) ? absint( $_POST['learnkit_lesson_page'] ) : 0;
+			$saved_quiz_page   = isset( $_POST['learnkit_quiz_page'] ) ? absint( $_POST['learnkit_quiz_page'] ) : 0;
+		} else {
+			$saved_course_page = (int) get_option( 'learnkit_course_page', 0 );
+			$saved_lesson_page = (int) get_option( 'learnkit_lesson_page', 0 );
+			$saved_quiz_page   = (int) get_option( 'learnkit_quiz_page', 0 );
+		}
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
@@ -500,7 +512,7 @@ class LearnKit_Admin {
 								<select name="learnkit_course_page" id="learnkit_course_page">
 									<option value="0"><?php esc_html_e( '— Select a page —', 'learnkit' ); ?></option>
 									<?php foreach ( get_pages() as $page ) : ?>
-										<option value="<?php echo esc_attr( $page->ID ); ?>" <?php selected( get_option( 'learnkit_course_page' ), $page->ID ); ?>>
+										<option value="<?php echo esc_attr( $page->ID ); ?>" <?php selected( $saved_course_page, $page->ID ); ?>>
 											<?php echo esc_html( $page->post_title ); ?>
 										</option>
 									<?php endforeach; ?>
@@ -516,7 +528,7 @@ class LearnKit_Admin {
 								<select name="learnkit_lesson_page" id="learnkit_lesson_page">
 									<option value="0"><?php esc_html_e( '— Select a page —', 'learnkit' ); ?></option>
 									<?php foreach ( get_pages() as $page ) : ?>
-										<option value="<?php echo esc_attr( $page->ID ); ?>" <?php selected( get_option( 'learnkit_lesson_page' ), $page->ID ); ?>>
+										<option value="<?php echo esc_attr( $page->ID ); ?>" <?php selected( $saved_lesson_page, $page->ID ); ?>>
 											<?php echo esc_html( $page->post_title ); ?>
 										</option>
 									<?php endforeach; ?>
@@ -532,7 +544,7 @@ class LearnKit_Admin {
 								<select name="learnkit_quiz_page" id="learnkit_quiz_page">
 									<option value="0"><?php esc_html_e( '— Select a page —', 'learnkit' ); ?></option>
 									<?php foreach ( get_pages() as $page ) : ?>
-										<option value="<?php echo esc_attr( $page->ID ); ?>" <?php selected( get_option( 'learnkit_quiz_page' ), $page->ID ); ?>>
+										<option value="<?php echo esc_attr( $page->ID ); ?>" <?php selected( $saved_quiz_page, $page->ID ); ?>>
 											<?php echo esc_html( $page->post_title ); ?>
 										</option>
 									<?php endforeach; ?>
