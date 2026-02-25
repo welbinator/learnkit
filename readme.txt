@@ -4,7 +4,7 @@ Tags: lms, courses, elearning, quizzes, learning management
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.8.6
+Stable tag: 0.8.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,6 +40,9 @@ Yes. Lessons are gated behind enrollment by default.
 
 = Does LearnKit support certificates? =
 Basic certificate infrastructure is included. A full certificate builder is planned for a future release.
+
+= Where do I report security bugs found in this plugin? =
+Please report security bugs found in the source code of the LearnKit plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/84933a49-75e2-4232-ad88-afcb20271d05). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
 
 == Changelog ==
 
@@ -85,3 +88,11 @@ Basic certificate infrastructure is included. A full certificate builder is plan
 
 = 0.5.0 =
 Includes security improvements. Update recommended for all users.
+
+== Security ==
+
+LearnKit takes security seriously. If you discover a security vulnerability, please report it responsibly through our Vulnerability Disclosure Program powered by Patchstack:
+
+https://patchstack.com/database/vdp/learnkit
+
+Do not report security vulnerabilities through GitHub issues or public forums.
