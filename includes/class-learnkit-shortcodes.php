@@ -74,7 +74,8 @@ class LearnKit_Shortcodes {
 			$slug = get_query_var( 'name' );
 		}
 		if ( ! $slug ) {
-			$slug = self::slug_from_uri( LEARNKIT_COURSE_REWRITE_BASE );
+			$base = LearnKit_Rewrite::get_base( 'learnkit_course_page' );
+			$slug = $base ? self::slug_from_uri( $base ) : '';
 		}
 		if ( ! $slug ) {
 			return '';
@@ -96,7 +97,8 @@ class LearnKit_Shortcodes {
 			$slug = get_query_var( 'name' );
 		}
 		if ( ! $slug ) {
-			$slug = self::slug_from_uri( LEARNKIT_LESSON_REWRITE_BASE );
+			$base = LearnKit_Rewrite::get_base( 'learnkit_lesson_page' );
+			$slug = $base ? self::slug_from_uri( $base ) : '';
 		}
 		if ( ! $slug ) {
 			return '';
@@ -117,9 +119,11 @@ class LearnKit_Shortcodes {
 		if ( ! $slug ) {
 			$slug = get_query_var( 'name' );
 		}
-		// Last resort: parse slug from URI (handles Etch block render timing issues).
+		// Last resort: parse slug from URI (handles page builders that render
+		// shortcodes before WordPress has populated custom query vars).
 		if ( ! $slug ) {
-			$slug = self::slug_from_uri( LEARNKIT_QUIZ_REWRITE_BASE );
+			$base = LearnKit_Rewrite::get_base( 'learnkit_quiz_page' );
+			$slug = $base ? self::slug_from_uri( $base ) : '';
 		}
 		if ( ! $slug ) {
 			return '';

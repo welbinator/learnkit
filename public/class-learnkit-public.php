@@ -278,8 +278,11 @@ class LearnKit_Public {
 		// so the lk_quiz_slug query var gets set and the shortcode resolves correctly.
 		$quiz_page_id = get_option( 'learnkit_quiz_page' );
 		if ( $quiz_page_id ) {
-			$quiz_slug     = get_post_field( 'post_name', $quiz_id );
-			$redirect_base = home_url( LEARNKIT_QUIZ_REWRITE_BASE . '/' . $quiz_slug . '/' );
+			$quiz_base = LearnKit_Rewrite::get_base( 'learnkit_quiz_page' );
+			if ( $quiz_base ) {
+				$quiz_slug     = get_post_field( 'post_name', $quiz_id );
+				$redirect_base = home_url( $quiz_base . '/' . $quiz_slug . '/' );
+			}
 		}
 
 		$redirect_url = add_query_arg(

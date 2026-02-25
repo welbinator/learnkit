@@ -70,9 +70,12 @@ function learnkit_button_classes( $button_key, $base_classes = '' ) {
  */
 function learnkit_quiz_url( $quiz_id ) {
 	$quiz_page_id = get_option( 'learnkit_quiz_page' );
-	if ( $quiz_page_id && defined( 'LEARNKIT_QUIZ_REWRITE_BASE' ) ) {
-		$slug = get_post_field( 'post_name', $quiz_id );
-		return home_url( LEARNKIT_QUIZ_REWRITE_BASE . '/' . $slug . '/' );
+	if ( $quiz_page_id ) {
+		$base = LearnKit_Rewrite::get_base( 'learnkit_quiz_page' );
+		if ( $base ) {
+			$slug = get_post_field( 'post_name', $quiz_id );
+			return home_url( $base . '/' . $slug . '/' );
+		}
 	}
 	return get_permalink( $quiz_id );
 }
@@ -86,9 +89,12 @@ function learnkit_quiz_url( $quiz_id ) {
  */
 function learnkit_lesson_url( $lesson_id ) {
 	$lesson_page_id = get_option( 'learnkit_lesson_page' );
-	if ( $lesson_page_id && defined( 'LEARNKIT_LESSON_REWRITE_BASE' ) ) {
-		$slug = get_post_field( 'post_name', $lesson_id );
-		return home_url( LEARNKIT_LESSON_REWRITE_BASE . '/' . $slug . '/' );
+	if ( $lesson_page_id ) {
+		$base = LearnKit_Rewrite::get_base( 'learnkit_lesson_page' );
+		if ( $base ) {
+			$slug = get_post_field( 'post_name', $lesson_id );
+			return home_url( $base . '/' . $slug . '/' );
+		}
 	}
 	return get_permalink( $lesson_id );
 }
@@ -102,9 +108,12 @@ function learnkit_lesson_url( $lesson_id ) {
  */
 function learnkit_course_url( $course_id ) {
 	$course_page_id = get_option( 'learnkit_course_page' );
-	if ( $course_page_id && defined( 'LEARNKIT_COURSE_REWRITE_BASE' ) ) {
-		$slug = get_post_field( 'post_name', $course_id );
-		return home_url( LEARNKIT_COURSE_REWRITE_BASE . '/' . $slug . '/' );
+	if ( $course_page_id ) {
+		$base = LearnKit_Rewrite::get_base( 'learnkit_course_page' );
+		if ( $base ) {
+			$slug = get_post_field( 'post_name', $course_id );
+			return home_url( $base . '/' . $slug . '/' );
+		}
 	}
 	return get_permalink( $course_id );
 }
