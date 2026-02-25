@@ -76,6 +76,11 @@ require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-drip.php';
 require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-cron.php';
 LearnKit_Cron::init();
 
+/**
+ * GitHub updater — enables WordPress plugin update notifications from GitHub Releases.
+ */
+require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-github-updater.php';
+
 // Hook enrollment → welcome email.
 add_action( 'learnkit_user_enrolled', array( 'LearnKit_Emails', 'schedule_welcome_email' ), 10, 2 );
 
