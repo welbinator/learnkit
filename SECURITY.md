@@ -4,7 +4,7 @@
 
 LearnKit takes security seriously. If you discover a security vulnerability in this plugin, please report it responsibly through our Vulnerability Disclosure Program powered by Patchstack:
 
-**[Report a vulnerability](https://patchstack.com/database/vdp/learnkit)**
+**[Report a vulnerability](https://patchstack.com/database/vdp/84933a49-75e2-4232-ad88-afcb20271d05)**
 
 Please **do not** report security vulnerabilities through GitHub issues, pull requests, or public forums, as this could put users at risk before a fix is available.
 
