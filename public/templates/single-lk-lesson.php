@@ -374,7 +374,12 @@ if ( ! $is_available ) {
 
 		<!-- Lesson Content -->
 		<div class="learnkit-lesson-content">
-			<?php echo wp_kses_post( $lesson->post_content ); ?>
+			<?php
+			// Use apply_filters('the_content') instead of raw post_content so that
+			// Gutenberg blocks (including third-party blocks like wp:etch/component)
+			// are properly rendered through the full block processing pipeline.
+			echo wp_kses_post( apply_filters( 'the_content', $lesson->post_content ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_kses_post handles escaping.
+			?>
 		</div>
 
 		<!-- Progress & Navigation -->
