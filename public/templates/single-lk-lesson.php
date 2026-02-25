@@ -290,7 +290,7 @@ if ( ! $is_enrolled ) {
 			<?php esc_html_e( 'You need to be enrolled in this course to access lessons.', 'learnkit' ); ?>
 		</p>
 		<?php if ( $course_id ) : ?>
-			<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>"
+			<a href="<?php echo esc_url( learnkit_course_url( $course_id ) ); ?>"
 				style="display: inline-block; background: #2271b1; color: #fff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: 600;">
 				<?php esc_html_e( 'View Course', 'learnkit' ); ?>
 			</a>
@@ -331,7 +331,7 @@ if ( ! $is_available ) {
 			</p>
 		<?php endif; ?>
 		<?php if ( $course_id ) : ?>
-			<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>"
+			<a href="<?php echo esc_url( learnkit_course_url( $course_id ) ); ?>"
 				style="display: inline-block; background: #2271b1; color: #fff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: 600;">
 				<?php esc_html_e( 'Back to Course', 'learnkit' ); ?>
 			</a>
@@ -350,7 +350,7 @@ if ( ! $is_available ) {
 		<!-- Breadcrumb -->
 		<div class="learnkit-breadcrumb">
 			<?php if ( $course ) : ?>
-				<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>">
+				<a href="<?php echo esc_url( learnkit_course_url( $course_id ) ); ?>">
 					<?php echo esc_html( $course->post_title ); ?>
 				</a>
 				<span class="separator">/</span>
@@ -466,7 +466,7 @@ if ( ! $is_available ) {
 							)
 						);
 						?>
-						<a href="<?php echo esc_url( get_permalink( $quiz->ID ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'take_quiz_button', 'btn--lk-take-quiz' ) ); ?>">
+						<a href="<?php echo esc_url( learnkit_quiz_url( $quiz->ID ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'take_quiz_button', 'btn--lk-take-quiz' ) ); ?>">
 							
 							<?php if ( $quiz_attempt ) : ?>
 								<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
@@ -497,7 +497,7 @@ if ( ! $is_available ) {
 				}
 
 				if ( $prev_lesson_id || $prev_module_last_lesson ) :
-					$prev_href = $prev_lesson_id ? get_permalink( $prev_lesson_id ) : get_permalink( $prev_module_last_lesson['id'] );
+					$prev_href = $prev_lesson_id ? learnkit_lesson_url( $prev_lesson_id ) : learnkit_lesson_url( $prev_module_last_lesson["id"] );
 				?>
 					<a
 						href="<?php echo esc_url( $prev_href ); ?>"
@@ -525,7 +525,7 @@ if ( ! $is_available ) {
 				}
 
 				if ( $next_lesson_id || $next_module_first_lesson ) :
-					$next_href = $next_lesson_id ? get_permalink( $next_lesson_id ) : get_permalink( $next_module_first_lesson['id'] );
+					$next_href = $next_lesson_id ? learnkit_lesson_url( $next_lesson_id ) : learnkit_lesson_url( $next_module_first_lesson["id"] );
 					if ( $quiz_gate_active ) : ?>
 						<span
 							class="<?php echo esc_attr( learnkit_button_classes( 'next_lesson_button_disabled', 'btn--lk-nav next disabled' ) ); ?>"
@@ -593,7 +593,7 @@ if ( ! $is_available ) {
 							</span>
 						</span>
 					<?php else : ?>
-						<a href="<?php echo esc_url( get_permalink( $l->ID ) ); ?>">
+						<a href="<?php echo esc_url( learnkit_lesson_url( $l->ID ) ); ?>">
 							<span class="lesson-number"><?php echo esc_html( $index + 1 ); ?>.</span>
 							<span class="lesson-title"><?php echo esc_html( $l->post_title ); ?></span>
 							<span class="lesson-status">

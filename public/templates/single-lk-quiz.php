@@ -190,16 +190,16 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 			</p>
 			<div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
 				<?php if ( false === $result_passed && ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'retake_quiz_button', 'btn--lk-submit' ) ); ?>">
+					<a href="<?php echo esc_url( learnkit_quiz_url( $quiz_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'retake_quiz_button', 'btn--lk-submit' ) ); ?>">
 						<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
 					</a>
 				<?php elseif ( true === $result_passed && ( 0 === $attempts_allowed || $attempts_used < $attempts_allowed ) ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $quiz_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'retake_quiz_button', 'btn--lk-submit' ) ); ?>">
+					<a href="<?php echo esc_url( learnkit_quiz_url( $quiz_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'retake_quiz_button', 'btn--lk-submit' ) ); ?>">
 						<?php esc_html_e( 'Retake Quiz', 'learnkit' ); ?>
 					</a>
 				<?php endif; ?>
 				<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
-					<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'btn--lk-submit' ) ); ?>">
+					<a href="<?php echo esc_url( learnkit_lesson_url( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'btn--lk-submit' ) ); ?>">
 						<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
 					</a>
 				<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
@@ -301,7 +301,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 			<h3><?php esc_html_e( 'Enrollment Required', 'learnkit' ); ?></h3>
 			<p><?php esc_html_e( 'You must be enrolled in this course to take this quiz.', 'learnkit' ); ?></p>
 			<?php if ( $course_id ) : ?>
-				<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_course_button', 'btn--lk-submit' ) ); ?>">
+				<a href="<?php echo esc_url( learnkit_course_url( $course_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_course_button', 'btn--lk-submit' ) ); ?>">
 					<?php esc_html_e( 'View Course', 'learnkit' ); ?>
 				</a>
 			<?php endif; ?>
@@ -354,7 +354,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				</p>
 				<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
 					<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'btn--lk-submit' ) ); ?>">
+						<a href="<?php echo esc_url( learnkit_lesson_url( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'btn--lk-submit' ) ); ?>">
 							<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
 						</a>
 					<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
@@ -395,7 +395,7 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 				<?php endif; ?>
 				<div style="margin-top: 20px;">
 					<?php if ( $lesson_id && ! empty( $lesson_id ) ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'btn--lk-submit' ) ); ?>">
+						<a href="<?php echo esc_url( learnkit_lesson_url( $lesson_id ) ); ?>" class="<?php echo esc_attr( learnkit_button_classes( 'back_to_lesson_button', 'btn--lk-submit' ) ); ?>">
 							<?php esc_html_e( 'Back to Lesson', 'learnkit' ); ?>
 						</a>
 					<?php elseif ( ( $module_id && ! empty( $module_id ) ) || ( $course_id && ! empty( $course_id ) ) ) : ?>
