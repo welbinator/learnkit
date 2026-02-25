@@ -64,12 +64,22 @@ class LearnKit_Public {
 	/**
 	 * Load custom template for single lessons and courses.
 	 *
+	 * When a template page is configured for a given post type, the content
+	 * is rendered via shortcode inside the user-chosen page, so this filter
+	 * should not hijack the template — the theme's default template handles
+	 * the wrapper. Fall back to plugin templates only when no template page
+	 * is configured for that post type.
+	 *
 	 * @since    0.2.13
 	 * @param    string $template    The path to the template.
 	 * @return   string             Modified template path.
 	 */
 	public function load_lesson_template( $template ) {
 		if ( is_singular( 'lk_lesson' ) ) {
+			// If a template page is configured, let the theme handle it.
+			if ( get_option( 'learnkit_lesson_page' ) ) {
+				return $template;
+			}
 			$plugin_template = plugin_dir_path( __FILE__ ) . 'templates/single-lk-lesson.php';
 			if ( file_exists( $plugin_template ) ) {
 				return $plugin_template;
@@ -77,6 +87,10 @@ class LearnKit_Public {
 		}
 
 		if ( is_singular( 'lk_course' ) ) {
+			// If a template page is configured, let the theme handle it.
+			if ( get_option( 'learnkit_course_page' ) ) {
+				return $template;
+			}
 			$plugin_template = plugin_dir_path( __FILE__ ) . 'templates/single-lk-course.php';
 			if ( file_exists( $plugin_template ) ) {
 				return $plugin_template;
@@ -84,6 +98,10 @@ class LearnKit_Public {
 		}
 
 		if ( is_singular( 'lk_quiz' ) ) {
+			// If a template page is configured, let the theme handle it.
+			if ( get_option( 'learnkit_quiz_page' ) ) {
+				return $template;
+			}
 			$plugin_template = plugin_dir_path( __FILE__ ) . 'templates/single-lk-quiz.php';
 			if ( file_exists( $plugin_template ) ) {
 				return $plugin_template;
@@ -109,6 +127,13 @@ class LearnKit_Public {
 				$is_learnkit_page = true;
 			}
 			if ( $post && has_shortcode( $post->post_content, 'learnkit_dashboard' ) ) {
+				$is_learnkit_page = true;
+			}
+			if ( $post && (
+				has_shortcode( $post->post_content, 'learnkit_course' ) ||
+				has_shortcode( $post->post_content, 'learnkit_lesson' ) ||
+				has_shortcode( $post->post_content, 'learnkit_quiz' )
+			) ) {
 				$is_learnkit_page = true;
 			}
 		}
@@ -139,6 +164,13 @@ class LearnKit_Public {
 		if ( ! $is_learnkit_page && is_singular() ) {
 			$post = get_post();
 			if ( $post && ( has_shortcode( $post->post_content, 'learnkit_catalog' ) || has_shortcode( $post->post_content, 'learnkit_dashboard' ) ) ) {
+				$is_learnkit_page = true;
+			}
+			if ( $post && (
+				has_shortcode( $post->post_content, 'learnkit_course' ) ||
+				has_shortcode( $post->post_content, 'learnkit_lesson' ) ||
+				has_shortcode( $post->post_content, 'learnkit_quiz' )
+			) ) {
 				$is_learnkit_page = true;
 			}
 		}

@@ -15,7 +15,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template-scoped variables, not true PHP globals.
 
-get_header();
+if ( empty( $GLOBALS['learnkit_shortcode_context'] ) ) {
+	get_header();
+}
 
 $course_id = get_the_ID();
 $user_id   = get_current_user_id();
@@ -498,4 +500,6 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 
 <?php
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
-get_footer();
+if ( empty( $GLOBALS['learnkit_shortcode_context'] ) ) {
+	get_footer();
+}

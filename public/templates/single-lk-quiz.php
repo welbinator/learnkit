@@ -12,7 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-get_header();
+if ( empty( $GLOBALS['learnkit_shortcode_context'] ) ) {
+	get_header();
+}
 
 // Check if user is enrolled in the course.
 $quiz_id   = get_the_ID();
@@ -277,7 +279,9 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 		<?php endif; ?>
 		<?php
 		// Don't show quiz form again after completion, just show navigation.
-		get_footer();
+		if ( empty( $GLOBALS['learnkit_shortcode_context'] ) ) {
+			get_footer();
+		}
 		return;
 		?>
 	<?php endif; ?>
@@ -555,4 +559,6 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 
 <?php
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
-get_footer();
+if ( empty( $GLOBALS['learnkit_shortcode_context'] ) ) {
+	get_footer();
+}

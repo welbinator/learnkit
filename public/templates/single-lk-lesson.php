@@ -15,7 +15,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template-scoped variables, not true PHP globals.
 
-get_header();
+if ( empty( $GLOBALS['learnkit_shortcode_context'] ) ) {
+	get_header();
+}
 
 // Get current lesson.
 $lesson_id = get_the_ID();
@@ -293,7 +295,9 @@ if ( ! $is_enrolled ) {
 		<?php endif; ?>
 	</div>
 	<?php
-	get_footer();
+	if ( empty( $GLOBALS['learnkit_shortcode_context'] ) ) {
+		get_footer();
+	}
 	return;
 }
 
@@ -332,7 +336,9 @@ if ( ! $is_available ) {
 		<?php endif; ?>
 	</div>
 	<?php
-	get_footer();
+	if ( empty( $GLOBALS['learnkit_shortcode_context'] ) ) {
+		get_footer();
+	}
 	return;
 }
 ?>
@@ -601,4 +607,6 @@ if ( ! $is_available ) {
 
 <?php
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
-get_footer();
+if ( empty( $GLOBALS['learnkit_shortcode_context'] ) ) {
+	get_footer();
+}

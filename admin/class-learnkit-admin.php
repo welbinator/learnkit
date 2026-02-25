@@ -327,6 +327,24 @@ class LearnKit_Admin {
 				update_option( 'learnkit_acss_settings', $acss_settings );
 			}
 
+			// Save Template Pages settings.
+			$course_page = isset( $_POST['learnkit_course_page'] ) ? absint( $_POST['learnkit_course_page'] ) : 0;
+			$lesson_page = isset( $_POST['learnkit_lesson_page'] ) ? absint( $_POST['learnkit_lesson_page'] ) : 0;
+			$quiz_page   = isset( $_POST['learnkit_quiz_page'] ) ? absint( $_POST['learnkit_quiz_page'] ) : 0;
+
+			$old_course_page = get_option( 'learnkit_course_page' );
+			$old_lesson_page = get_option( 'learnkit_lesson_page' );
+			$old_quiz_page   = get_option( 'learnkit_quiz_page' );
+
+			update_option( 'learnkit_course_page', $course_page );
+			update_option( 'learnkit_lesson_page', $lesson_page );
+			update_option( 'learnkit_quiz_page', $quiz_page );
+
+			// Flush rewrite rules whenever any template page setting changes.
+			if ( $course_page !== (int) $old_course_page || $lesson_page !== (int) $old_lesson_page || $quiz_page !== (int) $old_quiz_page ) {
+				flush_rewrite_rules();
+			}
+
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'learnkit' ) . '</p></div>';
 		}
 
@@ -399,6 +417,61 @@ class LearnKit_Admin {
 					</tbody>
 				</table>
 				<?php endif; ?>
+
+				<h2><?php esc_html_e( 'Template Pages', 'learnkit' ); ?></h2>
+				<p><?php esc_html_e( 'Choose WordPress pages to use as wrappers for LearnKit content. The shortcode placed in each page\'s content will render the corresponding course, lesson, or quiz. Leave blank to use the default plugin templates.', 'learnkit' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tbody>
+						<tr>
+							<th scope="row">
+								<label for="learnkit_course_page"><?php esc_html_e( 'Course Page', 'learnkit' ); ?></label>
+							</th>
+							<td>
+								<select name="learnkit_course_page" id="learnkit_course_page">
+									<option value="0"><?php esc_html_e( '— Select a page —', 'learnkit' ); ?></option>
+									<?php foreach ( get_pages() as $page ) : ?>
+										<option value="<?php echo esc_attr( $page->ID ); ?>" <?php selected( get_option( 'learnkit_course_page' ), $page->ID ); ?>>
+											<?php echo esc_html( $page->post_title ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<p class="description"><?php esc_html_e( 'Add [learnkit_course] to this page\'s content.', 'learnkit' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="learnkit_lesson_page"><?php esc_html_e( 'Lesson Page', 'learnkit' ); ?></label>
+							</th>
+							<td>
+								<select name="learnkit_lesson_page" id="learnkit_lesson_page">
+									<option value="0"><?php esc_html_e( '— Select a page —', 'learnkit' ); ?></option>
+									<?php foreach ( get_pages() as $page ) : ?>
+										<option value="<?php echo esc_attr( $page->ID ); ?>" <?php selected( get_option( 'learnkit_lesson_page' ), $page->ID ); ?>>
+											<?php echo esc_html( $page->post_title ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<p class="description"><?php esc_html_e( 'Add [learnkit_lesson] to this page\'s content.', 'learnkit' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="learnkit_quiz_page"><?php esc_html_e( 'Quiz Page', 'learnkit' ); ?></label>
+							</th>
+							<td>
+								<select name="learnkit_quiz_page" id="learnkit_quiz_page">
+									<option value="0"><?php esc_html_e( '— Select a page —', 'learnkit' ); ?></option>
+									<?php foreach ( get_pages() as $page ) : ?>
+										<option value="<?php echo esc_attr( $page->ID ); ?>" <?php selected( get_option( 'learnkit_quiz_page' ), $page->ID ); ?>>
+											<?php echo esc_html( $page->post_title ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<p class="description"><?php esc_html_e( 'Add [learnkit_quiz] to this page\'s content.', 'learnkit' ); ?></p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 
 				<?php submit_button(); ?>
 			</form>
