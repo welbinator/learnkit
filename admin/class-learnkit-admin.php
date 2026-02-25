@@ -441,6 +441,13 @@ class LearnKit_Admin {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+
+			<?php /* Standalone form for "Create All Pages" — kept outside the main settings form
+			         to avoid invalid nested <form> elements which break submission in all browsers. */ ?>
+			<form method="post" action="" id="learnkit-create-pages-form">
+				<?php wp_nonce_field( 'learnkit_create_pages', 'learnkit_create_pages_nonce' ); ?>
+			</form>
+
 			<form method="post" action="">
 				<?php wp_nonce_field( 'learnkit_settings', 'learnkit_settings_nonce' ); ?>
 
@@ -493,15 +500,14 @@ class LearnKit_Admin {
 				<h2><?php esc_html_e( 'Template Pages', 'learnkit' ); ?></h2>
 				<p><?php esc_html_e( 'Choose WordPress pages to use as wrappers for LearnKit content. The shortcode placed in each page\'s content will render the corresponding course, lesson, or quiz. Leave blank to use the default plugin templates.', 'learnkit' ); ?></p>
 
-				<form method="post" action="" style="margin-bottom: 12px;">
-					<?php wp_nonce_field( 'learnkit_create_pages', 'learnkit_create_pages_nonce' ); ?>
-					<button type="submit" class="button button-secondary">
+				<div style="margin-bottom: 12px;">
+					<button type="submit" name="learnkit_create_pages" value="1" class="button button-secondary" form="learnkit-create-pages-form">
 						<?php esc_html_e( '⚡ Create All Pages', 'learnkit' ); ?>
 					</button>
 					<p class="description" style="margin-top: 6px;">
 						<?php esc_html_e( 'Automatically creates Course, Lesson, and Quiz pages with the correct shortcodes and assigns them below. Skips any that are already assigned.', 'learnkit' ); ?>
 					</p>
-				</form>
+				</div>
 				<table class="form-table" role="presentation">
 					<tbody>
 						<tr>
