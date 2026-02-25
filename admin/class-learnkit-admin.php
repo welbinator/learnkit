@@ -866,7 +866,7 @@ class LearnKit_Admin {
 
 			<hr style="margin: 32px 0;">
 			<h2 id="template-pages"><?php esc_html_e( 'Template Pages', 'learnkit' ); ?></h2>
-			<p><?php esc_html_e( 'By default, LearnKit uses its own PHP templates to display courses, lessons, and quizzes. This works out of the box but bypasses your theme\'s header, footer, and any custom page templates you\'ve built in a page builder like Etch.', 'learnkit' ); ?></p>
+			<p><?php esc_html_e( 'By default, LearnKit uses its own PHP templates to display courses, lessons, and quizzes. This works out of the box but bypasses your theme\'s header, footer, and any custom page templates you\'ve built with your page builder.', 'learnkit' ); ?></p>
 			<p><?php esc_html_e( 'The Template Pages system lets you use normal WordPress pages as wrappers for LearnKit content. Your page builder controls the layout (header, footer, sidebar, container widths, etc.) and a shortcode injects the LearnKit content into the page.', 'learnkit' ); ?></p>
 
 			<div id="template-pages-setup" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
