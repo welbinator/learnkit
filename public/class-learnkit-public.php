@@ -274,11 +274,12 @@ class LearnKit_Public {
 		);
 		$redirect_base = get_permalink( $quiz_id );
 
-		// If using template page system, redirect back to the template page URL.
+		// If using template page system, redirect back through the rewrite rule URL
+		// so the lk_quiz_slug query var gets set and the shortcode resolves correctly.
 		$quiz_page_id = get_option( 'learnkit_quiz_page' );
 		if ( $quiz_page_id ) {
 			$quiz_slug     = get_post_field( 'post_name', $quiz_id );
-			$redirect_base = trailingslashit( get_permalink( $quiz_page_id ) ) . $quiz_slug . '/';
+			$redirect_base = home_url( LEARNKIT_QUIZ_REWRITE_BASE . '/' . $quiz_slug . '/' );
 		}
 
 		$redirect_url = add_query_arg(

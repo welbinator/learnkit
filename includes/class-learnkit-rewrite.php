@@ -17,6 +17,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// URL prefixes for the template page rewrite rules.
+define( 'LEARNKIT_COURSE_REWRITE_BASE', 'course' );
+define( 'LEARNKIT_LESSON_REWRITE_BASE', 'lesson' );
+define( 'LEARNKIT_QUIZ_REWRITE_BASE', 'quiz' );
+
 /**
  * Handles rewrite rules for the LearnKit template page system.
  *
@@ -51,7 +56,7 @@ class LearnKit_Rewrite {
 		$course_page_id = get_option( 'learnkit_course_page' );
 		if ( $course_page_id ) {
 			add_rewrite_rule(
-				'course/([^/]+)/?$',
+				LEARNKIT_COURSE_REWRITE_BASE . '/([^/]+)/?$',
 				'index.php?page_id=' . absint( $course_page_id ) . '&lk_course_slug=$matches[1]',
 				'top'
 			);
@@ -60,7 +65,7 @@ class LearnKit_Rewrite {
 		$lesson_page_id = get_option( 'learnkit_lesson_page' );
 		if ( $lesson_page_id ) {
 			add_rewrite_rule(
-				'lesson/([^/]+)/?$',
+				LEARNKIT_LESSON_REWRITE_BASE . '/([^/]+)/?$',
 				'index.php?page_id=' . absint( $lesson_page_id ) . '&lk_lesson_slug=$matches[1]',
 				'top'
 			);
@@ -69,7 +74,7 @@ class LearnKit_Rewrite {
 		$quiz_page_id = get_option( 'learnkit_quiz_page' );
 		if ( $quiz_page_id ) {
 			add_rewrite_rule(
-				'lk_quiz/([^/]+)/?$',
+				LEARNKIT_QUIZ_REWRITE_BASE . '/([^/]+)/?$',
 				'index.php?page_id=' . absint( $quiz_page_id ) . '&lk_quiz_slug=$matches[1]',
 				'top'
 			);
