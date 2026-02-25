@@ -204,7 +204,7 @@ class LearnKit_Post_Types {
 			'label'               => __( 'Lesson', 'learnkit' ),
 			'description'         => __( 'Course Lessons', 'learnkit' ),
 			'labels'              => $labels,
-			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'comments' ),
+			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt', 'comments', 'revisions' ),
 			'hierarchical'        => false,
 			'public'              => true,
 			'show_ui'             => true,
