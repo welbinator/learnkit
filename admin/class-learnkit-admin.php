@@ -321,16 +321,19 @@ class LearnKit_Admin {
 			$pages_to_create = array(
 				'course' => array(
 					'title'     => __( 'Course', 'learnkit' ),
+					'slug'      => 'course',
 					'shortcode' => '[learnkit_course]',
 					'option'    => 'learnkit_course_page',
 				),
 				'lesson' => array(
 					'title'     => __( 'Lesson', 'learnkit' ),
+					'slug'      => 'lesson',
 					'shortcode' => '[learnkit_lesson]',
 					'option'    => 'learnkit_lesson_page',
 				),
 				'quiz' => array(
 					'title'     => __( 'Quiz', 'learnkit' ),
+					'slug'      => 'quiz',
 					'shortcode' => '[learnkit_quiz]',
 					'option'    => 'learnkit_quiz_page',
 				),
@@ -346,6 +349,7 @@ class LearnKit_Admin {
 
 				$page_id = wp_insert_post( array(
 					'post_title'   => $page_def['title'],
+					'post_name'    => $page_def['slug'],
 					'post_content' => $page_def['shortcode'],
 					'post_status'  => 'publish',
 					'post_type'    => 'page',
