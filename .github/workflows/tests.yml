@@ -1,0 +1,60 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    strategy:
+      matrix:
+        php: ['7.4', '8.0', '8.1', '8.2']
+        wordpress: ['latest', '6.4']
+    
+    name: PHP ${{ matrix.php }} / WP ${{ matrix.wordpress }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, mysql, mysqli, pdo_mysql, bcmath, soap, intl, gd, exif, iconv
+          coverage: none
+      
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+      
+      - name: Run PHPCS
+        run: composer phpcs
+      
+      - name: Run PHPMD
+        run: composer phpmd
+      
+      - name: Install Subversion
+        run: sudo apt-get install -y subversion
+
+      - name: Setup WordPress test environment
+        run: |
+          bash bin/install-wp-tests.sh wordpress_test root root localhost ${{ matrix.wordpress }}
+        env:
+          WP_VERSION: ${{ matrix.wordpress }}
+      
+      - name: Run PHPUnit tests
+        run: composer test

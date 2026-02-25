@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "learnkit/dashboard",
+	"version": "0.3.0",
+	"title": "Student Dashboard",
+	"category": "widgets",
+	"icon": "welcome-learn-more",
+	"description": "Display enrolled courses with progress tracking for the current user.",
+	"keywords": ["learnkit", "dashboard", "courses", "student", "progress"],
+	"textdomain": "learnkit",
+	"supports": {
+		"html": false,
+		"align": ["wide", "full"]
+	}
+}

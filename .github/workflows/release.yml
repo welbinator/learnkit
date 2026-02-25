@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: admin/react/package-lock.json
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: dom, curl, mbstring, zip
+          coverage: none
+
+      - name: Build React admin
+        working-directory: admin/react
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install Composer dependencies (production only)
+        run: composer install --prefer-dist --no-progress --no-dev --optimize-autoloader
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Build plugin zip
+        run: |
+          PLUGIN_SLUG="learnkit"
+          RELEASE_DIR="/tmp/${PLUGIN_SLUG}"
+          ZIP_NAME="${PLUGIN_SLUG}-${{ steps.version.outputs.VERSION }}.zip"
+
+          # Copy plugin files into a clean folder named after the plugin slug
+          # (WordPress convention: zip extracts to a folder matching the plugin slug)
+          rsync -r \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.gitignore' \
+            --exclude='.gitattributes' \
+            --exclude='.gitkeep' \
+            --exclude='node_modules' \
+            --exclude='admin/react/node_modules' \
+            --exclude='admin/react/src' \
+            --exclude='admin/react/package.json' \
+            --exclude='admin/react/package-lock.json' \
+            --exclude='admin/react/webpack.config.js' \
+            --exclude='admin/react/README.md' \
+            --exclude='tests' \
+            --exclude='bin' \
+            --exclude='docs' \
+            --exclude='vendor/bin' \
+            --exclude='composer.lock' \
+            --exclude='phpcs.xml.dist' \
+            --exclude='phpmd.xml' \
+            --exclude='phpunit.xml.dist' \
+            --exclude='phpunit.xml' \
+            --exclude='*.sh' \
+            --exclude='*.md' \
+            --exclude='CHANGELOG.md' \
+            --exclude='CONTRIBUTING.md' \
+            --exclude='ARCHITECTURE.md' \
+            --exclude='QUICKSTART.md' \
+            --exclude='SPRINT*.md' \
+            --exclude='FINAL-VERIFICATION.sh' \
+            --exclude='create-test-data.sh' \
+            --exclude='verify-testing-setup.sh' \
+            --exclude='TEST-RESULTS.md' \
+            --exclude='TESTING-INFRASTRUCTURE-SUMMARY.md' \
+            ./ "${RELEASE_DIR}/"
+
+          # Create the zip with the plugin folder inside
+          cd /tmp
+          zip -r "${ZIP_NAME}" "${PLUGIN_SLUG}/"
+
+          echo "ZIP_PATH=/tmp/${ZIP_NAME}" >> $GITHUB_ENV
+          echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: LearnKit v${{ steps.version.outputs.VERSION }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') || contains(github.ref_name, '-alpha') }}
+          generate_release_notes: true
+          files: ${{ env.ZIP_PATH }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
