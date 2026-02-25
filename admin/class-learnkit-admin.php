@@ -312,6 +312,66 @@ class LearnKit_Admin {
 			'login_button'           => __( 'Log In to Take Quiz Button', 'learnkit' ),
 		);
 
+		// Handle "Create All Pages" action.
+		if ( isset( $_POST['learnkit_create_pages_nonce'] ) ) {
+			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['learnkit_create_pages_nonce'] ) ), 'learnkit_create_pages' ) ) {
+				wp_die( esc_html__( 'Security check failed.', 'learnkit' ) );
+			}
+
+			$pages_to_create = array(
+				'course' => array(
+					'title'     => __( 'Course', 'learnkit' ),
+					'shortcode' => '[learnkit_course]',
+					'option'    => 'learnkit_course_page',
+				),
+				'lesson' => array(
+					'title'     => __( 'Lesson', 'learnkit' ),
+					'shortcode' => '[learnkit_lesson]',
+					'option'    => 'learnkit_lesson_page',
+				),
+				'quiz' => array(
+					'title'     => __( 'Quiz', 'learnkit' ),
+					'shortcode' => '[learnkit_quiz]',
+					'option'    => 'learnkit_quiz_page',
+				),
+			);
+
+			$created = array();
+			foreach ( $pages_to_create as $key => $page_def ) {
+				// Skip if the option is already set to an existing page.
+				$existing = get_option( $page_def['option'] );
+				if ( $existing && get_post( $existing ) ) {
+					continue;
+				}
+
+				$page_id = wp_insert_post( array(
+					'post_title'   => $page_def['title'],
+					'post_content' => $page_def['shortcode'],
+					'post_status'  => 'publish',
+					'post_type'    => 'page',
+				) );
+
+				if ( $page_id && ! is_wp_error( $page_id ) ) {
+					update_option( $page_def['option'], $page_id );
+					$created[] = $page_def['title'];
+				}
+			}
+
+			flush_rewrite_rules();
+
+			if ( ! empty( $created ) ) {
+				echo '<div class="notice notice-success is-dismissible"><p>' .
+					sprintf(
+						/* translators: %s: comma-separated list of page titles */
+						esc_html__( 'Created pages: %s. Rewrite rules flushed.', 'learnkit' ),
+						esc_html( implode( ', ', $created ) )
+					) .
+					'</p></div>';
+			} else {
+				echo '<div class="notice notice-info is-dismissible"><p>' . esc_html__( 'All template pages already exist — no new pages were created.', 'learnkit' ) . '</p></div>';
+			}
+		}
+
 		// Save settings.
 		if ( isset( $_POST['learnkit_settings_nonce'] ) ) {
 			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['learnkit_settings_nonce'] ) ), 'learnkit_settings' ) ) {
@@ -420,6 +480,16 @@ class LearnKit_Admin {
 
 				<h2><?php esc_html_e( 'Template Pages', 'learnkit' ); ?></h2>
 				<p><?php esc_html_e( 'Choose WordPress pages to use as wrappers for LearnKit content. The shortcode placed in each page\'s content will render the corresponding course, lesson, or quiz. Leave blank to use the default plugin templates.', 'learnkit' ); ?></p>
+
+				<form method="post" action="" style="margin-bottom: 12px;">
+					<?php wp_nonce_field( 'learnkit_create_pages', 'learnkit_create_pages_nonce' ); ?>
+					<button type="submit" class="button button-secondary">
+						<?php esc_html_e( '⚡ Create All Pages', 'learnkit' ); ?>
+					</button>
+					<p class="description" style="margin-top: 6px;">
+						<?php esc_html_e( 'Automatically creates Course, Lesson, and Quiz pages with the correct shortcodes and assigns them below. Skips any that are already assigned.', 'learnkit' ); ?>
+					</p>
+				</form>
 				<table class="form-table" role="presentation">
 					<tbody>
 						<tr>
@@ -613,6 +683,12 @@ class LearnKit_Admin {
 							<li><a href="#filter-button-classes"><code>learnkit_button_classes</code></a></li>
 						</ol>
 					</li>
+					<li><a href="#template-pages"><?php esc_html_e( 'Template Pages', 'learnkit' ); ?></a>
+						<ol style="margin:4px 0; padding-left:20px; line-height:2;">
+							<li><a href="#template-pages-setup"><?php esc_html_e( 'Setup', 'learnkit' ); ?></a></li>
+							<li><a href="#template-pages-create"><?php esc_html_e( 'Create All Pages button', 'learnkit' ); ?></a></li>
+						</ol>
+					</li>
 					<li><a href="#woocommerce-integration"><?php esc_html_e( 'WooCommerce Integration', 'learnkit' ); ?></a>
 						<ol style="margin:4px 0; padding-left:20px; line-height:2;">
 							<li><a href="#wc-step-1"><?php esc_html_e( 'Step 1 — Create a WooCommerce product', 'learnkit' ); ?></a></li>
@@ -786,6 +862,44 @@ class LearnKit_Admin {
     }
     return $classes;
 }, 10, 3 );</code></pre>
+			</div>
+
+			<hr style="margin: 32px 0;">
+			<h2 id="template-pages"><?php esc_html_e( 'Template Pages', 'learnkit' ); ?></h2>
+			<p><?php esc_html_e( 'By default, LearnKit uses its own PHP templates to display courses, lessons, and quizzes. This works out of the box but bypasses your theme\'s header, footer, and any custom page templates you\'ve built in a page builder like Etch.', 'learnkit' ); ?></p>
+			<p><?php esc_html_e( 'The Template Pages system lets you use normal WordPress pages as wrappers for LearnKit content. Your page builder controls the layout (header, footer, sidebar, container widths, etc.) and a shortcode injects the LearnKit content into the page.', 'learnkit' ); ?></p>
+
+			<div id="template-pages-setup" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'How it works', 'learnkit' ); ?></h3>
+				<p><?php esc_html_e( 'When a template page is configured for a content type, LearnKit registers a rewrite rule that maps URLs like:', 'learnkit' ); ?></p>
+				<ul style="list-style:disc; padding-left:24px; margin-bottom:12px;">
+					<li><code>/course/my-course-slug/</code> <?php esc_html_e( '→ your Course page', 'learnkit' ); ?></li>
+					<li><code>/lesson/my-lesson-slug/</code> <?php esc_html_e( '→ your Lesson page', 'learnkit' ); ?></li>
+					<li><code>/quiz/my-quiz-slug/</code> <?php esc_html_e( '→ your Quiz page', 'learnkit' ); ?></li>
+				</ul>
+				<p><?php esc_html_e( 'The slug in the URL tells the shortcode which piece of content to render. Your theme (or page builder template) wraps the entire page, so your custom header, footer, and layout are fully in control.', 'learnkit' ); ?></p>
+				<p><?php esc_html_e( 'If a template page is not configured for a content type, LearnKit falls back to its built-in default templates — so you can adopt the system incrementally or not at all.', 'learnkit' ); ?></p>
+
+				<h3><?php esc_html_e( 'Manual setup', 'learnkit' ); ?></h3>
+				<ol style="padding-left:24px;">
+					<li><?php esc_html_e( 'Create a new WordPress page (e.g. "Lesson").', 'learnkit' ); ?></li>
+					<li><?php printf( esc_html__( 'Add the shortcode %s to the page\'s content area (in a text/HTML block).', 'learnkit' ), '<code>[learnkit_lesson]</code>' ); ?></li>
+					<li><?php esc_html_e( 'In your page builder, assign whatever template or layout you want to this page — this is the template every lesson will use.', 'learnkit' ); ?></li>
+					<li><?php printf( esc_html__( 'Go to %s and select the page you just created under "Lesson Page". Save settings.', 'learnkit' ), '<strong>' . esc_html__( 'LearnKit → Settings → Template Pages', 'learnkit' ) . '</strong>' ); ?></li>
+				</ol>
+				<p><?php esc_html_e( 'Repeat for Course and Quiz pages as needed.', 'learnkit' ); ?></p>
+			</div>
+
+			<div id="template-pages-create" style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:24px 28px; margin-bottom:24px; max-width:900px;">
+				<h3 style="margin-top:0;"><?php esc_html_e( 'Create All Pages button', 'learnkit' ); ?></h3>
+				<p><?php printf( esc_html__( 'On the %s page, clicking %s will automatically:', 'learnkit' ), '<strong>' . esc_html__( 'LearnKit → Settings', 'learnkit' ) . '</strong>', '<strong>' . esc_html__( '⚡ Create All Pages', 'learnkit' ) . '</strong>' ); ?></p>
+				<ul style="list-style:disc; padding-left:24px;">
+					<li><?php esc_html_e( 'Create published pages named "Course", "Lesson", and "Quiz"', 'learnkit' ); ?></li>
+					<li><?php esc_html_e( 'Add the correct shortcode to each page\'s content automatically', 'learnkit' ); ?></li>
+					<li><?php esc_html_e( 'Assign each page to its respective Template Page setting', 'learnkit' ); ?></li>
+					<li><?php esc_html_e( 'Flush rewrite rules so the new URL patterns take effect immediately', 'learnkit' ); ?></li>
+				</ul>
+				<p><?php esc_html_e( 'Pages that are already assigned are skipped. After creation, open each page in your page builder and apply your desired template.', 'learnkit' ); ?></p>
 			</div>
 
 			<hr style="margin: 32px 0;">
