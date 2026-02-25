@@ -88,6 +88,12 @@ require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-rewrite.php';
 LearnKit_Rewrite::init();
 
 /**
+ * Template helper functions (learnkit_course_url, learnkit_lesson_url, etc.)
+ * Must be loaded before shortcodes and any code that calls get_permalink() on CPTs.
+ */
+require_once LEARNKIT_PLUGIN_DIR . 'includes/learnkit-template-helpers.php';
+
+/**
  * Shortcodes for the template page system.
  */
 require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-shortcodes.php';

@@ -111,8 +111,11 @@ class LearnKit {
 
 		/**
 		 * Template helper functions (e.g. learnkit_button_classes).
+		 * Guard against double-load since learnkit.php now requires this earlier.
 		 */
-		require_once LEARNKIT_PLUGIN_DIR . 'includes/learnkit-template-helpers.php';
+		if ( ! function_exists( 'learnkit_button_classes' ) ) {
+			require_once LEARNKIT_PLUGIN_DIR . 'includes/learnkit-template-helpers.php';
+		}
 
 		/**
 		 * The class responsible for defining custom post types.
