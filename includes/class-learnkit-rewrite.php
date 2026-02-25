@@ -41,6 +41,7 @@ class LearnKit_Rewrite {
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'add_rewrite_rules' ), 1 );
 		add_filter( 'query_vars', array( __CLASS__, 'register_query_vars' ) );
+		add_action( 'init', array( __CLASS__, 'maybe_flush' ), 99 );
 	}
 
 	/**
@@ -106,5 +107,25 @@ class LearnKit_Rewrite {
 	 */
 	public static function flush() {
 		flush_rewrite_rules();
+	}
+
+	/**
+	 * Flush rewrite rules once when the rewrite rule version changes.
+	 *
+	 * This ensures that changes to rewrite base constants (e.g. lk_quiz → quiz)
+	 * are picked up automatically on existing sites without requiring a manual
+	 * Settings → Permalinks save.
+	 *
+	 * @since 0.8.0
+	 * @return void
+	 */
+	public static function maybe_flush() {
+		$rewrite_version = LEARNKIT_COURSE_REWRITE_BASE . '|' . LEARNKIT_LESSON_REWRITE_BASE . '|' . LEARNKIT_QUIZ_REWRITE_BASE;
+		$stored_version  = get_option( 'learnkit_rewrite_version', '' );
+
+		if ( $stored_version !== $rewrite_version ) {
+			flush_rewrite_rules();
+			update_option( 'learnkit_rewrite_version', $rewrite_version );
+		}
 	}
 }
