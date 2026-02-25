@@ -41,6 +41,9 @@ Yes. Lessons are gated behind enrollment by default.
 = Does LearnKit support certificates? =
 Basic certificate infrastructure is included. A full certificate builder is planned for a future release.
 
+= Where do I report security bugs found in this plugin? =
+Please report security bugs found in the source code of the LearnKit plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/84933a49-75e2-4232-ad88-afcb20271d05). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
+
 == Changelog ==
 
 = 0.5.4 =
