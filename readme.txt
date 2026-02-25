@@ -85,3 +85,11 @@ Basic certificate infrastructure is included. A full certificate builder is plan
 
 = 0.5.0 =
 Includes security improvements. Update recommended for all users.
+
+== Security ==
+
+LearnKit takes security seriously. If you discover a security vulnerability, please report it responsibly through our Vulnerability Disclosure Program powered by Patchstack:
+
+https://patchstack.com/database/vdp/learnkit
+
+Do not report security vulnerabilities through GitHub issues or public forums.
