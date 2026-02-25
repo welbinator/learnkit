@@ -95,7 +95,7 @@ body a:where(:not([class*="btn--"])) {
 }
 
 .learnkit-lesson-container {
-	background: #ffffff;
+	background: var(--lk-lesson-bg, #ffffff);
 	border-radius: 8px;
 	padding: 2rem;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -168,6 +168,9 @@ body a:where(:not([class*="btn--"])) {
     padding-top: 2rem;
     border-top: 2px solid #e5e7eb;
     margin-block-start: auto;
+    position: sticky;
+    bottom: 0;
+    background: var(--lk-lesson-bg, #ffffff);
 }
 
 .btn--lk-mark-complete {
@@ -268,7 +271,7 @@ body a:where(:not([class*="btn--"])) {
 }
 
 .learnkit-lesson-sidebar {
-	background: #ffffff;
+	background: var(--lk-lesson-bg, #ffffff);
 	border-radius: 8px;
 	padding: 1.5rem;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
