@@ -12,6 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+global $wpdb;
+
 if ( empty( $GLOBALS['learnkit_shortcode_context'] ) ) {
 	get_header();
 }
