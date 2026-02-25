@@ -4,7 +4,7 @@ Tags: lms, courses, elearning, quizzes, learning management
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.8.6
+Stable tag: 0.8.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -85,3 +85,11 @@ Basic certificate infrastructure is included. A full certificate builder is plan
 
 = 0.5.0 =
 Includes security improvements. Update recommended for all users.
+
+== Security ==
+
+LearnKit takes security seriously. If you discover a security vulnerability, please report it responsibly through our Vulnerability Disclosure Program powered by Patchstack:
+
+https://patchstack.com/database/vdp/learnkit
+
+Do not report security vulnerabilities through GitHub issues or public forums.
