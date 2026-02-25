@@ -29,9 +29,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-	getCourses,
-	assignModuleToCourse,
-	removeModuleFromCourse,
 	getAllLessons,
 	assignLessonToModule,
 	removeLessonFromModule,
@@ -86,13 +83,7 @@ const EditModuleModal = ({ module, isOpen, onClose, onSave }) => {
 	const [quizModalOpen, setQuizModalOpen] = useState(false);
 	const [quizLesson, setQuizLesson]       = useState(null);
 
-	// Course assignment state
-	const [allCourses, setAllCourses]                   = useState([]);
-	const [assignedCourseIds, setAssignedCourseIds]     = useState([]);
-	const [coursesLoading, setCoursesLoading]           = useState(false);
-	const [selectedCourseToAdd, setSelectedCourseToAdd] = useState('');
-	const [assignError, setAssignError]                 = useState('');
-
+	
 	const isEditing = !!( module && module.id && !module._courseId );
 
 	const sensors = useSensors(
@@ -114,8 +105,6 @@ const EditModuleModal = ({ module, isOpen, onClose, onSave }) => {
 		setAllLessons( [] );
 		setSelectedLessonId( '' );
 		setNewLessonTitle( '' );
-		setSelectedCourseToAdd( '' );
-		setAssignError( '' );
 	}, [module] );
 
 	// ── Load lessons + courses when editing ──────────────────────────────────
@@ -123,7 +112,6 @@ const EditModuleModal = ({ module, isOpen, onClose, onSave }) => {
 	useEffect( () => {
 		if ( !isOpen || !isEditing ) return;
 		loadLessons();
-		loadCourses();
 	}, [isOpen, isEditing, module?.id] ); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const loadLessons = async () => {
@@ -139,21 +127,6 @@ const EditModuleModal = ({ module, isOpen, onClose, onSave }) => {
 			console.error( 'Failed to load lessons:', err );
 		} finally {
 			setLessonsLoading( false );
-		}
-	};
-
-	const loadCourses = async () => {
-		setCoursesLoading( true );
-		setAssignError( '' );
-		try {
-			const courses = await getCourses();
-			setAllCourses( courses );
-			const ids = Array.isArray( module?.course_ids ) ? module.course_ids.map( Number ) : [];
-			setAssignedCourseIds( ids );
-		} catch {
-			setAssignError( __( 'Failed to load courses', 'learnkit' ) );
-		} finally {
-			setCoursesLoading( false );
 		}
 	};
 
@@ -224,31 +197,6 @@ const EditModuleModal = ({ module, isOpen, onClose, onSave }) => {
 		setQuizModalOpen( true );
 	};
 
-	// ── Course handlers ───────────────────────────────────────────────────────
-
-	const handleAddCourse = async () => {
-		const courseId = parseInt( selectedCourseToAdd, 10 );
-		if ( !courseId ) return;
-		try {
-			await assignModuleToCourse( module.id, courseId );
-			setAssignedCourseIds( (prev) => [...prev, courseId] );
-			setSelectedCourseToAdd( '' );
-			setAssignError( '' );
-		} catch {
-			setAssignError( __( 'Failed to assign course. Please try again.', 'learnkit' ) );
-		}
-	};
-
-	const handleRemoveCourse = async ( courseId ) => {
-		try {
-			await removeModuleFromCourse( module.id, courseId );
-			setAssignedCourseIds( (prev) => prev.filter( (id) => id !== courseId ) );
-			setAssignError( '' );
-		} catch {
-			setAssignError( __( 'Failed to remove course. Please try again.', 'learnkit' ) );
-		}
-	};
-
 	// ── Save / close ──────────────────────────────────────────────────────────
 
 	const handleSave = () => {
@@ -268,12 +216,10 @@ const EditModuleModal = ({ module, isOpen, onClose, onSave }) => {
 	const handleClose = () => {
 		setTitle( '' );
 		setDescription( '' );
-		setAssignError( '' );
 		setAssignedLessons( [] );
 		setAllLessons( [] );
 		setSelectedLessonId( '' );
 		setNewLessonTitle( '' );
-		setSelectedCourseToAdd( '' );
 		onClose();
 	};
 
@@ -285,12 +231,6 @@ const EditModuleModal = ({ module, isOpen, onClose, onSave }) => {
 	const lessonOptions    = [
 		{ label: __( '— Select a lesson —', 'learnkit' ), value: '' },
 		...unassignedLessons.map( (l) => ( { label: l.title, value: String( l.id ) } ) ),
-	];
-
-	const unassignedCourses = allCourses.filter( (c) => !assignedCourseIds.includes( c.id ) );
-	const addCourseOptions  = [
-		{ label: __( '— select a course —', 'learnkit' ), value: '' },
-		...unassignedCourses.map( (c) => ( { label: c.title, value: String( c.id ) } ) ),
 	];
 
 	return (
@@ -409,85 +349,7 @@ const EditModuleModal = ({ module, isOpen, onClose, onSave }) => {
 						</div>
 					) }
 
-					{/* ── Assigned to Courses (edit mode only) ── */}
-					{ isEditing && (
-						<div className="learnkit-module-course-assignments" style={{ marginTop: '20px' }}>
-							<hr />
-							<h3 style={{ marginBottom: '12px' }}>{ __( 'Assigned to Courses', 'learnkit' ) }</h3>
-
-							{ assignError && (
-								<div className="notice notice-error" style={{ marginBottom: '8px' }}>
-									<p>{ assignError }</p>
-								</div>
-							) }
-
-							{ coursesLoading ? (
-								<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-									<Spinner />
-									<span>{ __( 'Loading courses…', 'learnkit' ) }</span>
-								</div>
-							) : (
-								<>
-									{ assignedCourseIds.length === 0 ? (
-										<p style={{ color: '#757575', marginBottom: '12px' }}>
-											{ __( 'Not assigned to any course yet.', 'learnkit' ) }
-										</p>
-									) : (
-										<ul style={{ listStyle: 'none', margin: '0 0 12px', padding: 0 }}>
-											{ assignedCourseIds.map( (courseId) => {
-												const course = allCourses.find( (c) => c.id === courseId );
-												return (
-													<li
-														key={ courseId }
-														style={{
-															display: 'flex',
-															alignItems: 'center',
-															justifyContent: 'space-between',
-															padding: '4px 0',
-															borderBottom: '1px solid #e0e0e0',
-														}}
-													>
-														<span>{ course ? course.title : `Course #${ courseId }` }</span>
-														<Button
-															isSmall
-															isDestructive
-															onClick={ () => handleRemoveCourse( courseId ) }
-															aria-label={ __( 'Remove course assignment', 'learnkit' ) }
-														>
-															&times;
-														</Button>
-													</li>
-												);
-											} ) }
-										</ul>
-									) }
-
-									{ unassignedCourses.length > 0 && (
-										<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-											<SelectControl
-												label={ __( 'Add to course', 'learnkit' ) }
-												value={ selectedCourseToAdd }
-												options={ addCourseOptions }
-												onChange={ setSelectedCourseToAdd }
-												style={{ marginBottom: 0 }}
-											/>
-											<Button
-												variant="secondary"
-												isSmall
-												onClick={ handleAddCourse }
-												disabled={ !selectedCourseToAdd }
-												style={{ marginTop: '22px' }}
-											>
-												{ __( 'Add', 'learnkit' ) }
-											</Button>
-										</div>
-									) }
-								</>
-							) }
-						</div>
-					) }
-
-					{/* Action Buttons */}
+						{/* Action Buttons */}
 					<div className="modal-actions" style={{ marginTop: '24px' }}>
 						<Button variant="secondary" onClick={ handleClose }>
 							{ __( 'Cancel', 'learnkit' ) }
