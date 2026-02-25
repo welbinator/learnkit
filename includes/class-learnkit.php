@@ -248,6 +248,27 @@ class LearnKit {
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 
+		// Filter post_type_link so that get_permalink() for our CPTs returns the
+		// template page URL when one is configured. This covers the admin "View"
+		// link, the REST API permalink field, and any direct get_permalink() calls.
+		add_filter(
+			'post_type_link',
+			function ( $url, $post ) {
+				if ( 'lk_course' === $post->post_type ) {
+					return learnkit_course_url( $post->ID );
+				}
+				if ( 'lk_lesson' === $post->post_type ) {
+					return learnkit_lesson_url( $post->ID );
+				}
+				if ( 'lk_quiz' === $post->post_type ) {
+					return learnkit_quiz_url( $post->ID );
+				}
+				return $url;
+			},
+			10,
+			2
+		);
+
 		// Register student dashboard.
 		$student_dashboard = new LearnKit_Student_Dashboard();
 		$student_dashboard->register();
