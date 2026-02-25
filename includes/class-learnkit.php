@@ -257,15 +257,46 @@ class LearnKit {
 		add_filter(
 			'post_type_link',
 			function ( $url, $post ) {
+				// Use post_name directly to avoid re-calling get_permalink() which
+				// would trigger this filter again causing infinite recursion.
+				$slug = $post->post_name;
+				if ( ! $slug ) {
+					return $url;
+				}
+
 				if ( 'lk_course' === $post->post_type ) {
-					return learnkit_course_url( $post->ID );
+					static $course_base = null;
+					if ( null === $course_base ) {
+						$course_base = get_option( 'learnkit_course_page' )
+							? ( LearnKit_Rewrite::get_base( 'learnkit_course_page' ) ?? '' )
+							: '';
+					}
+					if ( $course_base ) {
+						return home_url( $course_base . '/' . $slug . '/' );
+					}
+				} elseif ( 'lk_lesson' === $post->post_type ) {
+					static $lesson_base = null;
+					if ( null === $lesson_base ) {
+						$lesson_base = get_option( 'learnkit_lesson_page' )
+							? ( LearnKit_Rewrite::get_base( 'learnkit_lesson_page' ) ?? '' )
+							: '';
+					}
+					if ( $lesson_base ) {
+						return home_url( $lesson_base . '/' . $slug . '/' );
+					}
+				} elseif ( 'lk_quiz' === $post->post_type ) {
+					static $quiz_base = null;
+					if ( null === $quiz_base ) {
+						$quiz_base = get_option( 'learnkit_quiz_page' )
+							? ( LearnKit_Rewrite::get_base( 'learnkit_quiz_page' ) ?? '' )
+							: '';
+					}
+					if ( $quiz_base ) {
+						return home_url( $quiz_base . '/' . $slug . '/' );
+					}
 				}
-				if ( 'lk_lesson' === $post->post_type ) {
-					return learnkit_lesson_url( $post->ID );
-				}
-				if ( 'lk_quiz' === $post->post_type ) {
-					return learnkit_quiz_url( $post->ID );
-				}
+
+				// No template page configured — return the original CPT URL unchanged.
 				return $url;
 			},
 			10,
