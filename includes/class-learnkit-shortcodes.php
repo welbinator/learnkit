@@ -69,14 +69,12 @@ class LearnKit_Shortcodes {
 	 * @return string      Rendered HTML output.
 	 */
 	public static function render_course( $atts ) {
-		if ( ! empty( self::$rendered['course'] ) ) {
-			return '';
-		}
-		self::$rendered['course'] = true;
-
 		$slug = get_query_var( 'lk_course_slug' );
 		if ( ! $slug ) {
 			$slug = get_query_var( 'name' );
+		}
+		if ( ! $slug ) {
+			$slug = self::slug_from_uri( LEARNKIT_COURSE_REWRITE_BASE );
 		}
 		if ( ! $slug ) {
 			return '';
@@ -93,14 +91,12 @@ class LearnKit_Shortcodes {
 	 * @return string      Rendered HTML output.
 	 */
 	public static function render_lesson( $atts ) {
-		if ( ! empty( self::$rendered['lesson'] ) ) {
-			return '';
-		}
-		self::$rendered['lesson'] = true;
-
 		$slug = get_query_var( 'lk_lesson_slug' );
 		if ( ! $slug ) {
 			$slug = get_query_var( 'name' );
+		}
+		if ( ! $slug ) {
+			$slug = self::slug_from_uri( LEARNKIT_LESSON_REWRITE_BASE );
 		}
 		if ( ! $slug ) {
 			return '';
@@ -117,20 +113,42 @@ class LearnKit_Shortcodes {
 	 * @return string      Rendered HTML output.
 	 */
 	public static function render_quiz( $atts ) {
-		if ( ! empty( self::$rendered['quiz'] ) ) {
-			return '';
-		}
-		self::$rendered['quiz'] = true;
-
 		$slug = get_query_var( 'lk_quiz_slug' );
 		if ( ! $slug ) {
 			$slug = get_query_var( 'name' );
+		}
+		// Last resort: parse slug from URI (handles Etch block render timing issues).
+		if ( ! $slug ) {
+			$slug = self::slug_from_uri( LEARNKIT_QUIZ_REWRITE_BASE );
 		}
 		if ( ! $slug ) {
 			return '';
 		}
 
 		return self::render_template( $slug, 'lk_quiz', 'single-lk-quiz.php' );
+	}
+
+	/**
+	 * Parse the CPT slug directly from the request URI as a fallback.
+	 *
+	 * Some page builders (e.g. Etch) render shortcodes during block rendering
+	 * before WordPress has populated custom query vars. This parses the slug
+	 * directly from $_SERVER['REQUEST_URI'] using the known rewrite base prefix.
+	 *
+	 * @since  0.8.0
+	 * @param  string $base Rewrite base (e.g. 'quiz', 'lesson', 'course').
+	 * @return string       Slug, or empty string if not found.
+	 */
+	private static function slug_from_uri( $base ) {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitified -- sanitized below via sanitize_title
+		$uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+		// Strip query string.
+		$path = strtok( $uri, '?' );
+		// Match /<base>/<slug>/ pattern.
+		if ( preg_match( '#/' . preg_quote( $base, '#' ) . '/([^/]+)/?#', $path, $matches ) ) {
+			return sanitize_title( $matches[1] );
+		}
+		return '';
 	}
 
 	/**
