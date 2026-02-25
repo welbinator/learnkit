@@ -55,3 +55,65 @@ function learnkit_button_classes( $button_key, $base_classes = '' ) {
 
 	return apply_filters( 'learnkit_button_classes', implode( ' ', array_unique( $classes ) ), $button_key, $base_classes );
 }
+
+/**
+ * Get the front-end URL for a quiz post.
+ *
+ * When a quiz template page is configured (LearnKit → Settings → Template Pages),
+ * returns the rewrite-based URL (e.g. /quiz/quiz-slug/) so users land on the
+ * theme-wrapped page rather than the raw CPT URL.
+ * Falls back to get_permalink() when no template page is configured.
+ *
+ * @since  0.8.0
+ * @param  int $quiz_id Quiz post ID.
+ * @return string       Absolute URL.
+ */
+function learnkit_quiz_url( $quiz_id ) {
+	$quiz_page_id = get_option( 'learnkit_quiz_page' );
+	if ( $quiz_page_id ) {
+		$base = LearnKit_Rewrite::get_base( 'learnkit_quiz_page' );
+		if ( $base ) {
+			$slug = get_post_field( 'post_name', $quiz_id );
+			return home_url( $base . '/' . $slug . '/' );
+		}
+	}
+	return get_permalink( $quiz_id );
+}
+
+/**
+ * Get the front-end URL for a lesson post.
+ *
+ * @since  0.8.0
+ * @param  int $lesson_id Lesson post ID.
+ * @return string         Absolute URL.
+ */
+function learnkit_lesson_url( $lesson_id ) {
+	$lesson_page_id = get_option( 'learnkit_lesson_page' );
+	if ( $lesson_page_id ) {
+		$base = LearnKit_Rewrite::get_base( 'learnkit_lesson_page' );
+		if ( $base ) {
+			$slug = get_post_field( 'post_name', $lesson_id );
+			return home_url( $base . '/' . $slug . '/' );
+		}
+	}
+	return get_permalink( $lesson_id );
+}
+
+/**
+ * Get the front-end URL for a course post.
+ *
+ * @since  0.8.0
+ * @param  int $course_id Course post ID.
+ * @return string         Absolute URL.
+ */
+function learnkit_course_url( $course_id ) {
+	$course_page_id = get_option( 'learnkit_course_page' );
+	if ( $course_page_id ) {
+		$base = LearnKit_Rewrite::get_base( 'learnkit_course_page' );
+		if ( $base ) {
+			$slug = get_post_field( 'post_name', $course_id );
+			return home_url( $base . '/' . $slug . '/' );
+		}
+	}
+	return get_permalink( $course_id );
+}
