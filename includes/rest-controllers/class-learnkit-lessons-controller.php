@@ -542,7 +542,7 @@ class LearnKit_Lessons_Controller extends LearnKit_Base_Controller {
 			'menu_order'     => $lesson->menu_order,
 			'module_id'      => (int) get_post_meta( $lesson->ID, '_lk_module_id', true ),
 			'module_ids'     => array( (int) get_post_meta( $lesson->ID, '_lk_module_id', true ) ), // backwards compat
-			'permalink'      => get_permalink( $lesson->ID ),
+			'permalink'      => learnkit_lesson_url( $lesson->ID ),
 			'edit_link'      => get_edit_post_link( $lesson->ID, 'raw' ),
 			'release_type'   => get_post_meta( $lesson->ID, '_lk_release_type', true ) ? get_post_meta( $lesson->ID, '_lk_release_type', true ) : 'immediate',
 			'release_days'   => (int) get_post_meta( $lesson->ID, '_lk_release_days', true ),

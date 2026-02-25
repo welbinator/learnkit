@@ -395,7 +395,7 @@ class LearnKit_Courses_Controller extends LearnKit_Base_Controller {
 			'author'         => $course->post_author,
 			'date_created'   => $course->post_date,
 			'date_modified'  => $course->post_modified,
-			'permalink'      => get_permalink( $course->ID ),
+			'permalink'      => learnkit_course_url( $course->ID ),
 			'featured_image' => get_the_post_thumbnail_url( $course->ID, 'large' ),
 			'edit_link'      => get_edit_post_link( $course->ID, 'raw' ),
 			'access_type'    => $this->get_course_access_type( $course->ID ),
