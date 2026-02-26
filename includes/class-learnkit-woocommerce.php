@@ -356,7 +356,14 @@ class LearnKit_WooCommerce {
 	 */
 	public static function get_course_cta_url( $course_id, $products ) {
 		if ( 1 === count( $products ) ) {
-			return $products[0]->get_permalink();
+			// Single product → add to cart and go straight to checkout.
+			return add_query_arg(
+				array(
+					'add-to-cart' => $products[0]->get_id(),
+					'quantity'    => 1,
+				),
+				wc_get_checkout_url()
+			);
 		}
 
 		return add_query_arg( 'learnkit_course', (int) $course_id, wc_get_page_permalink( 'shop' ) );
