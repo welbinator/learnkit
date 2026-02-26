@@ -34,7 +34,6 @@ class LearnKit_Course_Catalog {
 		add_shortcode( 'learnkit_catalog', array( $this, 'render_catalog' ) );
 		add_action( 'init', array( $this, 'register_block' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		add_action( 'wp_ajax_learnkit_enroll_course', array( $this, 'handle_enrollment' ) );
 	}
 
@@ -56,32 +55,6 @@ class LearnKit_Course_Catalog {
 		}
 	}
 
-	/**
-	 * Enqueue catalog scripts.
-	 *
-	 * @since    0.3.0
-	 */
-	public function enqueue_scripts() {
-		global $post;
-		if ( is_a( $post, 'WP_Post' ) && ( has_shortcode( $post->post_content, 'learnkit_catalog' ) || has_block( 'learnkit/catalog', $post ) ) ) {
-			wp_enqueue_script(
-				'learnkit-course-catalog',
-				LEARNKIT_PLUGIN_URL . 'assets/js/course-catalog.js',
-				array( 'jquery' ),
-				LEARNKIT_VERSION,
-				true
-			);
-
-			wp_localize_script(
-				'learnkit-course-catalog',
-				'learnkitCatalog',
-				array(
-					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-					'nonce'   => wp_create_nonce( 'learnkit_enroll' ),
-				)
-			);
-		}
-	}
 
 	/**
 	 * Render course catalog.
