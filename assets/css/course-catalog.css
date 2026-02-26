@@ -160,7 +160,7 @@
 .course-actions button {
 	flex: 1;
 	text-align: center;
-	padding: 12px 24px;
+	/* padding: 12px 24px;
 	border-radius: 6px;
 	font-size: 14px;
 	font-weight: 500;
@@ -168,7 +168,7 @@
 	transition: all 0.2s ease;
 	cursor: pointer;
 	border: none;
-	display: inline-block;
+	display: inline-block;  */
 }
 
 .button-enroll {
