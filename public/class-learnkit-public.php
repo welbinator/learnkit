@@ -120,19 +120,28 @@ class LearnKit_Public {
 		// Load on LearnKit CPT pages.
 		$is_learnkit_page = is_singular( array( 'lk_course', 'lk_module', 'lk_lesson', 'lk_quiz' ) );
 
-		// Also load on pages containing LearnKit shortcodes.
+		// Also load on pages containing LearnKit shortcodes or blocks.
 		if ( ! $is_learnkit_page && is_singular() ) {
 			$post = get_post();
-			if ( $post && has_shortcode( $post->post_content, 'learnkit_catalog' ) ) {
+			if ( $post && (
+				has_shortcode( $post->post_content, 'learnkit_catalog' ) ||
+				has_block( 'learnkit/catalog', $post )
+			) ) {
 				$is_learnkit_page = true;
 			}
-			if ( $post && has_shortcode( $post->post_content, 'learnkit_dashboard' ) ) {
+			if ( $post && (
+				has_shortcode( $post->post_content, 'learnkit_dashboard' ) ||
+				has_block( 'learnkit/dashboard', $post )
+			) ) {
 				$is_learnkit_page = true;
 			}
 			if ( $post && (
 				has_shortcode( $post->post_content, 'learnkit_course' ) ||
 				has_shortcode( $post->post_content, 'learnkit_lesson' ) ||
-				has_shortcode( $post->post_content, 'learnkit_quiz' )
+				has_shortcode( $post->post_content, 'learnkit_quiz' ) ||
+				has_block( 'learnkit/course', $post ) ||
+				has_block( 'learnkit/lesson', $post ) ||
+				has_block( 'learnkit/quiz', $post )
 			) ) {
 				$is_learnkit_page = true;
 			}
@@ -160,16 +169,24 @@ class LearnKit_Public {
 		// Load on LearnKit CPT pages.
 		$is_learnkit_page = is_singular( array( 'lk_course', 'lk_module', 'lk_lesson', 'lk_quiz' ) );
 
-		// Also load on pages containing LearnKit shortcodes.
+		// Also load on pages containing LearnKit shortcodes or blocks.
 		if ( ! $is_learnkit_page && is_singular() ) {
 			$post = get_post();
-			if ( $post && ( has_shortcode( $post->post_content, 'learnkit_catalog' ) || has_shortcode( $post->post_content, 'learnkit_dashboard' ) ) ) {
+			if ( $post && (
+				has_shortcode( $post->post_content, 'learnkit_catalog' ) ||
+				has_shortcode( $post->post_content, 'learnkit_dashboard' ) ||
+				has_block( 'learnkit/catalog', $post ) ||
+				has_block( 'learnkit/dashboard', $post )
+			) ) {
 				$is_learnkit_page = true;
 			}
 			if ( $post && (
 				has_shortcode( $post->post_content, 'learnkit_course' ) ||
 				has_shortcode( $post->post_content, 'learnkit_lesson' ) ||
-				has_shortcode( $post->post_content, 'learnkit_quiz' )
+				has_shortcode( $post->post_content, 'learnkit_quiz' ) ||
+				has_block( 'learnkit/course', $post ) ||
+				has_block( 'learnkit/lesson', $post ) ||
+				has_block( 'learnkit/quiz', $post )
 			) ) {
 				$is_learnkit_page = true;
 			}

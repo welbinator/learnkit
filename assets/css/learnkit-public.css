@@ -97,7 +97,7 @@ body a:where(:not([class*="btn--"])) {
 .learnkit-lesson-container {
 	background: var(--lk-lesson-bg, #ffffff);
 	border-radius: 8px;
-	padding: 2rem;
+	padding: 2rem 2rem 0 2rem;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	display: flex;
 	flex-direction: column;
@@ -165,7 +165,7 @@ body a:where(:not([class*="btn--"])) {
     gap: 2rem;
     justify-content: space-between;
     align-items: center;
-    padding-top: 2rem;
+    padding-block: 2rem;
     border-top: 2px solid #e5e7eb;
     margin-block-start: auto;
     position: sticky;
@@ -277,6 +277,7 @@ body a:where(:not([class*="btn--"])) {
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	height: fit-content;
 	position: sticky;
+	top: 0;
 	
 }
 
