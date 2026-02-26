@@ -157,14 +157,12 @@ body a:where(:not([class*="btn--"])) {
 	display: flex;
 	gap: 1rem;
 	align-self: flex-start;
+	width: 50%;
 }
 
 .learnkit-lesson-footer {
 	display: flex;
-    flex-direction: column;
     gap: 2rem;
-    justify-content: space-between;
-    align-items: center;
     padding-block: 2rem;
     border-top: 2px solid #e5e7eb;
     margin-block-start: auto;
@@ -210,10 +208,9 @@ body a:where(:not([class*="btn--"])) {
 .learnkit-lesson-navigation {
 	display: flex;
     gap: 1rem;
-    width: 100%;
-    justify-content: space-between;
-    padding-block-start: 2rem;
-    border-top: 2px solid #e5e7eb;
+    width: 50%;
+    justify-content: flex-end;
+    
 }
 
 .btn--lk-nav {
@@ -440,6 +437,10 @@ body a:where(:not([class*="btn--"])) {
 		gap: 1rem;
 	}
 
+	.learnkit-lesson-progress, .learnkit-lesson-navigation {
+		width: 100%;
+	}
+
 	
 
 	.btn--lk-nav {
@@ -453,8 +454,8 @@ body a:where(:not([class*="btn--"])) {
    ========================================================================== */
 
 .lk-course-hero {
-	background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-	color: #ffffff;
+	
+	
 	padding: 60px 20px;
 	margin-bottom: 40px;
 }
@@ -535,7 +536,6 @@ body a:where(:not([class*="btn--"])) {
 	font-size: 32px;
 	font-weight: 700;
 	margin-bottom: 30px;
-	color: #111827;
 }
 
 .lk-module {
@@ -565,7 +565,7 @@ body a:where(:not([class*="btn--"])) {
 	font-size: 20px;
 	font-weight: 600;
 	margin: 0;
-	color: #111827;
+	
 }
 
 .lk-module-meta {
@@ -609,7 +609,6 @@ body a:where(:not([class*="btn--"])) {
 
 .lk-lesson-title {
 	font-size: 16px;
-	color: #111827;
 	text-decoration: none;
 	display: flex;
 	align-items: center;
@@ -617,7 +616,7 @@ body a:where(:not([class*="btn--"])) {
 }
 
 .lk-lesson-title:hover {
-	color: #4f46e5;
+	
 }
 
 .lk-lesson-locked {
