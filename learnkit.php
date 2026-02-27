@@ -3,7 +3,7 @@
  * Plugin Name: LearnKit
  * Plugin URI: https://github.com/welbinator/learnkit
  * Description: Modern WordPress LMS plugin for course creators who value simplicity, performance, and fair pricing. Create, deliver, and monetize online courses with a beautiful, intuitive interface.
- * Version: 0.9.1
+ * Version: 0.9.2
  * Author: James Welbes
  * Author URI: https://jameswelbes.com
  * License: GPL v2 or later
@@ -26,7 +26,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 0.1.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'LEARNKIT_VERSION', '0.9.1' );
+define( 'LEARNKIT_VERSION', '0.9.2' );
 
 /**
  * Plugin directory path.
@@ -150,6 +150,13 @@ function run_learnkit() { // phpcs:ignore WordPress.NamingConventions.PrefixAllG
 	$plugin->run();
 }
 run_learnkit();
+
+/**
+ * Load the license manager.
+ */
+require_once LEARNKIT_PLUGIN_DIR . 'includes/class-learnkit-license.php';
+$learnkit_license = new LearnKit_License();
+$learnkit_license->register();
 
 /**
  * Load WooCommerce integration when WooCommerce is active.
