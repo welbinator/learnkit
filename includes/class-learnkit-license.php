@@ -53,6 +53,9 @@ class LearnKit_License {
 		// AJAX handler for the "Activate License" button.
 		add_action( 'wp_ajax_learnkit_activate_license', array( $this, 'ajax_activate_license' ) );
 
+		// AJAX handler for the "Deactivate License" button.
+		add_action( 'wp_ajax_learnkit_deactivate_license', array( $this, 'ajax_deactivate_license' ) );
+
 		// Hook into WordPress update system.
 		add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'check_for_update' ) );
 
@@ -132,6 +135,16 @@ class LearnKit_License {
 						>
 							<?php esc_html_e( 'Activate License', 'learnkit' ); ?>
 						</button>
+						<?php if ( ! empty( $license_key ) ) : ?>
+						<button
+							type="button"
+							id="learnkit-deactivate-license"
+							class="button button-secondary"
+							style="margin-left: 8px;"
+						>
+							<?php esc_html_e( 'Deactivate License', 'learnkit' ); ?>
+						</button>
+						<?php endif; ?>
 						<span id="learnkit-license-spinner" class="spinner" style="float:none; margin-top:0; vertical-align:middle;"></span>
 					</td>
 				</tr>
@@ -186,6 +199,10 @@ class LearnKit_License {
 								.text(response.data.label)
 								.removeClass('learnkit-status-active learnkit-status-inactive learnkit-status-invalid learnkit-status-expired')
 								.addClass('learnkit-status-' + response.data.css_class);
+							// Show deactivate button now that a key is active.
+							if (!$('#learnkit-deactivate-license').length) {
+								$btn.after('<button type="button" id="learnkit-deactivate-license" class="button button-secondary" style="margin-left:8px;"><?php echo esc_js( __( 'Deactivate License', 'learnkit' ) ); ?></button>');
+							}
 						} else {
 							$status
 								.text(response.data.message || '<?php echo esc_js( __( 'Error contacting license server.', 'learnkit' ) ); ?>')
@@ -198,6 +215,40 @@ class LearnKit_License {
 						$status
 							.text('<?php echo esc_js( __( 'Error contacting license server.', 'learnkit' ) ); ?>')
 							.addClass('learnkit-status-invalid');
+					});
+				});
+
+				$(document).on('click', '#learnkit-deactivate-license', function() {
+					if (!confirm('<?php echo esc_js( __( 'Are you sure you want to deactivate this license key?', 'learnkit' ) ); ?>')) {
+						return;
+					}
+					var $btn     = $(this);
+					var $spinner = $('#learnkit-license-spinner');
+					var $status  = $('#learnkit-license-status');
+
+					$btn.prop('disabled', true);
+					$spinner.addClass('is-active');
+
+					$.post(ajaxurl, {
+						action: 'learnkit_deactivate_license',
+						nonce:  '<?php echo esc_js( wp_create_nonce( 'learnkit_deactivate_license' ) ); ?>'
+					}, function(response) {
+						$spinner.removeClass('is-active');
+						if (response.success) {
+							$('#learnkit_license_key').val('');
+							$status
+								.text(response.data.label)
+								.removeClass('learnkit-status-active learnkit-status-inactive learnkit-status-invalid learnkit-status-expired')
+								.addClass('learnkit-status-inactive');
+							$btn.remove();
+						} else {
+							$btn.prop('disabled', false);
+							alert(response.data.message || '<?php echo esc_js( __( 'Error deactivating license.', 'learnkit' ) ); ?>');
+						}
+					}).fail(function() {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+						alert('<?php echo esc_js( __( 'Error deactivating license.', 'learnkit' ) ); ?>');
 					});
 				});
 			})(jQuery);
@@ -246,6 +297,26 @@ class LearnKit_License {
 				'plan'      => isset( $result['plan'] ) ? $result['plan'] : '',
 			)
 		);
+	}
+
+	// -------------------------------------------------------------------------
+	// AJAX: Deactivate License
+	// -------------------------------------------------------------------------
+
+	/**
+	 * AJAX handler — remove the stored license key and status from the DB.
+	 */
+	public function ajax_deactivate_license() {
+		check_ajax_referer( 'learnkit_deactivate_license', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'learnkit' ) ) );
+		}
+
+		delete_option( self::OPTION_KEY );
+		delete_option( self::STATUS_OPTION );
+
+		wp_send_json_success( array( 'label' => __( 'Not activated', 'learnkit' ) ) );
 	}
 
 	// -------------------------------------------------------------------------
