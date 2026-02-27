@@ -798,16 +798,16 @@ body a:where(:not([class*="btn--"])) {
 }
 
 .not-enrolled {
-	background: #fef3c7;
-	border-left: 4px solid #d97706;
+	background: var(--warning-light, #fef3c7);
+	border-left: 4px solid var(--warning-semi-light, #d97706);
 	padding: 20px;
 	margin: 40px 0;
 	border-radius: 4px;
 }
 
 .passed-banner {
-	background: #dcfce7;
-	border-left: 4px solid #16a34a;
+	background: var(--success-ultra-light, #dcfce7);
+	border-left: 4px solid var(--success, #16a34a);
 	padding: 20px;
 	margin-bottom: 20px;
 	border-radius: 4px;
@@ -815,7 +815,7 @@ body a:where(:not([class*="btn--"])) {
 }
 
 .passed-banner h3 {
-	color: #16a34a;
+	color: var(--success, #16a34a);
 	margin: 0 0 10px;
 }
 
@@ -842,8 +842,8 @@ body a:where(:not([class*="btn--"])) {
 }
 
 .lk-answer-review__question--correct {
-	border-color: #16a34a;
-	background: #dcfce7;
+	border-color: var(--success, #16a34a);
+	background: var(--success-ultra-light, #dcfce7);
 }
 
 .lk-answer-review__question--incorrect {
