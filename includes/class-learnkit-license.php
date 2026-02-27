@@ -334,15 +334,21 @@ class LearnKit_License {
 			return $transient;
 		}
 
+		$plugin_file = self::PLUGIN_SLUG . '/' . self::PLUGIN_SLUG . '.php';
 		$license_key = get_option( self::OPTION_KEY, '' );
 
 		if ( empty( $license_key ) ) {
+			// No license key — ensure no stale update entry lingers.
+			unset( $transient->response[ $plugin_file ] );
 			return $transient;
 		}
 
 		$result = $this->call_check_update( $license_key );
 
 		if ( is_wp_error( $result ) || empty( $result['valid'] ) ) {
+			// Invalid/expired license — remove any stale update entry and clear cached status.
+			unset( $transient->response[ $plugin_file ] );
+			delete_option( self::STATUS_OPTION );
 			return $transient;
 		}
 
@@ -350,8 +356,6 @@ class LearnKit_License {
 		update_option( self::STATUS_OPTION, $result );
 
 		if ( ! empty( $result['update_available'] ) && ! empty( $result['new_version'] ) ) {
-			$plugin_file = self::PLUGIN_SLUG . '/' . self::PLUGIN_SLUG . '.php';
-
 			$transient->response[ $plugin_file ] = (object) array(
 				'id'          => 'learnkitwp.com/' . self::PLUGIN_SLUG,
 				'slug'        => self::PLUGIN_SLUG,
@@ -360,6 +364,9 @@ class LearnKit_License {
 				'url'         => 'https://learnkitwp.com',
 				'package'     => esc_url_raw( $result['download_url'] ),
 			);
+		} else {
+			// Valid license but no update available — remove any stale entry.
+			unset( $transient->response[ $plugin_file ] );
 		}
 
 		return $transient;
