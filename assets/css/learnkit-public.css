@@ -518,14 +518,17 @@ body a:where(:not([class*="btn--"])) {
 
 .lk-progress-bar {
 	height: 100%;
-	background: linear-gradient(90deg, #4f46e5 0%, #3730a3 100%);
 	transition: width 0.3s ease;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: #ffffff;
 	font-size: 14px;
 	font-weight: 600;
+}
+
+:where(.lk-progress-bar) {
+	background: linear-gradient(90deg, #4f46e5 0%, #3730a3 100%);
+	color: #ffffff;
 }
 
 .lk-modules-section {
