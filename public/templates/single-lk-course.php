@@ -351,13 +351,13 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 											<a href="<?php echo esc_url( learnkit_quiz_url( $lesson_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #2271b1;">
 												<span class="lk-icon"><svg aria-hidden="true" focusable="false" width="1.5em" height="1.5em" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="var(--base, #757575)"><g><path d="M154.8,424.7h202.4c12.8,0,23.2-10.4,23.2-23.2V139.3c0-12.8-10.4-23.2-23.2-23.2h-29.8V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-48.9V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-48.9V94.8c0-4.1-3.4-7.5-7.5-7.5s-7.5,3.4-7.5,7.5v21.3h-29.8c-12.8,0-23.2,10.4-23.2,23.2v262.1C131.6,414.2,142,424.7,154.8,424.7z M146.6,139.3c0-4.5,3.7-8.2,8.2-8.2h29.8v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h48.9v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h48.9v21.5c0,4.1,3.4,7.5,7.5,7.5s7.5-3.4,7.5-7.5v-21.5h29.8c4.5,0,8.2,3.7,8.2,8.2v262.1c0,4.5-3.7,8.2-8.2,8.2H154.8c-4.5,0-8.2-3.7-8.2-8.2V139.3z"/><path d="M181.9,219.4c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6c-2.9-2.9-7.7-2.9-10.6,0l-21.2,21.2l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,219.4z"/><path d="M238.1,208.3h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,208.3,238.1,208.3z"/><path d="M181.9,289c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6s-7.7-2.9-10.6,0L187.2,273l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,289z"/><path d="M238.1,277.9h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,277.9,238.1,277.9z"/><path d="M181.9,358.5c1.5,1.5,3.4,2.2,5.3,2.2c1.9,0,3.8-0.7,5.3-2.2l26.5-26.5c2.9-2.9,2.9-7.7,0-10.6s-7.7-2.9-10.6,0l-21.2,21.2l-7.7-7.7c-2.9-2.9-7.7-2.9-10.6,0c-2.9,2.9-2.9,7.7,0,10.6L181.9,358.5z"/><path d="M238.1,347.5h99.7c4.1,0,7.5-3.4,7.5-7.5s-3.4-7.5-7.5-7.5h-99.7c-4.1,0-7.5,3.4-7.5,7.5S234,347.5,238.1,347.5z"/></g></svg></span> <?php echo esc_html( $lesson_quiz->post_title ); ?>
 												<?php if ( $quiz_attempt ) : ?>
-													<span style="font-size: 13px; margin-left: 8px; color: <?php echo $quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+													<span style="font-size: 13px; margin-left: 8px; color: <?php echo $quiz_attempt->passed ? 'var(--success, #00a32a)' : 'var(--danger, #d63638)'; ?>;">
 														(<?php echo esc_html( $quiz_attempt->score ); ?>% - <?php echo $quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
 													</span>
 												<?php endif; ?>
 											</a>
 											<?php if ( $quiz_attempt ) : ?>
-												<span class="lk-lesson-status" style="color: <?php echo $quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+												<span class="lk-lesson-status" style="color: <?php echo $quiz_attempt->passed ? 'var(--success, #00a32a)' : 'var(--danger, #d63638)'; ?>;">
 													<?php echo $quiz_attempt->passed ? '✓' : '✗'; ?>
 												</span>
 											<?php endif; ?>
@@ -432,13 +432,13 @@ $self_enrollment = ( 'free' === $access_type ); // Keep $self_enrollment var for
 										<a href="<?php echo esc_url( learnkit_quiz_url( $course_quiz->ID ) ); ?>" class="lk-lesson-title" style="color: #00a32a; font-weight: 600;">
 											🎓 <?php echo esc_html( $course_quiz->post_title ); ?>
 											<?php if ( $course_quiz_attempt ) : ?>
-												<span style="font-size: 13px; margin-left: 8px; color: <?php echo $course_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+												<span style="font-size: 13px; margin-left: 8px; color: <?php echo $course_quiz_attempt->passed ? 'var(--success, #00a32a)' : 'var(--danger, #d63638)'; ?>;">
 													(<?php echo esc_html( $course_quiz_attempt->score ); ?>% - <?php echo $course_quiz_attempt->passed ? 'Passed' : 'Failed'; ?>)
 												</span>
 											<?php endif; ?>
 										</a>
 										<?php if ( $course_quiz_attempt ) : ?>
-											<span class="lk-lesson-status" style="color: <?php echo $course_quiz_attempt->passed ? '#00a32a' : '#d63638'; ?>;">
+											<span class="lk-lesson-status" style="color: <?php echo $course_quiz_attempt->passed ? 'var(--success, #00a32a)' : 'var(--danger, #d63638)'; ?>;">
 												<?php echo $course_quiz_attempt->passed ? '✓' : '✗'; ?>
 											</span>
 										<?php endif; ?>
