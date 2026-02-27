@@ -121,6 +121,12 @@ $has_passed    = $best_attempt && $best_attempt->passed;
 			);
 		}
 
+		// Fallback: if transient was already consumed (e.g. page refresh), read score from DB.
+		if ( $latest_attempt && ! $result_data ) {
+			$result_score  = (int) $latest_attempt->score;
+			$result_passed = (bool) $latest_attempt->passed;
+		}
+
 		if ( $latest_attempt && ! empty( $latest_attempt->answers ) ) {
 			$attempt_answers = json_decode( $latest_attempt->answers, true );
 			if ( ! is_array( $attempt_answers ) ) {
