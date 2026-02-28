@@ -340,15 +340,23 @@ class LearnKit_License {
 		if ( empty( $license_key ) ) {
 			// No license key — ensure no stale update entry lingers.
 			unset( $transient->response[ $plugin_file ] );
+			error_log( '[LearnKit License] No license key set — cleared any stale update entry.' );
 			return $transient;
 		}
 
 		$result = $this->call_check_update( $license_key );
 
-		if ( is_wp_error( $result ) || empty( $result['valid'] ) ) {
+		if ( is_wp_error( $result ) ) {
+			error_log( '[LearnKit License] API call failed: ' . $result->get_error_message() );
+			unset( $transient->response[ $plugin_file ] );
+			return $transient;
+		}
+
+		if ( empty( $result['valid'] ) ) {
 			// Invalid/expired license — remove any stale update entry and clear cached status.
 			unset( $transient->response[ $plugin_file ] );
 			delete_option( self::STATUS_OPTION );
+			error_log( '[LearnKit License] Invalid/expired license — cleared update entry. API response: ' . wp_json_encode( $result ) );
 			return $transient;
 		}
 
@@ -454,6 +462,8 @@ class LearnKit_License {
 		$http_code    = wp_remote_retrieve_response_code( $response );
 		$raw_body     = wp_remote_retrieve_body( $response );
 		$decoded      = json_decode( $raw_body, true );
+
+		error_log( '[LearnKit License] check-update API response — HTTP ' . $http_code . ' — body: ' . $raw_body );
 
 		if ( ! is_array( $decoded ) ) {
 			return new WP_Error( 'learnkit_license_parse_error', __( 'Invalid response from license server.', 'learnkit' ) );
