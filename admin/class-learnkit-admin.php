@@ -91,13 +91,16 @@ class LearnKit_Admin {
 		$react_bundle = LEARNKIT_PLUGIN_URL . 'assets/js/learnkit-admin.js';
 
 		// Check if React build exists, otherwise use development warning.
+		$asset_file = LEARNKIT_PLUGIN_DIR . 'assets/js/learnkit-admin.asset.php';
+		$asset      = file_exists( $asset_file ) ? require $asset_file : array( 'dependencies' => array(), 'version' => $this->version );
+
 		if ( file_exists( LEARNKIT_PLUGIN_DIR . 'assets/js/learnkit-admin.js' ) ) {
 			// Enqueue React styles (main styles).
 			wp_enqueue_style(
 				$this->plugin_name . '-react',
 				LEARNKIT_PLUGIN_URL . 'assets/js/style-index.css',
 				array(),
-				$this->version,
+				$asset['version'],
 				'all'
 			);
 
@@ -106,15 +109,15 @@ class LearnKit_Admin {
 				$this->plugin_name . '-quiz',
 				LEARNKIT_PLUGIN_URL . 'assets/js/index.css',
 				array(),
-				$this->version,
+				$asset['version'],
 				'all'
 			);
 
 			wp_enqueue_script(
 				$this->plugin_name,
 				$react_bundle,
-				array(), // React has no jQuery dependency.
-				$this->version,
+				$asset['dependencies'],
+				$asset['version'],
 				true
 			);
 
