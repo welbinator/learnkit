@@ -1,0 +1,8 @@
+{
+  "name": "learnkit",
+  "version": "1.0.0",
+  "scripts": {
+    "build-admin": "cd admin/react && npm run build",
+    "start-admin": "cd admin/react && npm run start"
+  }
+}
