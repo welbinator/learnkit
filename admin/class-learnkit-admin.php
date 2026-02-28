@@ -230,8 +230,7 @@ class LearnKit_Admin {
 	public function render_admin_page() {
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<!-- React app mounts here -->
+			<!-- React app mounts here (title rendered by React to avoid WP's duplicate spinner) -->
 			<div id="learnkit-admin-root"></div>
 			<noscript>
 				<div class="notice notice-error">
