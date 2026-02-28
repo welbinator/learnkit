@@ -10,7 +10,7 @@
 
 import { __, sprintf } from '@wordpress/i18n';
 import { useState, useEffect } from '@wordpress/element';
-import { Button, Spinner } from '@wordpress/components';
+import { Button } from '@wordpress/components';
 import CourseGrid from './components/CourseGrid';
 import CourseDetailModal from './components/CourseDetailModal';
 import CreateCourseModal from './components/CreateCourseModal';
@@ -231,12 +231,7 @@ const CourseBuilder = () => {
 	const selectedCourse = courses.find((c) => c.id === selectedCourseId);
 
 	if (loading) {
-		return (
-			<div className="learnkit-loading">
-				<Spinner />
-				<p>{__('Loading courses...', 'learnkit')}</p>
-			</div>
-		);
+		return null;
 	}
 
 	return (
